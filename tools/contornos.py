@@ -23,7 +23,12 @@ SEEDS = {
   "D": (962, 660, None, 707), "E": (962, 660, 707, None),
   "F2": (947, 777, None, 812), "F": (947, 777, 812, None), "M": (363, 488), "M2": (412, 523), "R": (435, 317),
   "R2": (485, 360), "U": (737, 652), "P": (775, 250), "P2": (775, 170), "H": (602, 750),
-  "I": (767, 855), "J": (949, 330), "K": (970, 435), "L": (620, 595), "O": (995, 550), "T": (1227, 825),
+  "I": (767, 855), "J": (949, 330), "K": (970, 435), "O": (995, 550), "T": (1227, 825),
+}
+# Espacios abiertos (patios): semilla y, opcional, rectángulo (x1, y1, x2, y2) para no escapar por zonas abiertas.
+SPACE_SEEDS = {
+  "patio_central": ((870, 660), (845, 586, 915, 735)),
+  "patio_canon": ((762, 640), None),
 }
 # Puntos de referencia reales: (px, py) del plano -> (lat, lng)
 lat0, lng0 = -33.034172, -71.595702
@@ -45,8 +50,10 @@ def rdp(p, e):
     if ds[i - 1] > e: return rdp(p[:i + 1], e)[:-1] + rdp(p[i:], e)
     return [p[0], p[-1]]
 
-def contorno(lab, seed, h, w):
+def contorno(lab, seed, h, w, clip=None):
     m = lab == lab[seed[1], seed[0]]
+    if clip:
+        cm = np.zeros_like(m); cm[clip[1]:clip[3], clip[0]:clip[2]] = True; m = m & cm
     if len(seed) > 2:                                            # corte por filas
         ymin, ymax = seed[2], seed[3]; rows = np.arange(h)[:, None]
         if ymin is not None: m = m & (rows >= ymin)
@@ -70,15 +77,23 @@ def main():
         poly, area = contorno(lab, s, h, w)
         print(f"{k:4s} área={area:6d} px  ", f"{len(poly)} vértices" if poly else "DESCARTADO (fuga o semilla mala)")
         if poly: polys[k] = poly
+    spaces = {}
+    for k, (s, clip) in SPACE_SEEDS.items():
+        poly, area = contorno(lab, s, h, w, clip)
+        print(f"{k:14s} área={area:6d} px  ", f"{len(poly)} vértices" if poly else "DESCARTADO")
+        if poly: spaces[k] = poly
     img = Image.open(PLANO).convert("RGB"); d = ImageDraw.Draw(img)
     for k, p in polys.items(): d.line(p + [p[0]], fill=(255, 0, 0), width=2)
+    for k, p in spaces.items(): d.line(p + [p[0]], fill=(0, 160, 0), width=2)
     img.save(os.path.join(HERE, "preview.png"))
     if "--preview" in sys.argv: return
     html = open(HTML).read()
     keep = re.search(r"  cancha: \[.*?\],\n", html).group(0)       # la cancha no es un edificio: se mantiene
     block = "const BUILDINGS = {\n" + "".join(
         f"  {k}: [" + ",".join("[%.1f,%.1f]" % tr(x, y) for x, y in p) + "],\n" for k, p in polys.items()) + keep + "};"
-    html, c = re.subn(r"const BUILDINGS = \{.*?\n\};", lambda m: block, html, flags=re.S)
+    block += "\nconst SPACES = {\n" + "".join(
+        f"  {k}: [" + ",".join("[%.1f,%.1f]" % tr(x, y) for x, y in p) + "],\n" for k, p in spaces.items()) + "};"
+    html, c = re.subn(r"const BUILDINGS = \{.*?\n\};(\nconst SPACES = \{.*?\n\};)?", lambda m: block, html, flags=re.S)
     # Las puertas (destinos de edificio) se ajustan al punto más cercano del nuevo borde.
     dest = dict(re.findall(r'(\w+):"(\w+)"', re.search(r"const DEST_BLD = \{(.*?)\};", html).group(1)))
     for nid, bk in dest.items():
