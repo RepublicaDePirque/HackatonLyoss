@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /fotos/{id} {
+      allow read: if true;
+
+      // Publicar: usuario anónimo, foto ≤ ~300 KB (base64), lado válido, sin reportes.
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['edificio', 'lado', 'foto', 'reportes', 'creada'])
+        && request.resource.data.edificio is string && request.resource.data.edificio.size() < 60
+        && request.resource.data.lado in ['N', 'S', 'E', 'O']
+        && request.resource.data.foto is string
+        && request.resource.data.foto.size() <= 300000
+        && request.resource.data.foto.matches('^data:image/jpeg;base64,.*')
+        && request.resource.data.reportes == 0
+        && request.resource.data.creada == request.time;
+
+      // Reportar: solo se puede sumar 1 a `reportes`.
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportes'])
+        && request.resource.data.reportes == resource.data.reportes + 1;
+
+      allow delete: if false;
+    }
+  }
+}
