@@ -175,7 +175,7 @@ var texto = 'Edificio A';
 var n = Math.max(0, Math.min(texto.length, Math.floor((T - 0.9) / 0.13)));
 var q = texto.slice(0, n).toLowerCase();
 var sel = sm(2.7, 3.1);
-var base = [['P', 'Edificio P', '85 m'], ['C', 'Edificio C', '90 m'], ['Fe', 'Federación', '90 m'], ['A', 'Edificio A', '205 m']];
+var base = [['P', 'Edificio P', '85 m'], ['C', 'Edificio C', '90 m'], ['D', 'Comedores', '155 m'], ['A', 'Edificio A', '205 m']];
 var filas = base.filter(function (e) { return !q || e[1].toLowerCase().indexOf(q) === 0; }).map(function (e) {
 var activo = e[0] === 'A' && n === texto.length;
 var k = activo ? sel : 0;

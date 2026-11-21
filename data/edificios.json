@@ -1,6 +1,67 @@
 {
 	"nota": "lat/lng en WGS84. px = píxel en el plano oficial y en data/mapa-casa-central.svg. «verificada» = huella de OpenStreetMap que calza con el plano oficial (~2 m); no es una medición en terreno ni la puerta del edificio. Las pistas son borradores. «que_hay» viene del equipo y no está verificado.",
 	"atribucion": "Coordenadas: © colaboradores de OpenStreetMap (ODbL). Plano: infraestructura.usm.cl.",
+	"georef": {
+		"gps_a_px": {
+			"formula": "px_x = a*lng + b*lat + c ; px_y = d*lng + e*lat + f",
+			"a": -180749.81750682846,
+			"b": -101068.91757058853,
+			"c": -16278863.33719626,
+			"d": -83191.95450730185,
+			"e": 216632.3234418215,
+			"f": 1200966.5954243056
+		},
+		"metros_por_px": 0.4666,
+		"rumbo_del_arriba_del_plano_grados": 154.8,
+		"norte_arriba": false,
+		"puntos_de_control": [
+			{
+				"nombre": "M",
+				"lat": -33.03494,
+				"lng": -71.59301,
+				"px": [
+					365.8,
+					493.2
+				]
+			},
+			{
+				"nombre": "T",
+				"lat": -33.035188,
+				"lng": -71.59761,
+				"px": [
+					1222.3,
+					822.2
+				]
+			},
+			{
+				"nombre": "P",
+				"lat": -33.036805,
+				"lng": -71.594274,
+				"px": [
+					782.7,
+					194.4
+				]
+			},
+			{
+				"nombre": "F",
+				"lat": -33.034819,
+				"lng": -71.596678,
+				"px": [
+					1016.5,
+					824.6
+				]
+			},
+			{
+				"nombre": "C",
+				"lat": -33.036019,
+				"lng": -71.5946,
+				"px": [
+					762.2,
+					391.7
+				]
+			}
+		]
+	},
 	"edificios": [
 		{
 			"id": "c",
@@ -106,7 +167,7 @@
 				194
 			],
 			"coordenada": "verificada",
-			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/687247034); calza con el plano oficial a ~2 m",
+			"fuente_coordenada": "Centro de la huella «Edificio P» de OpenStreetMap (way/687247034), que une P y P2: el punto queda unos 20 m corrido hacia el P2 respecto del P del plano.",
 			"destino_demo": true,
 			"pista": "Fuera del recinto principal: cruza Av. Los Placeres y sube por San Guillermo.",
 			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
@@ -159,16 +220,16 @@
 			"id": "federacion",
 			"letra": null,
 			"nombre": "Federación de Estudiantes",
-			"lat": -33.036547,
-			"lng": -71.59421,
+			"lat": -33.034965,
+			"lng": -71.59269,
 			"px": [
-				745,
-				245
+				310,
+				461
 			],
-			"coordenada": "estimada",
-			"fuente_coordenada": "Posición del rótulo «FEDERACION» en el plano oficial. Conflicto: OpenStreetMap ubica la Federación en otra casa, al oriente del edificio M (-33.034964, -71.592688). Confirmar en terreno.",
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/577285640). Ubicación confirmada por el equipo: pasaje Valdés, frente a la portería M. El rótulo «FEDERACION» del plano oficial, junto al P, no corresponde.",
 			"destino_demo": true,
-			"pista": "Casa junto al edificio P, por Av. Los Placeres.",
+			"pista": "En pasaje Valdés, frente a la portería del M.",
 			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
 			"foto": null,
 			"foto_estado": "pendiente: sacar en terreno"
@@ -330,9 +391,9 @@
 			"foto_estado": "pendiente: sacar en terreno"
 		},
 		{
-			"id": "q",
-			"letra": "Q",
-			"nombre": "Cafetería Vivendum (Edificio Q)",
+			"id": "vivendum",
+			"letra": null,
+			"nombre": "Cafetería Vivendum",
 			"lat": -33.035818,
 			"lng": -71.595989,
 			"px": [
@@ -340,7 +401,7 @@
 				551
 			],
 			"coordenada": "verificada",
-			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343091); calza con el plano oficial a ~2 m",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343091). Sin letra a propósito: OpenStreetMap lo llama «Q» y el plano oficial «O»; confirmar en terreno.",
 			"destino_demo": false,
 			"pista": "Al poniente del B, junto a la subida San Luis.",
 			"pista_estado": "borrador: redactada desde el plano, validar en terreno",

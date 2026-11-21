@@ -147,7 +147,7 @@
 			"coordenada": "verificada en OSM"
 		},
 		{
-			"nombre": "Cafetería Vivendum (Q)",
+			"nombre": "Cafetería Vivendum",
 			"tipo": "comida",
 			"lat": -33.035818,
 			"lng": -71.595989,
@@ -353,6 +353,19 @@
 			"coordenada": "verificada en OSM"
 		},
 		{
+			"nombre": "Obelisco a Diego Portales",
+			"tipo": "monumento",
+			"lat": -33.035866,
+			"lng": -71.592834,
+			"px": [
+				428,
+				278
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM",
+			"nota": "En Av. Los Placeres, junto al edificio R. Según OpenStreetMap, monolito encargado por Nicanor Parra en honor a Diego Portales; candidato a dato curioso, verificar la historia antes de usarla."
+		},
+		{
 			"nombre": "Mirador",
 			"tipo": "mirador",
 			"lat": -33.034468,
@@ -381,15 +394,15 @@
 	"pendientes": [
 		{
 			"nombre": "Cajero BancoEstado",
-			"motivo": "No está en OpenStreetMap. Sale en Google Maps, pero no se extrajo: su API es de pago y sus términos no permiten copiar datos en bloque. Marcar a mano (clic derecho en Google Maps copia las coordenadas) o en terreno."
+			"motivo": "OpenStreetMap no tiene un cajero identificado como BancoEstado; hay uno sin banco indicado en Av. Los Placeres (-33.036625, -71.595195) que podría serlo. Confirmar. Sale en Google Maps, pero no se extrajo: su API es de pago y sus términos no permiten copiar datos en bloque. Marcar a mano (clic derecho en Google Maps copia las coordenadas) o en terreno."
 		},
 		{
 			"nombre": "Testamento de Federico Santa María (entrada)",
-			"motivo": "Sin ubicación en OpenStreetMap ni en las fuentes revisadas. Trabajo futuro: marcar en terreno."
+			"motivo": "No figura en OpenStreetMap (consultado el 21-11-2026). Trabajo futuro: marcar en terreno."
 		},
 		{
 			"nombre": "Memorial del reloj de sol",
-			"motivo": "Sin ubicación en OpenStreetMap ni en las fuentes revisadas. Trabajo futuro: marcar en terreno."
+			"motivo": "No figura en OpenStreetMap (consultado el 21-11-2026). Trabajo futuro: marcar en terreno."
 		}
 	]
 }

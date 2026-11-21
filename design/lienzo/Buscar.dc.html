@@ -38,6 +38,7 @@ Estás en la entrada de Av. Los Placeres
 </sc-if>
 </div>
 </div>
+<div style="flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0 -20px; padding: 0 20px 8px; display: flex; flex-direction: column; gap: 20px">
 <sc-if value="{{sinResultados}}" hint-placeholder-val="{{false}}">
 <div role="status" style="display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 20px; background: {{surface}}; border: 1px solid {{line}}">
 <span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 20px">No encontramos «{{q}}»</span>
@@ -65,7 +66,8 @@ Estás en la entrada de Av. Los Placeres
 </sc-for>
 </div>
 </sc-for>
-<span style="margin-top: auto; font-size: 14px; line-height: 1.4; color: {{muted}}">Distancias en línea recta. Tú eliges el camino.</span>
+</div>
+<span style="flex-shrink: 0; font-size: 14px; line-height: 1.4; color: {{muted}}">Distancias en línea recta. Tú eliges el camino.</span>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"tema": {"editor": "enum", "options": ["oscuro", "claro"], "section": "Aspecto", "default": "oscuro"}, "consulta": {"editor": "enum", "options": ["ninguna", "gimnasio", "edificio"], "section": "Estado", "default": "ninguna"}, "$preview": {"width": 390, "height": 844}}'>
@@ -82,13 +84,13 @@ var q = S.q !== undefined ? S.q : (cq && cq !== 'ninguna' ? cq : '');
 var todos = [
 { letra: 'P', nombre: 'Edificio P', detalle: 'Salas de clases', m: 85, cerca: true },
 { letra: 'C', nombre: 'Edificio C', detalle: 'Salas de clases', m: 90, cerca: true },
-{ letra: 'Fe', nombre: 'Federación', detalle: 'Federación de Estudiantes, junto al P', m: 90, cerca: true },
 { letra: 'A', nombre: 'Edificio A', detalle: 'La torre, sobre Av. España', m: 205, foto: true },
 { letra: 'U', nombre: 'Biblioteca', detalle: 'Edificio U', m: 190 },
 { letra: 'D', nombre: 'Comedores', detalle: 'Casino, piso 1 del Edificio D', m: 155 },
 { letra: 'F', nombre: 'Edificio F', detalle: 'Informática, Matemática, Industrias', m: 250, foto: true },
-{ letra: 'M', nombre: 'Edificio M', detalle: 'Salas de clases', m: 275 }
-].map(function (e) {
+{ letra: 'M', nombre: 'Edificio M', detalle: 'Salas de clases', m: 275 },
+{ letra: 'Fe', nombre: 'Federación', detalle: 'En pasaje Valdés, frente a la portería del M', m: 295 }
+].sort(function (x, y) { return x.m - y.m; }).map(function (e) {
 return { letra: e.letra, nombre: e.nombre, detalle: e.detalle, dist: e.m + ' m', foto: !!e.foto, cerca: !!e.cerca, aria: e.nombre + ', ' + e.detalle + ', a ' + e.m + ' metros' + (e.foto ? ', con fotos' : '') };
 });
 var norm = function (s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); };

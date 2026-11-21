@@ -40,7 +40,7 @@ Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app
 2. Seguir la brújula: señal, distancia, pista.
 3. En el trayecto: tarjetas de datos curiosos al entrar en una zona.
 4. Últimos 60 m: foto de cómo se ve el destino.
-5. Llegada: automática por GPS (a 20 m o menos del destino), con un botón secundario «Ya llegué» por si el GPS falla. La pantalla de llegada muestra la foto, un dato y la invitación a dejar la propia; «Aún no llego» devuelve a la brújula.
+5. Llegada: automática por GPS (a 20 m o menos del borde del edificio, según su huella en `huellas-edificios.geojson`), con un botón secundario «Ya llegué» por si el GPS falla. La pantalla de llegada muestra la foto, un dato y la invitación a dejar la propia; «Aún no llego» devuelve a la brújula.
 
 Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en línea recta), pasando junto al Edificio C (dato: era el hall de montaje). Se eligió el A porque tiene foto con licencia libre.
 
@@ -100,7 +100,8 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 ## 9. Supuestos y pendientes
 
 - Datos del campus: las coordenadas salen de OpenStreetMap contrastado con el plano oficial; no se midieron en terreno y marcan el centro del edificio, no su puerta.
-- Estimado o sin verificar: la ubicación de la Federación (el plano y OpenStreetMap no coinciden), las pistas (borradores redactados desde el plano) y el contenido de cada edificio (aportado por el equipo).
+- Federación: en pasaje Valdés, frente a la portería del M (confirmado por el equipo).
+- Estimado o sin verificar: las pistas (borradores redactados desde el plano) y el contenido de cada edificio (aportado por el equipo).
 - Fotos con licencia libre solo para A, F y B (Wikimedia Commons; las de A y B con la letra inferida). C, M, P, Biblioteca, Comedores y Federación: pendientes de sacar en terreno.
 - Sin ubicar (trabajo futuro): testamento de la entrada y memorial del reloj de sol; no figuran en OpenStreetMap. Cajero BancoEstado: hay un cajero sin banco indicado en Av. Los Placeres que podría serlo, por confirmar.
 - Letra por confirmar: la cafetería Vivendum es «Q» en OpenStreetMap y «O» en el plano oficial. El punto del edificio P es el centro de P y P2 juntos. Los datos de Google Maps no se extrajeron: API de pago y términos que no permiten copiarlos en bloque.
