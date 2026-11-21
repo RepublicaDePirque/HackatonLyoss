@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#15131F">
+<title>Marcar entradas · Brújula USM</title>
+<link rel="stylesheet" href="assets/fuentes.css">
+<script>
+// Tema claro/oscuro según el teléfono (?tema=claro u ?tema=oscuro lo fuerza)
+(function () {
+  var f = new URLSearchParams(location.search).get("tema"), mq = matchMedia("(prefers-color-scheme: light)");
+  var poner = function () { document.documentElement.dataset.tema = f === "claro" || f === "oscuro" ? f : (mq.matches ? "claro" : "oscuro"); };
+  poner(); if (mq.addEventListener) mq.addEventListener("change", poner);
+})();
+</script>
+<style>
+  /* Herramienta TEMPORAL para levantar las puertas de los edificios. No forma parte de la app ni del caché offline. */
+  :root, :root[data-tema="oscuro"] { color-scheme:dark; --bg:#15131F; --fg:#F5F1EA; --muted:#B3ADBF; --surface:rgba(40,36,56,.88); --hoja:#221F30; --line:rgba(255,255,255,.14); --acento:#FFB877; --ruta:#FF8A3D; --si:#4CD964; --no:#FF5C7A; }
+  :root[data-tema="claro"] { color-scheme:light; --bg:#F6F1EA; --fg:#1D1A26; --muted:#5E5869; --surface:rgba(255,255,255,.92); --hoja:#FFFFFF; --line:rgba(29,26,38,.14); --acento:#B8330F; --ruta:#D2531A; --si:#1F9D3A; --no:#C8203F; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--fg); font-family:'Instrument Sans', system-ui, sans-serif; }
+  button, input, select, textarea { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  :focus-visible { outline:3px solid #FFB877; outline-offset:2px; }
+  [hidden] { display:none !important; }
+  #app { position:relative; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+  header { display:flex; gap:8px; align-items:center; padding:calc(env(safe-area-inset-top) + 8px) 10px 8px; background:var(--surface); border-bottom:1px solid var(--line); z-index:3; }
+  header select { flex:1; min-width:0; height:46px; border-radius:12px; border:1px solid var(--line); background:var(--hoja); padding:0 10px; font-size:16px; font-weight:600; }
+  .btn { height:46px; min-width:46px; padding:0 14px; border-radius:12px; border:1px solid var(--line); background:var(--hoja); font-weight:600; font-size:15px; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .btn.pri { background:var(--fg); color:var(--bg); border-color:var(--fg); }
+  .btn.on { background:var(--acento); color:#1D1A26; border-color:var(--acento); }
+  .btn.peligro { color:var(--no); }
+  #mapa { flex:1; min-height:0; width:100%; display:block; touch-action:none; background:var(--bg); }
+  #ctl { position:absolute; right:10px; top:calc(env(safe-area-inset-top) + 74px); display:flex; flex-direction:column; gap:8px; z-index:2; }
+  #ctl .btn { width:46px; padding:0; font-size:22px; background:var(--surface); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+  #barra { position:absolute; left:10px; right:10px; bottom:calc(env(safe-area-inset-bottom) + 10px); display:flex; flex-direction:column; gap:8px; z-index:2; pointer-events:none; }
+  #barra > * { pointer-events:auto; }
+  #ayuda { padding:10px 14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); font-size:14px; line-height:1.4; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+  #ayuda b { color:var(--acento); }
+  #acciones { display:flex; gap:8px; }
+  #acciones .btn { flex:1; }
+  .hoja { position:absolute; left:0; right:0; bottom:0; z-index:5; background:var(--hoja); border-radius:24px 24px 0 0; box-shadow:0 -16px 40px rgba(12,10,24,.3); padding:14px 16px calc(env(safe-area-inset-bottom) + 16px); display:flex; flex-direction:column; gap:12px; max-height:88%; overflow-y:auto; }
+  .hoja h2 { margin:0; font-family:'Chakra Petch',sans-serif; font-size:22px; }
+  .hoja label { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600; color:var(--muted); }
+  .hoja input[type=text], .hoja select, .hoja textarea { height:48px; border-radius:12px; border:1px solid var(--line); background:var(--bg); padding:0 12px; font-size:16px; color:var(--fg); }
+  .hoja textarea { height:150px; padding:10px 12px; font-family:ui-monospace, monospace; font-size:12px; }
+  .opciones { display:flex; gap:8px; }
+  .opciones label { position:relative; flex:1; flex-direction:row; align-items:center; justify-content:center; height:46px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--fg); font-size:15px; cursor:pointer; }
+  .opciones input { position:absolute; opacity:0; }
+  .opciones label.sel { background:var(--fg); color:var(--bg); }
+  .opciones label.foco { outline:3px solid #FFB877; }
+  .fila-btns { display:flex; gap:8px; } .fila-btns .btn { flex:1; }
+  .aviso { font-size:13px; line-height:1.4; color:var(--acento); font-weight:600; }
+  .aviso:empty { display:none; }
+  #lista { display:flex; flex-direction:column; gap:6px; }
+  .item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); text-align:left; width:100%; }
+  .item .pto { width:14px; height:14px; border-radius:7px; flex-shrink:0; }
+  .item .t { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .item .t b { font-size:15px; } .item .t small { color:var(--muted); font-size:12px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { padding:6px 12px; border-radius:16px; border:1px solid var(--line); background:var(--bg); font-size:14px; font-weight:600; }
+  .progreso { font-size:14px; color:var(--muted); }
+  .progreso b { color:var(--fg); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <select id="selEdif" aria-label="Edificio"></select>
+    <button id="btnLista" class="btn">Lista <span id="nTotal">0</span></button>
+  </header>
+  <canvas id="mapa" aria-label="Plano de Casa Central"></canvas>
+  <div id="ctl">
+    <button id="zIn" class="btn" aria-label="Acercar">+</button>
+    <button id="zOut" class="btn" aria-label="Alejar">−</button>
+    <button id="btnGps" class="btn" aria-label="Mostrar mi ubicación" aria-pressed="false">⌖</button>
+  </div>
+  <div id="barra">
+    <div id="ayuda"><b>Toca la puerta</b> del edificio en el plano. Acércate con los dedos para ser más preciso.</div>
+    <div id="acciones" hidden><button id="btnAqui" class="btn pri">Marcar donde estoy</button></div>
+  </div>
+
+  <!-- Editor de una entrada -->
+  <div id="hojaEd" class="hoja" role="dialog" aria-modal="true" aria-labelledby="edTitulo" hidden>
+    <h2 id="edTitulo">Nueva entrada</h2>
+    <label>Edificio <select id="edEdif"></select></label>
+    <label>Cómo la reconocerías <input id="edPunto" type="text" list="sugerencias" placeholder="Ej.: principal, lado Av. España" autocomplete="off"></label>
+    <datalist id="sugerencias"><option value="Principal"><option value="Lateral"><option value="Trasera"><option value="Lado Av. España"><option value="Lado Av. Los Placeres"><option value="Lado Patio Central"><option value="Con rampa"><option value="Con escalera"></datalist>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px">¿Se puede entrar sin escaleras?</div>
+      <div class="opciones" role="radiogroup" aria-label="Accesible">
+        <label><input type="radio" name="acc" value="si">Sí</label>
+        <label><input type="radio" name="acc" value="no">No</label>
+        <label><input type="radio" name="acc" value="nose" checked>No sé</label>
+      </div>
+    </div>
+    <div id="edAviso" class="aviso"></div>
+    <div class="fila-btns"><button id="edBorrar" class="btn peligro" hidden>Borrar</button><button id="edCancelar" class="btn">Cancelar</button><button id="edGuardar" class="btn pri">Guardar</button></div>
+  </div>
+
+  <!-- Lista y exportación -->
+  <div id="hojaLista" class="hoja" role="dialog" aria-modal="true" aria-labelledby="liTitulo" hidden>
+    <h2 id="liTitulo">Entradas marcadas</h2>
+    <div class="progreso" id="progreso"></div>
+    <div id="faltan" class="chips"></div>
+    <div id="lista"></div>
+    <label>Resultado para enviar <textarea id="salida" readonly></textarea></label>
+    <div class="fila-btns"><button id="btnCopiar" class="btn pri">Copiar</button><button id="btnDescargar" class="btn">Descargar</button><button id="btnCompartir" class="btn" hidden>Compartir</button></div>
+    <div id="liAviso" class="aviso"></div>
+    <div class="fila-btns"><button id="btnVaciar" class="btn peligro">Borrar todo</button><button id="liCerrar" class="btn">Cerrar</button></div>
+  </div>
+</div>
+
+<script src="js/generado/contornos.js"></script>
+<script src="js/generado/datos.js"></script>
+<script>
+"use strict";
+// ============================================================================
+//  Marcar entradas — herramienta TEMPORAL. Se toca la puerta de cada edificio sobre el plano (o se marca con el GPS)
+//  y se exporta un JSON con las coordenadas. Usa la misma calibración que index.html (si cambia allá, cambiarla aquí).
+// ============================================================================
+const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
+const ORIGIN = { lat: -33.034358, lng: -71.595779 };
+const PLANO = { w: 1311, h: 1006, mpp: 0.4601, rot: 155.3, ax: 810, ay: 850 };
+const ROT = toRad(PLANO.rot), KLAT = 111320, KLNG = KLAT * Math.cos(toRad(ORIGIN.lat));
+const fromXY = (x, y) => ({ lat: ORIGIN.lat + y / KLAT, lng: ORIGIN.lng + x / KLNG });
+const toXY = p => ({ x: (p.lng - ORIGIN.lng) * KLNG, y: (p.lat - ORIGIN.lat) * KLAT });
+const fromPlan = (px, py) => { const X = (px - PLANO.ax) * PLANO.mpp, Y = (PLANO.ay - py) * PLANO.mpp; return { x: X * Math.cos(ROT) + Y * Math.sin(ROT), y: -X * Math.sin(ROT) + Y * Math.cos(ROT) }; };
+const toPlan = (x, y) => { const X = x * Math.cos(ROT) - y * Math.sin(ROT), Y = x * Math.sin(ROT) + y * Math.cos(ROT); return { px: PLANO.ax + X / PLANO.mpp, py: PLANO.ay - Y / PLANO.mpp }; };
+const pxALatLng = (px, py) => { const m = fromPlan(px, py); return fromXY(m.x, m.y); };
+const latLngAPx = p => { const q = toXY(p); return toPlan(q.x, q.y); };
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---------- Edificios (con su nombre en la app) ----------
+const CONT = CONTORNOS.edificios;                                            // clave -> polígono en píxeles del plano
+const AREAS = Object.fromEntries(Object.entries(CONT).map(([k, pts]) => [k, pts.map(([px, py]) => { const m = fromPlan(px, py); return [m.x, m.y]; })]));
+const destinosDe = k => [...Object.entries(CONTORNOS.areaDe).filter(([, a]) => a === k).map(([id]) => id), ...CONTORNOS.extra.filter(e => e.area === k).map(e => e.id)];
+function nombreDe(k) {
+  if (k === "P2") return "Edificio P2 (parte de P)"; if (k === "R2") return "Edificio R2 (parte de R)";
+  const ids = destinosDe(k), principal = ids.find(i => i.startsWith("edificio-")) || ids[0];
+  const n = principal && INFO[principal] ? INFO[principal].nombre : null;
+  if (k === "bari") return "Innovación Tecnológica (Edificio Bari)";
+  return n ? (/^Edificio/.test(n) || k.length > 2 ? n : `${n} (${k})`) : "Edificio " + k;
+}
+const EDIFICIOS = Object.keys(CONT).map(k => ({ key: k, nombre: nombreDe(k) })).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+
+// ---------- Estado ----------
+const KEY = "entradasMarcadas";
+let marcas = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } })();
+const guardar = () => { try { localStorage.setItem(KEY, JSON.stringify(marcas)); } catch (e) { $("liAviso").textContent = "No pude guardar en el teléfono: copia el resultado antes de cerrar."; } };
+let sel = EDIFICIOS[0].key;                                  // edificio elegido
+let pend = null;                                             // punto en edición: { px, py, origen, prec, id? }
+let gps = null, watchId = null;
+const V = { cx: PLANO.ax, cy: PLANO.ay, z: 1, w: 0, h: 0 };
+
+// ---------- Geometría ----------
+function nearestOnPoly(q, poly) {                            // punto más cercano del borde y distancia (0 si está adentro)
+  let best = { d: Infinity, x: 0, y: 0 }, inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [x1, y1] = poly[j], [x2, y2] = poly[i], dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
+    if ((y1 > q.y) !== (y2 > q.y) && q.x < (x2 - x1) * (q.y - y1) / (y2 - y1) + x1) inside = !inside;
+    const t = L2 ? Math.max(0, Math.min(1, ((q.x - x1) * dx + (q.y - y1) * dy) / L2)) : 0;
+    const x = x1 + t * dx, y = y1 + t * dy, d = Math.hypot(q.x - x, q.y - y);
+    if (d < best.d) best = { d, x, y };
+  }
+  return { ...best, inside };
+}
+const AUTO_M = 20, PEGAR_M = 8;                              // detecta el edificio a ≤ 20 m; pega la puerta al borde a ≤ 8 m
+function interpretar(px, py) {                               // elige edificio y ajusta el punto al borde
+  const q = fromPlan(px, py); let mejor = null;
+  for (const k of Object.keys(AREAS)) { const r = nearestOnPoly(q, AREAS[k]); if (!mejor || r.d < mejor.d) mejor = { k, ...r }; }
+  if (mejor && mejor.d <= AUTO_M) {
+    const pega = mejor.d <= PEGAR_M && !mejor.inside ? toPlan(mejor.x, mejor.y) : null;
+    return { key: mejor.k, px: pega ? pega.px : px, py: pega ? pega.py : py, pegada: !!pega, d: mejor.d };
+  }
+  return { key: null, px, py, pegada: false, d: mejor ? mejor.d : null };
+}
+
+// ---------- Mapa ----------
+const MAPA_VB = { x: 300, y: 60, w: 1000, h: 860 };
+const img = {}; const tema = () => document.documentElement.dataset.tema === "claro" ? "claro" : "oscuro";
+function cargar(t) { if (t in img) return; img[t] = null; const i = new Image(); i.onload = () => { img[t] = i; dibujar(); }; i.src = `assets/img/mapa-${t}.png`; }
+const toScr = (px, py) => [V.w / 2 + (px - V.cx) * V.z, V.h / 2 + (py - V.cy) * V.z];
+const fromScr = (sx, sy) => ({ px: V.cx + (sx - V.w / 2) / V.z, py: V.cy + (sy - V.h / 2) / V.z });
+const colorAcc = a => a === true ? "var(--si)" : a === false ? "var(--no)" : "#9A94A6";
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
+function dibujar() {
+  const c = $("mapa"), r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if (!r.width) return;
+  if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
+  const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); V.w = r.width; V.h = r.height;
+  const t = tema(); cargar(t);
+  g.fillStyle = cssVar("--bg"); g.fillRect(0, 0, V.w, V.h);
+  if (img[t]) g.drawImage(img[t], (MAPA_VB.x - V.cx) * V.z + V.w / 2, (MAPA_VB.y - V.cy) * V.z + V.h / 2, MAPA_VB.w * V.z, MAPA_VB.h * V.z);
+  const ruta = cssVar("--ruta"), fg = cssVar("--fg"), bg = cssVar("--bg"), si = cssVar("--si"), no = cssVar("--no");
+  g.lineJoin = "round"; g.lineCap = "round";
+  for (const k of Object.keys(CONT)) {                       // contornos: el elegido resaltado
+    const on = k === sel; g.beginPath();
+    CONT[k].forEach(([px, py], i) => { const [x, y] = toScr(px, py); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath();
+    if (on) { g.fillStyle = ruta + "30"; g.fill(); }
+    g.strokeStyle = on ? ruta : fg + "33"; g.lineWidth = on ? 2.5 : 1; g.stroke();
+  }
+  marcas.forEach((m, i) => {                                 // entradas ya marcadas
+    const [x, y] = toScr(m.px, m.py), col = m.acc === true ? si : m.acc === false ? no : "#9A94A6";
+    g.fillStyle = col; g.strokeStyle = bg; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = "#fff"; g.font = "700 11px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(i + 1), x, y + 0.5);
+  });
+  if (gps) {                                                 // tu ubicación
+    const p = latLngAPx(gps), [x, y] = toScr(p.px, p.py);
+    g.fillStyle = "#5B8CFF30"; g.beginPath(); g.arc(x, y, Math.max(6, gps.acc / PLANO.mpp * V.z), 0, 7); g.fill();
+    g.fillStyle = "#5B8CFF"; g.strokeStyle = "#fff"; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 8, 0, 7); g.fill(); g.stroke();
+  }
+  if (pend) {                                                // punto en edición: mira
+    const [x, y] = toScr(pend.px, pend.py);
+    g.strokeStyle = fg; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 14, 0, 7); g.stroke();
+    g.strokeStyle = ruta; g.lineWidth = 2; g.beginPath(); g.moveTo(x - 22, y); g.lineTo(x - 8, y); g.moveTo(x + 8, y); g.lineTo(x + 22, y); g.moveTo(x, y - 22); g.lineTo(x, y - 8); g.moveTo(x, y + 8); g.lineTo(x, y + 22); g.stroke();
+  }
+}
+function enfocar(key) {                                      // centra y acerca el edificio
+  const xs = CONT[key].map(p => p[0]), ys = CONT[key].map(p => p[1]);
+  V.cx = (Math.min(...xs) + Math.max(...xs)) / 2; V.cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const ancho = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 40);
+  V.z = Math.max(0.5, Math.min(4, Math.min(V.w, V.h) * 0.5 / ancho * 1.2)); dibujar();
+}
+const zoomEn = (sx, sy, z2) => { const a = fromScr(sx, sy); V.z = Math.max(0.3, Math.min(6, z2)); V.cx = a.px - (sx - V.w / 2) / V.z; V.cy = a.py - (sy - V.h / 2) / V.z; };
+
+// gestos: arrastrar, pellizcar, rueda y toque
+const ptrs = new Map(); let gest = null; const mapa = $("mapa");
+const rel = e => { const r = mapa.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+mapa.onpointerdown = e => { mapa.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, rel(e)); gest = { t: Date.now(), moved: 0, d0: null, z0: V.z }; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; gest.d0 = Math.hypot(a.x - b.x, a.y - b.y); } };
+mapa.onpointermove = e => {
+  if (!ptrs.has(e.pointerId)) return; const prev = ptrs.get(e.pointerId), cur = rel(e); ptrs.set(e.pointerId, cur);
+  gest.moved += Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y);
+  if (ptrs.size === 2 && gest.d0) { const [a, b] = [...ptrs.values()]; zoomEn((a.x + b.x) / 2, (a.y + b.y) / 2, gest.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gest.d0); }
+  else if (ptrs.size === 1) { V.cx -= (cur.x - prev.x) / V.z; V.cy -= (cur.y - prev.y) / V.z; }
+  dibujar();
+};
+const fin = e => { const tap = ptrs.size === 1 && gest && gest.moved < 8 && Date.now() - gest.t < 500; const p = ptrs.get(e.pointerId); ptrs.delete(e.pointerId); if (tap && e.type === "pointerup" && p) tocar(p.x, p.y); };
+mapa.onpointerup = fin; mapa.onpointercancel = fin;
+mapa.onwheel = e => { e.preventDefault(); const p = rel(e); zoomEn(p.x, p.y, V.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2)); dibujar(); };
+$("zIn").onclick = () => { zoomEn(V.w / 2, V.h / 2, V.z * 1.4); dibujar(); };
+$("zOut").onclick = () => { zoomEn(V.w / 2, V.h / 2, V.z / 1.4); dibujar(); };
+
+// ---------- Marcar ----------
+function tocar(sx, sy) {
+  if (!$("hojaEd").hidden || !$("hojaLista").hidden) return;
+  for (let i = 0; i < marcas.length; i++) {                  // ¿tocó una entrada ya marcada? -> editarla
+    const [x, y] = toScr(marcas[i].px, marcas[i].py); if (Math.hypot(x - sx, y - sy) <= 24) return abrirEditor({ ...marcas[i], id: i });
+  }
+  const p = fromScr(sx, sy), r = interpretar(p.px, p.py);
+  abrirEditor({ px: r.px, py: r.py, origen: "mapa", key: r.key || sel, pegada: r.pegada, sinEdificio: !r.key });
+}
+function abrirEditor(m) {
+  pend = m; $("edTitulo").textContent = m.id != null ? "Editar entrada " + (m.id + 1) : "Nueva entrada";
+  $("edEdif").innerHTML = EDIFICIOS.map(e => `<option value="${esc(e.key)}">${esc(e.nombre)}</option>`).join("");
+  $("edEdif").value = m.key || sel; $("edPunto").value = m.punto || "";
+  document.querySelector(`input[name=acc][value=${m.acc === true ? "si" : m.acc === false ? "no" : "nose"}]`).checked = true;
+  marcarOpciones(); $("edBorrar").hidden = m.id == null;
+  let a = ""; if (m.sinEdificio) a = "Quedó lejos de todo edificio: elige el correcto en la lista."; else if (m.origen === "gps" && m.prec > 15) a = `Precisión baja (±${Math.round(m.prec)} m). Mejor márcala tocando el plano.`;
+  else if (m.pegada) a = "La puerta se pegó al borde del edificio.";
+  $("edAviso").textContent = a; $("hojaEd").hidden = false; sel = $("edEdif").value; refrescarSelect(); dibujar();
+}
+function marcarOpciones() {                                  // (sin :has(), para teléfonos antiguos)
+  document.querySelectorAll(".opciones label").forEach(l => l.classList.toggle("sel", l.querySelector("input").checked));
+}
+document.querySelectorAll(".opciones input").forEach(i => {
+  i.onchange = marcarOpciones;
+  i.onfocus = () => i.parentElement.classList.add("foco"); i.onblur = () => i.parentElement.classList.remove("foco");
+});
+const cerrarEditor = () => { pend = null; $("hojaEd").hidden = true; dibujar(); };
+$("edEdif").onchange = () => { sel = $("edEdif").value; refrescarSelect(); dibujar(); };
+$("edCancelar").onclick = cerrarEditor;
+$("edGuardar").onclick = () => {
+  const acc = document.querySelector("input[name=acc]:checked").value, reg = {
+    key: $("edEdif").value, punto: $("edPunto").value.trim(), px: pend.px, py: pend.py,
+    acc: acc === "si" ? true : acc === "no" ? false : null, origen: pend.origen || "mapa", prec: pend.prec || null,
+  };
+  if (pend.id != null) marcas[pend.id] = reg; else marcas.push(reg);
+  sel = reg.key; guardar(); cerrarEditor(); refrescarSelect(); resumen("Entrada guardada.");
+};
+$("edBorrar").onclick = () => { if (pend && pend.id != null && confirm("¿Borrar esta entrada?")) { marcas.splice(pend.id, 1); guardar(); cerrarEditor(); refrescarSelect(); } };
+
+// ---------- Selector de edificio ----------
+function refrescarSelect() {
+  const n = k => marcas.filter(m => m.key === k).length;
+  $("selEdif").innerHTML = EDIFICIOS.map(e => `<option value="${esc(e.key)}">${n(e.key) ? "✓ " : ""}${esc(e.nombre)}${n(e.key) ? " · " + n(e.key) : ""}</option>`).join("");
+  $("selEdif").value = sel; $("nTotal").textContent = marcas.length;
+}
+$("selEdif").onchange = () => { sel = $("selEdif").value; enfocar(sel); };
+function resumen(t) { $("ayuda").innerHTML = `<b>${esc(t)}</b> ${marcas.length} entradas en ${new Set(marcas.map(m => m.key)).size} de ${EDIFICIOS.length} edificios.`; }
+
+// ---------- Mi ubicación ----------
+$("btnGps").onclick = () => {
+  if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; gps = null; $("btnGps").classList.remove("on"); $("btnGps").setAttribute("aria-pressed", "false"); $("acciones").hidden = true; return dibujar(); }
+  if (!navigator.geolocation) return resumen("Este navegador no tiene GPS.");
+  $("btnGps").classList.add("on"); $("btnGps").setAttribute("aria-pressed", "true"); $("acciones").hidden = false;
+  watchId = navigator.geolocation.watchPosition(p => {
+    const primera = !gps; gps = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
+    if (primera) { const q = latLngAPx(gps); V.cx = q.px; V.cy = q.py; V.z = Math.max(V.z, 1.5); }
+    $("btnAqui").textContent = `Marcar donde estoy (±${Math.round(gps.acc)} m)`; dibujar();
+  }, err => { resumen(err.code === 1 ? "Permiso de ubicación denegado." : "No pude obtener tu ubicación."); }, { enableHighAccuracy: true, maximumAge: 1000 });
+};
+$("btnAqui").onclick = () => { if (!gps) return; const q = latLngAPx(gps), r = interpretar(q.px, q.py); abrirEditor({ px: q.px, py: q.py, origen: "gps", prec: gps.acc, key: r.key || sel, sinEdificio: !r.key }); };
+
+// ---------- Lista y exportación ----------
+const colorTxt = a => a === true ? "var(--si)" : a === false ? "var(--no)" : "#9A94A6";
+function exportar() {
+  return {
+    proyecto: "Brújula USM", archivo: "entradas", generado: new Date().toISOString(),
+    nota: "Una fila por puerta. «edificio» es la clave del contorno en contornos.js; «destinos» son los destinos de la app que usan ese edificio. lat/lng salen de px/py con la calibración del plano.",
+    calibracion: { origen: ORIGIN, mpp: PLANO.mpp, rot: PLANO.rot, ax: PLANO.ax, ay: PLANO.ay },
+    entradas: marcas.map(m => { const ll = pxALatLng(m.px, m.py); return {
+      edificio: m.key, nombre: nombreDe(m.key), destinos: destinosDe(m.key), punto: m.punto,
+      lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6), px: +m.px.toFixed(1), py: +m.py.toFixed(1),
+      accesible: m.acc, origen: m.origen, precision_m: m.prec ? Math.round(m.prec) : null }; }),
+  };
+}
+function abrirLista() {
+  const por = k => marcas.filter(m => m.key === k).length, hechos = EDIFICIOS.filter(e => por(e.key));
+  $("progreso").innerHTML = `<b>${marcas.length}</b> entradas en <b>${hechos.length}</b> de ${EDIFICIOS.length} edificios.`;
+  const faltan = EDIFICIOS.filter(e => !por(e.key));
+  $("faltan").innerHTML = faltan.length ? '<span class="progreso">Faltan:</span>' + faltan.map(e => `<button class="chip" data-k="${esc(e.key)}">${esc(e.nombre.replace(/^Edificio /, ""))}</button>`).join("") : '<span class="progreso">¡Están todos los edificios!</span>';
+  $("lista").innerHTML = marcas.map((m, i) => `<button class="item" data-i="${i}"><span class="pto" style="background:${colorTxt(m.acc)}"></span><span class="t"><b>${i + 1}. ${esc(nombreDe(m.key))}</b><small>${esc(m.punto || "sin descripción")} · ${m.acc === true ? "accesible" : m.acc === false ? "con escalera" : "accesibilidad sin confirmar"}</small></span></button>`).join("");
+  $("salida").value = JSON.stringify(exportar(), null, 2); $("liAviso").textContent = ""; $("hojaLista").hidden = false;
+}
+$("btnLista").onclick = abrirLista; $("liCerrar").onclick = () => { $("hojaLista").hidden = true; };
+$("faltan").onclick = e => { const b = e.target.closest("[data-k]"); if (b) { sel = b.dataset.k; $("hojaLista").hidden = true; refrescarSelect(); enfocar(sel); } };
+$("lista").onclick = e => { const b = e.target.closest("[data-i]"); if (b) { const i = +b.dataset.i; $("hojaLista").hidden = true; abrirEditor({ ...marcas[i], id: i }); const q = marcas[i]; V.cx = q.px; V.cy = q.py; V.z = Math.max(V.z, 2); dibujar(); } };
+$("btnCopiar").onclick = async () => {
+  const t = $("salida").value;
+  try { await navigator.clipboard.writeText(t); $("liAviso").textContent = "Copiado. Pégalo en el chat."; }
+  catch (e) { $("salida").focus(); $("salida").select(); $("liAviso").textContent = "Selecciónalo y cópialo a mano."; }
+};
+$("btnDescargar").onclick = () => {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([$("salida").value], { type: "application/json" })); a.download = "entradas.json"; a.click();
+};
+if (navigator.share) { $("btnCompartir").hidden = false; $("btnCompartir").onclick = () => navigator.share({ title: "Entradas de edificios", text: $("salida").value }).catch(() => {}); }
+$("btnVaciar").onclick = () => { if (marcas.length && confirm(`¿Borrar las ${marcas.length} entradas marcadas? No se puede deshacer.`)) { marcas = []; guardar(); refrescarSelect(); abrirLista(); dibujar(); } };
+
+// ---------- Arranque ----------
+window.addEventListener("resize", dibujar);
+refrescarSelect(); resumen("Listo."); $("ayuda").innerHTML = "<b>Toca la puerta</b> del edificio en el plano. Acércate con los dedos para ser más preciso.";
+V.w = $("mapa").getBoundingClientRect().width; V.h = $("mapa").getBoundingClientRect().height; enfocar(sel);
+</script>
+</body>
+</html>

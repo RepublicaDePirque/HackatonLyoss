@@ -57,6 +57,15 @@ Se pueden combinar: `/?debug&tema=claro`.
 - **El color del resplandor va de azul a rojo pasando por morado** (el diseño iba de azul a naranja). Cada luz es un degradado que llega a transparente en el borde de su caja, sin `filter: blur`: el desenfoque dejaba ver la caja cuadrada en algunos móviles. Además las luces se difuminan con una máscara cerca del borde de arriba y de abajo y su centro entra 56 px en la pantalla: en Safari el borde de la página no es el de la pantalla (hay barras del navegador y del sistema) y cortar la luz en seco, justo donde es más fuerte, dibujaba un rectángulo. La barra fina queda fuera de la máscara, en el borde. El resplandor, la barra y la flecha giran con un suavizado por tiempo (`senal` en `index.html`) por el camino más corto, así que 359° → 1° no da una vuelta entera ni se arrastra con cada lectura del GPS.
 - **Calibración del plano**: la app usa 0,4601 m/px y 155,3°; `data/georef.json` da 0,4666 m/px y 154,8°. Las dos coinciden a 1 a 6 m (máximo en los bordes del plano), así que no hay desfase relevante. Si se unifican, hay que cambiar también `tools/generar-grafo.py`.
 
+## Herramienta temporal: marcar entradas
+
+`marcar-entradas.html` (en Pages: `/marcar-entradas.html`) sirve para levantar la puerta de cada edificio y exportar un `entradas.json`. No es parte de la app ni de su caché; se borra cuando las entradas estén integradas.
+
+- Elige el edificio arriba (o toca cerca de uno: lo detecta a 20 m y pega la puerta a su borde si está a 8 m o menos), toca la puerta en el plano y guarda con una descripción y si se puede entrar sin escaleras (sí, no, no sé).
+- «⌖» muestra tu ubicación y «Marcar donde estoy» marca con el GPS (avisa si la precisión es peor que ±15 m; tocar el plano es más preciso).
+- Se guarda solo en el teléfono mientras se trabaja. «Lista» muestra el avance, los edificios que faltan y el resultado para copiar, descargar o compartir.
+- Tocar una marca la edita o la borra. Admite varias puertas por edificio.
+
 ## Supuestos en los contornos
 
 - **Comedores** es la parte norte del bloque D (OpenStreetMap lo dibuja separado; el plano lo trae dentro del cuadro de D). Su contorno sale de OSM recortado al cuadro de D. Elegir «Edificio D» también se cumple al entrar a Comedores, porque está dentro de D.
