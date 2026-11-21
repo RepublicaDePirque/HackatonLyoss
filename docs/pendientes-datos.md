@@ -41,7 +41,7 @@ Pendientes de sacar en terreno, destinos de la demo primero:
 
 - **Pistas**: las de `data/edificios.json` son borradores escritos mirando el plano. Revisar que describan lo que se ve al caminar.
 - **Qué hay en cada edificio** (`que_hay`): viene de la rama `wip/brujula`, sin verificar.
-- **Letra de la cafetería Vivendum**: OpenStreetMap dice «Q» y el plano oficial «O». Hoy se muestra sin letra.
+- **Letra de la cafetería Vivendum**: OpenStreetMap dice «Q» y el plano oficial «O». El equipo decidió mostrarla sin letra (`data/edificios.json` no le asigna una), pero la app la muestra con «Q», porque la letra está fija en `tools/generar-datos.py` y no sale de `edificios.json`. Falta alinear el generador con esa decisión o cambiar la decisión.
 - **Punto del edificio P**: es el centro de P y P2 juntos; queda unos 20 m corrido hacia el P2. Tomar el punto de la entrada.
 - **Puertas**: todas las coordenadas marcan el centro del edificio, no la puerta. Tomar la puerta de los ocho destinos de la demo.
 - **Puntos de interés de OpenStreetMap** (32): no se comprobó que sigan existiendo.

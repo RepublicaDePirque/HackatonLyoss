@@ -56,7 +56,7 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 - **Comedores** es la parte norte del bloque D (OpenStreetMap lo dibuja separado; el plano lo trae dentro del cuadro de D). Su contorno sale de OSM recortado al cuadro de D. Elegir «Edificio D» también se cumple al entrar a Comedores, porque está dentro de D.
 - **Innovación Tecnológica** se asignó al edificio rotulado «Edificio Bari» en el plano (borde izquierdo): tiene la misma forma que el polígono de OSM y queda en el mismo lugar, pero es una inferencia, **por confirmar**.
-- **Cafetería Vivendum**: su contorno es el edificio rotulado «O» en el plano, pero la app la muestra con la letra «Q» de OpenStreetMap (`datos.js`). Cuál es la correcta está por confirmar (ver `docs/pendientes-datos.md`).
+- **Cafetería Vivendum**: su contorno es el edificio rotulado «O» en el plano. El equipo decidió mostrarla sin letra, pero la app la muestra como «Q» («Edificio Q» en el detalle), porque esa letra está fija en `tools/generar-datos.py` y no sale de `data/edificios.json`. Falta alinear el generador (ver `docs/pendientes-datos.md`).
 
 ## Contenido de ejemplo que hay que reemplazar
 
