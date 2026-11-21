@@ -1,6 +1,6 @@
 # Eventos, llegada según el lado y tarjetas del trayecto
 
-Diseño acordado con el usuario el 21 de noviembre de 2026 (rama `diseno/eventos-y-trayecto`). Complementa `docs/PRD.md`; las filas del PRD se actualizan aparte.
+Diseño acordado con el usuario el 21 de noviembre de 2026 (rama `diseno/eventos-y-trayecto`). Complementa `docs/PRD.md`.
 
 ## Decisiones
 
