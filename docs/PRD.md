@@ -90,7 +90,7 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 ## 7. Restricciones conocidas
 
 - En iPhone, la brújula del navegador exige un toque del usuario para dar permiso y requiere HTTPS.
-- El GPS del teléfono ronda los 5 m a cielo abierto y empeora entre edificios; la llegada se da al estar adentro del cuadro del edificio, al menos 3 m bajo su borde y menos en zonas angostas (`ARRIVE_ADENTRO` en `index.html`); con el error del GPS, «Ya llegué» queda como respaldo.
+- El GPS del teléfono ronda los 5 m a cielo abierto y empeora entre edificios; la llegada se da al estar adentro del cuadro del edificio, a una profundidad proporcional al tamaño de cada zona (60 % de lo más adentro que se puede estar, entre 1,5 y 4,5 m; `ADENTRO_*` en `index.html`); con el error del GPS, «Ya llegué» queda como respaldo.
 - El navegador no detecta zonas en segundo plano: los datos curiosos solo aparecen con la página abierta.
 - La señal directa puede apuntar a través de un edificio o un desnivel; por eso la pista textual es parte del core.
 
