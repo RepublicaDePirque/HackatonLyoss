@@ -29,6 +29,13 @@ SEEDS = {
 SPACE_SEEDS = {
   "patio_central": ((870, 660), (845, 586, 915, 735)),
   "patio_canon": ((762, 640), None),
+  "ceibos": ((1005, 775), (960, 738, 1055, 812)),
+  "magnolios": ((690, 500), (655, 470, 722, 572)),
+  "piscina": ((775, 515), (761, 502, 889, 564)),
+}
+# Espacios sin línea negra que los cierre: polígono trazado a mano (px del plano).
+SPACE_POLYS = {
+  "patio_calistenia": [(632, 552), (650, 548), (668, 556), (680, 572), (680, 700), (650, 703), (618, 700), (616, 676), (630, 672), (630, 570)],
 }
 # Puntos de referencia reales: (px, py) del plano -> (lat, lng)
 lat0, lng0 = -33.034172, -71.595702
@@ -82,6 +89,7 @@ def main():
         poly, area = contorno(lab, s, h, w, clip)
         print(f"{k:14s} área={area:6d} px  ", f"{len(poly)} vértices" if poly else "DESCARTADO")
         if poly: spaces[k] = poly
+    for k, poly in SPACE_POLYS.items(): spaces[k] = poly
     img = Image.open(PLANO).convert("RGB"); d = ImageDraw.Draw(img)
     for k, p in polys.items(): d.line(p + [p[0]], fill=(255, 0, 0), width=2)
     for k, p in spaces.items(): d.line(p + [p[0]], fill=(0, 160, 0), width=2)
