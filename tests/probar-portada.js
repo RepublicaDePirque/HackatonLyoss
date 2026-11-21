@@ -19,7 +19,8 @@ assert(/<main id="vPortada" class="vista"/.test(html), "falta la pantalla vPorta
 assert(/<button id="btnPortada"[^>]*aria-label=/.test(html), "el botón de la portada debe tener nombre accesible");
 assert(/const VISTAS = \["portada",/.test(html), "VISTAS debe incluir «portada»");
 assert(html.includes('history.replaceState({ v: "portada" }'), "el historial debe partir en la portada");
-assert(html.includes('$("btnPortada").onclick = () => ir("permiso")'), "tocar la portada debe llevar a la bienvenida");
+assert(/\$\("btnPortada"\)\.onclick = \(\) => \{[\s\S]*?classList\.add\("saliendo"\)[\s\S]*?ir\("permiso"\)/.test(html), "tocar la portada debe desvanecerla y luego llevar a la bienvenida");
+assert(/#vPortada\.saliendo \{[^}]*opacity:0/.test(html), "falta el desvanecimiento de la portada (.saliendo)");
 // el arranque normal muestra la portada; ?debug, ?demo y #mapa entran directo
 assert(/else ir\("portada", false\);\s*<\/script>/.test(html), "sin parámetros la app debe partir en la portada");
 assert(/else if \(DEBUG \|\| location\.hash === "#mapa"\)/.test(html), "?debug y #mapa deben entrar sin pasar por la portada");
