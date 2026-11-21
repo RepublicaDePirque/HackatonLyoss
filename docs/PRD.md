@@ -95,8 +95,8 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 
 ### Límites de «Evitar escaleras»
 
-- Solo conoce las escaleras marcadas en OpenStreetMap. Si falta una en esos datos, la app la trata como camino plano.
-- No considera pendientes, superficies, anchos ni cuál es la puerta de cada edificio. El aviso «No considera pendientes» va siempre en pantalla.
+- Solo conoce las escaleras marcadas en OpenStreetMap y las puertas y pasos por dentro que el equipo marcó «con escalera». Si falta una en esos datos, la app la trata como camino plano.
+- No considera pendientes, superficies ni anchos. El aviso «No considera pendientes» va siempre en pantalla.
 - Sin validar en terreno. En los datos actuales, 78 de 420 pares de destinos no tienen camino sin escaleras; entre ellos, todo lo que pasa por el Acceso Av. España.
 
 ### Límites del modo voz
@@ -115,7 +115,7 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 
 ## 9. Supuestos y pendientes
 
-- Datos del campus: las coordenadas salen de OpenStreetMap contrastado con el plano oficial; no se midieron en terreno y marcan el centro del edificio, no su puerta. En curso: el equipo marca en terreno las puertas de cada edificio (`marcar-entradas.html`) para que la ruta y la llegada apunten a la entrada más cercana a la persona, en vez del centro del edificio.
+- Datos del campus: las coordenadas salen de OpenStreetMap contrastado con el plano oficial; no se midieron en terreno y marcan el centro del edificio, no su puerta. Puertas: hay 41 marcadas en 20 edificios y la señal y la ruta apuntan a la de menor costo desde donde está la persona; la llegada sigue midiéndose contra la zona del edificio. Son aproximadas: se marcaron a mano sobre el plano y falta afinarlas en terreno (detalle en `docs/implementacion.md`).
 - Federación: en pasaje Valdés, frente a la portería del M (confirmado por el equipo).
 - Estimado o sin verificar: las pistas (borradores redactados desde el plano) y el contenido de cada edificio (aportado por el equipo).
 - Fotos con licencia libre solo para A, F y B (Wikimedia Commons; las de A y B con la letra inferida). C, M, P, Biblioteca, Comedores y Federación: pendientes de sacar en terreno.
