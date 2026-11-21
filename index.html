@@ -1628,6 +1628,13 @@ function renderAhora() {
   else if (state.vista === "buscar") { const t = Date.now(); if (t - ultimoBuscar > 1000) { ultimoBuscar = t; actualizarDistBuscar(); } }
 }
 window.addEventListener("resize", render);
+// El alto del panel de abajo cambia cuando cambian la pista o la puerta (después de medirlo en renderBrujula):
+// se vuelve a medir solo, para que las tarjetas flotantes no se monten encima.
+if (window.ResizeObserver) new ResizeObserver(() => {
+  const h = $("base").offsetHeight;
+  $("vBrujula").style.setProperty("--base-h", h + "px");
+  if (typeof mapV !== "undefined") mapV.baseH = h;
+}).observe($("base"));
 
 // ---------- Arranque ----------
 if (params.has("demo")) iniciarDemo();
