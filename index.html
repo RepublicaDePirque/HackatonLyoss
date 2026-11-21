@@ -3,111 +3,405 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e1116">
+<meta name="theme-color" content="#15131F">
+<meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Brújula USM">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="fuentes.css">
 <title>Brújula USM</title>
+<script>
+// Tema claro/oscuro según el teléfono (?tema=claro u ?tema=oscuro lo fuerza). Va en el <head> para evitar el parpadeo.
+(function () {
+  var f = new URLSearchParams(location.search).get("tema"), mq = matchMedia("(prefers-color-scheme: light)");
+  var poner = function () {
+    var t = f === "claro" || f === "oscuro" ? f : (mq.matches ? "claro" : "oscuro");
+    document.documentElement.dataset.tema = t;
+    var m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t === "claro" ? "#F6F1EA" : "#15131F";
+  };
+  poner(); if (mq.addEventListener) mq.addEventListener("change", poner);
+})();
+</script>
 <style>
-  :root { --bg:#0e1116; --fg:#e8edf3; --mut:#8a94a3; --acc:#ffd23f; --line:#2a313c; }
+  /* ---------- Paleta «confort» (docs/PRD.md) ---------- */
+  :root, :root[data-tema="oscuro"] {
+    color-scheme: dark;
+    --bg:#15131F; --fg:#F5F1EA; --muted:#B3ADBF; --sub:#DDD7E6;
+    --surface:rgba(40,36,56,.62); --surface-fuerte:rgba(40,36,56,.88); --hoja:#221F30;
+    --line:rgba(255,255,255,.10); --acento:#FFB877; --badge:#C9B8FF; --badge-bg:rgba(201,184,255,.12); --coral:#FF8A6B;
+    --velo:radial-gradient(closest-side, rgba(21,19,31,.66), rgba(21,19,31,.36) 55%, rgba(21,19,31,0));
+    --ruta:#FF8A3D; --yo:#8FA6FF;
+  }
+  :root[data-tema="claro"] {
+    color-scheme: light;
+    --bg:#F6F1EA; --fg:#1D1A26; --muted:#5E5869; --sub:#3A3446;
+    --surface:rgba(255,255,255,.68); --surface-fuerte:rgba(255,255,255,.90); --hoja:#FFFFFF;
+    --line:rgba(29,26,38,.10); --acento:#B8330F; --badge:#4B3BA8; --badge-bg:rgba(91,69,201,.10); --coral:#B8330F;
+    --velo:radial-gradient(closest-side, rgba(246,241,234,.72), rgba(246,241,234,.40) 55%, rgba(246,241,234,0));
+    --ruta:#D2531A; --yo:#5B6FD6;
+  }
+  :root { --ease:cubic-bezier(.22,1,.36,1); }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { margin:0; background:var(--bg); color:var(--fg); }
-  body { font:17px/1.4 -apple-system,system-ui,sans-serif; -webkit-user-select:none; user-select:none; -webkit-text-size-adjust:100%; }
-  main { min-height:100dvh; display:flex; flex-direction:column; gap:10px; max-width:520px; margin-inline:auto;
-         padding:calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + 16px); }
-  select, button { font:inherit; font-size:18px; padding:14px 16px; border-radius:14px; border:1px solid var(--line); background:#171c24; color:var(--fg); width:100%; min-height:52px; }
-  select { appearance:none; -webkit-appearance:none; background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%); background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%; background-size:6px 6px; background-repeat:no-repeat; }
-  button.big { background:var(--acc); color:#000; border-color:var(--acc); font-weight:700; }
-  button.on { background:var(--acc); color:#000; border-color:var(--acc); }
-  canvas { width:100%; display:block; border-radius:10px; background:#12161d; border:1px solid var(--line); }
-  #dial { width:min(86vw, 46dvh); aspect-ratio:1; margin:6px auto 0; background:#000; border-radius:50%; border:none; }
-  #info { text-align:center; }
-  #dir { font-size:40px; font-weight:800; color:var(--acc); line-height:1.1; }
-  #dist { font-size:24px; margin-top:4px; }
-  .mut { color:var(--mut); font-size:14px; }
-  #sub { margin-top:4px; }
-  label { display:block; margin:10px 0 4px; }
-  input[type=range] { width:100%; }
-  #warn { color:#ff8a8a; font-size:15px; min-height:20px; text-align:center; }
-  #hint { text-align:center; margin-top:auto; }
-  #simBox, #hint.dbg { display:none; }
-  .debug #simBox { display:block; }
+  html, body { margin:0; height:100%; background:var(--bg); }
+  body { font-family:'Instrument Sans', system-ui, -apple-system, sans-serif; color:var(--fg); -webkit-text-size-adjust:100%; }
+  h1, .titulo { font-family:'Chakra Petch', 'Instrument Sans', system-ui, sans-serif; font-weight:700; }
+  button, input { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  a { color:inherit; }
+  :focus-visible { outline:3px solid #FFB877; outline-offset:3px; }
+  [hidden] { display:none !important; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 
-  /* pestañas Brújula / Mapa */
-  #tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  #tabs button { min-height:46px; padding:10px; font-size:16px; font-weight:600; }
-  section { display:flex; flex-direction:column; gap:10px; flex:1; min-height:0; }
-  #vMapa { display:none; }
-  .tabMapa #vMapa { display:flex; }
-  .tabMapa #vBrujula { display:none; }
-  #map { flex:1 1 0; min-height:300px; aspect-ratio:auto; touch-action:none; cursor:grab; background:#0b0e13; }
-  #mapCtl { display:grid; grid-template-columns:1fr 1fr 2fr 2fr; gap:8px; }
-  #mapCtl button { min-height:44px; padding:8px; font-size:16px; }
-  #mapInfo { text-align:center; }
-  #mapInfo b { color:var(--acc); }
+  #app { position:relative; height:100dvh; max-width:480px; margin:0 auto; overflow:hidden; background:var(--bg); color:var(--fg); transition:background 900ms ease, color 900ms ease; }
+  .vista { position:absolute; inset:0; display:none; flex-direction:column; }
+  .vista.activa { display:flex; }
+  .vidrio { background:var(--surface); backdrop-filter:blur(22px) saturate(1.4); -webkit-backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--line); }
+  .muted { color:var(--muted); }
+  .btn-principal { height:56px; border:0; border-radius:18px; background:var(--fg); color:var(--bg); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:18px; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; text-decoration:none; }
+  .btn-texto { min-height:44px; border:0; background:transparent; color:var(--muted); font-size:16px; font-weight:500; padding:0 12px; }
+  .icono-btn { width:44px; height:44px; border-radius:22px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--fg); padding:0; }
+  .pad { padding:calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 24px); }
+
+  /* ---------- Permiso ---------- */
+  #vPermiso { gap:24px; }
+  #vPermiso .tel { align-self:center; position:relative; width:150px; height:250px; flex-shrink:0; border-radius:30px; border:2px solid var(--line); overflow:hidden; background:var(--surface); }
+  #vPermiso .tel .mancha { position:absolute; left:64px; top:-90px; width:200px; height:200px; animation:recorre 9s cubic-bezier(.45,0,.55,1) infinite; }
+  #vPermiso .tel .mancha div { width:100%; height:100%; border-radius:50%; background:radial-gradient(circle,#FF8A3D 0%,#B79CFF 30%,transparent 68%); filter:blur(14px); }
+  #vPermiso .tel .cifra { position:absolute; left:0; right:0; top:100px; text-align:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:34px; }
+  #vPermiso .tel .cifra small { font-size:16px; color:var(--muted); }
+  #vPermiso h1 { margin:0; font-size:32px; line-height:1.1; }
+  #vPermiso p { margin:12px 0 0; font-size:17px; line-height:1.5; color:var(--sub); }
+  #vPermiso .nota { display:flex; gap:12px; padding:14px 16px; border-radius:18px; font-size:15px; line-height:1.45; }
+  #vPermiso .acciones { margin-top:auto; display:flex; flex-direction:column; gap:6px; }
+  #permisoError { color:var(--acento); font-weight:600; font-size:15px; line-height:1.4; }
+  #permisoError:empty { display:none; }
+
+  /* ---------- Buscar ---------- */
+  #vBuscar { gap:16px; }
+  #vBuscar h1 { margin:0; font-size:36px; line-height:1.05; }
+  #buscarAqui { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--muted); min-height:20px; }
+  #buscarAqui:empty { display:none; }
+  .campo { display:flex; align-items:center; gap:10px; height:56px; padding:0 6px 0 16px; border-radius:18px; color:var(--muted); }
+  .campo:focus-within { outline:3px solid #FFB877; outline-offset:2px; }
+  .campo input { appearance:none; -webkit-appearance:none; flex:1; min-width:0; height:44px; background:transparent; border:0; outline:0; color:var(--fg); font-size:16px; }
+  .campo input::placeholder { color:inherit; opacity:.85; }
+  #lista { flex:1 1 auto; min-height:0; overflow-y:auto; margin:0 -20px; padding:0 20px 8px; display:flex; flex-direction:column; gap:20px; -webkit-overflow-scrolling:touch; }
+  .seccion { display:flex; flex-direction:column; gap:8px; }
+  .seccion > span { font-size:14px; font-weight:600; color:var(--muted); }
+  .fila { display:flex; align-items:center; gap:14px; width:100%; min-height:60px; padding:8px 14px 8px 8px; border-radius:18px; text-align:left; border:1px solid var(--line); background:var(--surface); }
+  .fila .letra { width:44px; height:44px; border-radius:12px; background:var(--badge-bg); color:var(--badge); display:flex; align-items:center; justify-content:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:19px; flex-shrink:0; }
+  .fila .txt { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+  .fila .txt b { font-size:16px; font-weight:600; }
+  .fila .txt small { font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fila .der { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+  .fila .dist { font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:16px; font-variant-numeric:tabular-nums; }
+  .fila .fotos { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--coral); }
+  .fila .fotos i { width:7px; height:7px; border-radius:4px; background:#FF5C39; }
+  .vacio { display:flex; flex-direction:column; gap:8px; padding:20px; border-radius:20px; }
+  .vacio b { font-family:'Chakra Petch',sans-serif; font-size:20px; }
+  .vacio p { margin:0; font-size:15px; line-height:1.45; color:var(--sub); }
+  .vacio button { align-self:flex-start; height:44px; margin-top:4px; padding:0 18px; border:0; border-radius:22px; background:var(--fg); color:var(--bg); font-size:15px; font-weight:600; }
+  #buscarPie { font-size:14px; line-height:1.4; color:var(--muted); }
+
+  /* ---------- Brújula ---------- */
+  #vBrujula { overflow:hidden; }
+  #map { position:absolute; inset:0; width:100%; height:100%; display:none; touch-action:none; background:var(--bg); }
+  .modo-mapa #map { display:block; }
+  #luz { position:absolute; inset:0; pointer-events:none; }
+  #luz .halo { position:absolute; transition:left 700ms var(--ease), top 700ms var(--ease), width 1400ms var(--ease), height 1400ms var(--ease), margin 1400ms var(--ease), opacity 1400ms var(--ease); }
+  #luz .halo > div { width:100%; height:100%; border-radius:50%; }
+  #luz .barra { position:absolute; border-radius:3px; transition:left 700ms var(--ease), top 700ms var(--ease), width 1400ms var(--ease), height 1400ms var(--ease), opacity 1400ms var(--ease); }
+  .capa { position:absolute; inset:0; display:flex; flex-direction:column; gap:12px; padding:calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px); pointer-events:none; }
+  .capa > * { pointer-events:auto; }
+  .cab { display:flex; align-items:center; gap:10px; }
+  .pill { height:44px; padding:0 16px; border-radius:22px; display:flex; align-items:center; gap:8px; min-width:0; }
+  .pill .de { font-size:13px; color:var(--muted); flex-shrink:0; }
+  .pill .a { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pill .d { font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:15px; color:var(--muted); font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .centro { position:relative; flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; pointer-events:none; }
+  .centro > * { pointer-events:auto; }
+  .modo-mapa #centro > * { display:none !important; }
+  .centro .velo { position:absolute; left:50%; top:46%; width:360px; height:330px; margin:-165px 0 0 -180px; background:var(--velo); pointer-events:none; }
+  .senal { position:relative; height:104px; display:flex; align-items:center; justify-content:center; }
+  #flecha { width:104px; height:104px; display:flex; align-items:center; justify-content:center; transition:transform 900ms var(--ease); }
+  .impreciso { height:32px; padding:0 14px; border-radius:16px; display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; }
+  #cifra { position:relative; display:flex; align-items:baseline; justify-content:center; gap:8px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:88px; line-height:1; font-variant-numeric:tabular-nums; }
+  #cifra small { font-weight:500; font-size:26px; color:var(--muted); }
+  #titulo { position:relative; margin-top:14px; font-size:19px; font-weight:600; }
+  #bajada { position:relative; margin-top:6px; max-width:290px; font-size:15px; line-height:1.45; color:var(--sub); }
+  #alerta { position:relative; margin-top:10px; font-weight:700; font-size:15px; color:var(--acento); }
+  #alerta:empty { display:none; }
+  #btnAbrirMapa { position:relative; margin-top:18px; height:48px; padding:0 22px; border-radius:24px; font-size:15px; font-weight:600; }
+  .base { display:flex; flex-direction:column; gap:12px; }
+  .pista { display:flex; gap:12px; padding:14px 16px; border-radius:18px; }
+  .pista svg { flex-shrink:0; margin-top:1px; color:var(--muted); }
+  .pista .t { display:flex; flex-direction:column; gap:3px; }
+  .pista .t small { font-size:13px; font-weight:600; color:var(--muted); }
+  .pista .t span { font-size:15px; line-height:1.4; }
+  .selector { display:flex; gap:4px; padding:4px; border-radius:26px; }
+  .selector button { flex:1 1 0; height:44px; border:0; border-radius:22px; background:transparent; color:var(--fg); font-size:15px; font-weight:600; transition:background 600ms var(--ease), color 600ms ease; }
+  .selector button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
+  #btnYaLlegue { height:44px; border:0; background:transparent; color:var(--muted); font-size:15px; font-weight:500; }
+
+  /* tarjetas que brotan sobre la misma pantalla */
+  .flota { position:absolute; left:20px; right:20px; bottom:calc(var(--base-h, 270px) + 12px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+  .flota > * { pointer-events:auto; }
+  .tarjeta { padding:16px; border-radius:22px; background:var(--surface-fuerte); backdrop-filter:blur(22px) saturate(1.4); -webkit-backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--line); box-shadow:0 16px 40px rgba(12,10,24,.22); display:flex; flex-direction:column; gap:6px; animation:brota 900ms var(--ease) both; }
+  .tarjeta .fila1 { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:600; color:var(--muted); }
+  .tarjeta .gancho { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:19px; }
+  .tarjeta .cuerpo { font-size:15px; line-height:1.4; color:var(--sub); }
+  .tarjeta .cerrar { width:44px; height:44px; margin:-12px -10px -12px 0; border:0; border-radius:22px; background:transparent; color:var(--muted); display:flex; align-items:center; justify-content:center; }
+  .tarjeta .mas { align-self:flex-start; height:44px; margin:2px 0 -10px -4px; padding:0 4px; border:0; background:transparent; color:var(--acento); font-size:15px; font-weight:600; }
+  .tarjeta.foto { flex-direction:row; gap:14px; align-items:center; padding:12px; }
+  .tarjeta.foto img { width:112px; height:84px; object-fit:cover; border-radius:14px; flex-shrink:0; }
+  .tarjeta.foto .t { display:flex; flex-direction:column; gap:4px; text-align:left; min-width:0; }
+  .tarjeta.foto .t b { font-family:'Chakra Petch',sans-serif; font-size:18px; }
+  .tarjeta.foto .t span { font-size:14px; line-height:1.35; color:var(--sub); }
+  .tarjeta.foto .t small { font-size:12px; color:var(--muted); }
+  #hoja { position:absolute; left:0; right:0; top:150px; bottom:0; padding:14px 24px calc(env(safe-area-inset-bottom) + 28px); border-radius:28px 28px 0 0; background:var(--hoja); box-shadow:0 -20px 50px rgba(12,10,24,.3); display:flex; flex-direction:column; gap:14px; animation:hoja 900ms var(--ease) both; z-index:5; overflow-y:auto; }
+  #hoja .agarre { align-self:center; width:40px; height:5px; border-radius:3px; background:var(--line); }
+  #hoja .et { font-size:14px; font-weight:600; color:var(--muted); }
+  #hoja h2 { margin:0; font-family:'Chakra Petch',sans-serif; font-size:30px; line-height:1.1; }
+  #hoja p { margin:0; font-size:17px; line-height:1.55; color:var(--sub); }
+  #hoja button { margin-top:auto; height:56px; border:0; border-radius:18px; background:var(--fg); color:var(--bg); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:18px; flex-shrink:0; }
+
+  /* controles del mapa */
+  #mapaCtl { position:absolute; right:14px; top:50%; transform:translateY(-50%); display:none; flex-direction:column; gap:8px; z-index:2; }
+  .modo-mapa #mapaCtl { display:flex; }
+  #mapaCtl button { width:44px; height:44px; border-radius:22px; padding:0; font-size:20px; font-weight:600; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--fg); }
+  #mapaCtl button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
+  #mapaCtl .etq { font-size:10px; }
+  #alertaMapa { align-self:center; padding:8px 14px; border-radius:18px; font-weight:700; font-size:14px; color:var(--acento); display:none; }
+  .modo-mapa #alertaMapa.hay { display:block; }
+  .chip-demo { position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 72px); transform:translateX(-50%); z-index:4; height:36px; padding:0 8px 0 14px; border-radius:18px; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; }
+  .chip-demo button { height:28px; border:0; border-radius:14px; background:var(--fg); color:var(--bg); padding:0 12px; font-size:13px; font-weight:600; }
+
+  /* ---------- Llegada ---------- */
+  #vLlegada { background:linear-gradient(162deg,#FF5C39 0%,#FF7A2E 48%,#FFB800 100%); color:#1D1A26; gap:18px; overflow-y:auto; }
+  #vLlegada :focus-visible { outline-color:#1D1A26; }
+  #vLlegada .resp { position:absolute; left:-120px; top:-180px; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle,rgba(255,233,194,.55) 0%,transparent 65%); filter:blur(20px); animation:respira 7s ease-in-out infinite; pointer-events:none; }
+  #vLlegada .bloque { position:relative; display:flex; flex-direction:column; gap:10px; animation:sube 900ms var(--ease) both; }
+  #vLlegada h1 { margin:0; font-size:34px; line-height:1.05; }
+  #vLlegada p { margin:0; font-size:17px; line-height:1.45; font-weight:500; }
+  #vLlegada .visto { width:52px; height:52px; border-radius:26px; background:#1D1A26; color:#FFB877; display:flex; align-items:center; justify-content:center; }
+  #vLlegada figure { position:relative; margin:0; display:flex; flex-direction:column; gap:6px; animation:sube 900ms 150ms var(--ease) both; }
+  #vLlegada figure img { width:100%; max-height:210px; object-fit:cover; border-radius:20px; box-shadow:0 14px 30px rgba(120,30,0,.25); }
+  #vLlegada figcaption { font-size:12px; font-weight:600; }
+  #vLlegada .sinfoto { position:relative; box-sizing:border-box; min-height:150px; padding:20px; border-radius:20px; border:2px dashed rgba(29,26,38,.45); background:rgba(255,255,255,.22); display:flex; flex-direction:column; justify-content:center; gap:6px; animation:sube 900ms 150ms var(--ease) both; }
+  #vLlegada .sinfoto b { font-family:'Chakra Petch',sans-serif; font-size:20px; }
+  #vLlegada .sinfoto span { font-size:15px; line-height:1.4; font-weight:500; }
+  #vLlegada .sabias { position:relative; padding:14px 16px; border-radius:18px; background:rgba(255,255,255,.32); border:1px solid rgba(29,26,38,.10); display:flex; flex-direction:column; gap:4px; animation:sube 900ms 300ms var(--ease) both; }
+  #vLlegada .sabias b { font-size:13px; }
+  #vLlegada .sabias span { font-size:15px; line-height:1.4; font-weight:500; }
+  #vLlegada .pie { position:relative; margin-top:auto; display:flex; flex-direction:column; gap:8px; animation:sube 900ms 450ms var(--ease) both; }
+  #vLlegada .pie > span { font-size:15px; line-height:1.4; font-weight:600; }
+  #vLlegada .btn-os { height:56px; border:0; border-radius:18px; background:#1D1A26; color:#FFE3C4; display:flex; align-items:center; justify-content:center; gap:10px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:18px; width:100%; }
+  #vLlegada .duo { display:flex; gap:8px; }
+  #vLlegada .duo button, #vLlegada .btn-claro { flex:1 1 0; height:44px; border:0; border-radius:22px; background:transparent; color:#1D1A26; font-size:15px; font-weight:600; }
+  #vLlegada .prev { position:relative; flex-grow:1; min-height:220px; border-radius:24px; background:rgba(29,26,38,.82); color:#FFE3C4; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  #vLlegada .prev img { width:100%; height:100%; object-fit:cover; }
+  #llegadaError { position:relative; font-size:14px; font-weight:700; }
+  #llegadaError:empty { display:none; }
+
+  /* ---------- Panel de depuración (?debug) ---------- */
+  #debug { position:absolute; left:8px; bottom:8px; z-index:20; display:none; max-width:230px; padding:8px 10px; border-radius:14px; font-size:12px; gap:6px; flex-direction:column; }
+  .debug #debug { display:flex; }
+  #debug select, #debug button { font-size:12px; padding:4px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface-fuerte); }
+  #debug input[type=range] { width:100%; }
+
+  @keyframes respira { 0%,100% { transform:scale(1) } 50% { transform:scale(1.08) } }
+  @keyframes brota { from { opacity:0; transform:translateY(24px) scale(.97) } to { opacity:1; transform:none } }
+  @keyframes hoja { from { opacity:0; transform:translateY(60px) } to { opacity:1; transform:none } }
+  @keyframes sube { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:none } }
+  @keyframes recorre { 0%,100% { transform:translate(0,0) } 33% { transform:translate(46px,40px) } 66% { transform:translate(-30px,60px) } }
+  @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
-<main>
-<select id="dest" aria-label="Destino"></select>
-<button id="accBtn" aria-pressed="false" style="min-height:44px;padding:8px;font-size:16px">♿ Ruta sin escaleras: NO</button>
-<div id="tabs" role="tablist">
-  <button id="tabBrujula" class="on" role="tab" aria-selected="true">🧭 Brújula</button>
-  <button id="tabMapa" role="tab" aria-selected="false">🗺️ Mapa</button>
-</div>
+<div id="app">
 
-<section id="vBrujula" aria-label="Brújula">
-  <canvas id="dial"></canvas>
-  <div id="info">
-    <div id="dir">—</div>
-    <div id="dist">—</div>
-    <div class="mut" id="sub"></div>
+<!-- ===================== PERMISO (primera vez) ===================== -->
+<main id="vPermiso" class="vista pad" aria-label="Bienvenida">
+  <div class="tel" role="img" aria-label="Un teléfono cuyo borde superior derecho brilla: así se ve la señal">
+    <div class="mancha" aria-hidden="true"><div></div></div>
+    <div class="cifra" aria-hidden="true">120<small> m</small></div>
   </div>
-</section>
-
-<section id="vMapa" aria-label="Mapa del campus">
-  <canvas id="map" aria-label="Plano del campus con tu ruta"></canvas>
-  <div id="mapCtl">
-    <button id="zOut" aria-label="Alejar">−</button>
-    <button id="zIn" aria-label="Acercar">+</button>
-    <button id="mYo">📍 Yo</button>
-    <button id="mRuta">🧭 Ruta</button>
+  <div>
+    <h1>El borde que brilla apunta a tu destino</h1>
+    <p>No te damos una ruta: te mostramos hacia dónde queda. Camina hacia donde brilla y descubre el campus en el camino.</p>
   </div>
-  <div id="mapInfo" class="mut">—</div>
-  <div class="mut" style="text-align:center;font-size:12px">Plano del campus · caminos © OpenStreetMap · posición aproximada (±10 m)</div>
-</section>
-
-<div id="warn"></div>
-<button id="modeBtn" class="big">Activar ubicación y brújula</button>
-
-<div id="simBox">
-  <div class="mut">Debug (sin GPS): en la pestaña Mapa, toca el plano para mover tu posición (azul = GPS crudo, verde = ajustada al camino, aro amarillo = siguiente nodo) y gira el celular con el deslizador.</div>
-  <label>Posición simulada</label>
-  <select id="from" style="width:100%"></select>
-  <label>Rumbo del celular: <b id="hv">0</b>°</label>
-  <input id="head" type="range" min="0" max="359" value="0">
-  <hr>
-  <div id="fotoDbg">
-    <b>Fotos (prueba, sin diseño)</b>
-    <div class="mut">Destino: <span id="fdDest"></span> · lado detectado: <b id="fdLado">—</b> · llegada: <b id="fdAprox">—</b></div>
-    <select id="fdLadoSel"><option value="">lado automático</option><option>N</option><option>S</option><option>E</option><option>O</option></select>
-    <button id="fdTomar">📷 Tomar foto</button>
-    <img id="fdPrev" alt="" style="display:none;max-width:100%;margin:6px 0">
-    <div class="mut" id="fdAviso"></div>
-    <button id="fdPub" disabled>Publicar</button>
-    <button id="fdVer">Ver foto del destino</button>
-    <button id="fdRep" disabled>Reportar</button>
-    <div class="mut" id="fdMsg"></div>
+  <div class="nota vidrio">
+    <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;color:var(--muted)"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>
+    <span>Para eso necesitamos tu ubicación y la brújula del teléfono. Tu teléfono te pedirá permiso.</span>
   </div>
-</div>
-<div id="hint" class="mut">Mantén la pantalla encendida. Si la flecha se ve rara, mueve el teléfono en forma de 8 para calibrar la brújula.</div>
+  <div class="acciones">
+    <div id="permisoError" role="alert"></div>
+    <button id="btnActivar" class="btn-principal">Activar ubicación y brújula</button>
+    <button id="btnSoloMapa" class="btn-texto">Prefiero ver solo el mapa</button>
+    <button id="btnDemo" class="btn-texto" style="min-height:36px;font-size:14px">Ver un recorrido de ejemplo</button>
+  </div>
 </main>
+
+<!-- ===================== BUSCAR ===================== -->
+<main id="vBuscar" class="vista pad" aria-label="Elegir destino">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <span id="buscarAqui"></span>
+    <h1>¿A dónde vas?</h1>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <label for="q" style="font-size:14px;font-weight:600;color:var(--muted)">Busca un edificio o un lugar</label>
+    <div class="campo vidrio">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Ej.: Biblioteca, Casino o la letra C" autocomplete="off" enterkeyhint="search">
+      <button id="qBorrar" class="icono-btn" aria-label="Borrar búsqueda" style="border:0;background:transparent;color:var(--muted)" hidden>
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="lista"></div>
+  <span id="buscarPie">Distancias en línea recta. Tú eliges el camino.</span>
+</main>
+
+<!-- ===================== BRÚJULA (resplandor · flecha · mapa) ===================== -->
+<main id="vBrujula" class="vista" aria-label="Brújula">
+  <canvas id="map" aria-label="Plano de Casa Central con tu posición y el destino"></canvas>
+  <div id="luz" aria-hidden="true">
+    <div id="g2" class="halo"><div></div></div>
+    <div id="g1" class="halo"><div></div></div>
+    <div id="barra" class="barra"></div>
+  </div>
+  <div class="capa">
+    <div class="cab">
+      <button id="btnAtras" class="icono-btn vidrio" aria-label="Cambiar destino">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="pill vidrio">
+        <span class="de">Vas hacia</span><span id="pillDest" class="a">—</span><span id="pillDist" class="d" hidden></span>
+      </div>
+    </div>
+    <div id="alertaMapa" class="vidrio" role="status"></div>
+    <div id="centro" class="centro">
+      <div class="velo" id="velo" aria-hidden="true"></div>
+      <div class="senal">
+        <div id="flecha" role="img" aria-label="Flecha que apunta hacia el destino" hidden>
+          <svg aria-hidden="true" width="92" height="92" viewBox="0 0 120 120"><path id="flechaPath" d="M60 6 L104 110 L60 88 L16 110 Z" stroke-width="8" stroke-linejoin="round"/></svg>
+        </div>
+        <span id="giro" role="img" aria-label="Date vuelta" hidden><svg aria-hidden="true" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span>
+        <div id="impreciso" class="impreciso vidrio" hidden>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 16.5v.5"/><path d="M10.3 3.9L2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+          Señal imprecisa entre edificios
+        </div>
+      </div>
+      <div id="cifra"><span id="cifraN">—</span><small id="cifraM" hidden>m</small></div>
+      <span id="titulo" aria-live="polite">Esperando ubicación</span>
+      <span id="bajada" aria-live="polite"></span>
+      <span id="alerta" role="status"></span>
+      <button id="btnAbrirMapa" class="vidrio" hidden>Abrir el mapa del campus</button>
+    </div>
+    <div id="base" class="base">
+      <div class="pista vidrio">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
+        <div class="t"><small>Pista para no perderte</small><span id="pistaTxt">—</span></div>
+      </div>
+      <div class="selector vidrio" role="group" aria-label="Tipo de señal">
+        <button id="selRes" aria-pressed="true">Resplandor</button>
+        <button id="selFle" aria-pressed="false">Flecha</button>
+        <button id="selMap" aria-pressed="false">Mapa</button>
+      </div>
+      <button id="btnYaLlegue">Ya llegué</button>
+    </div>
+  </div>
+  <div id="mapaCtl" role="group" aria-label="Controles del mapa">
+    <button id="zIn" class="vidrio" aria-label="Acercar">+</button>
+    <button id="zOut" class="vidrio" aria-label="Alejar">−</button>
+    <button id="mYo" class="vidrio" aria-label="Seguir mi posición" aria-pressed="false" title="Seguir mi posición">⌖</button>
+    <button id="mRot" class="vidrio" aria-label="Girar el mapa según hacia dónde miro" aria-pressed="false" title="Girar el mapa según hacia dónde miro">↻</button>
+    <button id="mRuta" class="vidrio" aria-label="Ver la ruta completa" title="Ver la ruta completa">⤢</button>
+    <button id="accBtn" class="vidrio" aria-label="Ruta sin escaleras" aria-pressed="false" title="Ruta sin escaleras">♿&#xFE0E;</button>
+  </div>
+  <div id="flota" class="flota">
+    <div id="dato" class="tarjeta" role="status" hidden>
+      <div class="fila1"><span id="datoTitulo"></span>
+        <button id="datoCerrar" class="cerrar" aria-label="Cerrar dato"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <span id="datoGancho" class="gancho"></span>
+      <span id="datoTexto" class="cuerpo"></span>
+      <button id="datoMas" class="mas">Leer más</button>
+    </div>
+    <div id="entrada" class="tarjeta foto" role="status" hidden>
+      <img id="entradaImg" alt="">
+      <div class="t"><b>Así se ve al llegar</b><span id="entradaPie"></span><small id="entradaCred"></small></div>
+    </div>
+  </div>
+  <div id="hoja" role="dialog" aria-modal="true" aria-labelledby="hojaTitulo" hidden>
+    <span class="agarre" aria-hidden="true"></span>
+    <span id="hojaEt" class="et"></span>
+    <h2 id="hojaTitulo"></h2>
+    <div id="hojaTexto" style="display:flex;flex-direction:column;gap:14px"></div>
+    <button id="hojaCerrar">Seguir caminando</button>
+  </div>
+  <div id="chipDemo" class="chip-demo vidrio" hidden><span>Recorrido de ejemplo</span><button id="demoSalir">Salir</button></div>
+</main>
+
+<!-- ===================== LLEGADA ===================== -->
+<main id="vLlegada" class="vista pad" aria-label="Llegada">
+  <div class="resp" aria-hidden="true"></div>
+  <div id="llInicio" style="display:contents">
+    <div class="bloque">
+      <span class="visto"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+      <h1 id="llTitulo">Llegaste</h1>
+      <p>Encontraste el camino por tu cuenta.</p>
+    </div>
+    <figure id="llFoto" hidden><img id="llFotoImg" alt=""><figcaption id="llFotoPie"></figcaption></figure>
+    <div id="llSinFoto" class="sinfoto" hidden><b>Nadie ha dejado una foto de este lugar</b><span>Sé el primero: así quien venga después lo reconocerá al llegar.</span></div>
+    <div id="llSabias" class="sabias" hidden><b>Sabías que</b><span id="llSabiasTxt"></span></div>
+    <div class="pie">
+      <span>Ayuda al siguiente: toma una foto de lo que ves ahora.</span>
+      <button id="btnTomar" class="btn-os"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6l1.5-2h3L15 6"/></svg>Tomar foto</button>
+      <div id="llError" role="alert" style="font-size:14px;font-weight:700"></div>
+      <div class="duo"><button id="btnAunNo">Aún no llego</button><button id="btnOtro">Otro destino</button></div>
+    </div>
+  </div>
+  <div id="llVista" style="display:none;flex-direction:column;gap:18px;flex:1">
+    <div class="bloque"><h1 style="font-size:30px">Tu foto de <span id="llNombre2"></span></h1><p style="font-size:16px">Revísala antes de publicarla.</p></div>
+    <div class="prev" role="img" aria-label="Vista previa de tu foto"><img id="llPrev" alt=""></div>
+    <span style="position:relative;font-size:14px;line-height:1.4;font-weight:600">Se publica sin tu nombre. Evita fotografiar a personas.</span>
+    <div id="llegadaError" role="alert"></div>
+    <div style="position:relative;display:flex;flex-direction:column;gap:8px">
+      <button id="btnPublicar" class="btn-os">Publicar foto</button>
+      <button id="btnRepetir" class="btn-claro" style="flex:none;width:100%">Tomar otra</button>
+    </div>
+  </div>
+  <div id="llGracias" style="display:none;flex-direction:column;gap:18px;flex:1">
+    <div role="status" style="position:relative;flex-grow:1;display:flex;flex-direction:column;justify-content:center;gap:14px;animation:sube 900ms var(--ease) both">
+      <span class="visto" style="width:64px;height:64px;border-radius:32px"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>
+      <h1 style="font-size:34px">Gracias por ayudar al siguiente</h1>
+      <p>Quien busque <span id="llNombre3"></span> verá tu foto al acercarse.</p>
+      <p style="font-size:14px;opacity:.85">Prototipo: por ahora tu foto queda guardada solo en este teléfono.</p>
+    </div>
+    <button id="btnOtro2" class="btn-os">Elegir otro destino</button>
+  </div>
+  <input id="inpFoto" type="file" accept="image/*" capture="environment" hidden>
+</main>
+
+<!-- ===================== DEPURACIÓN (?debug) ===================== -->
+<div id="debug" class="vidrio">
+  <b>Depuración</b>
+  <label for="from">Posición simulada</label>
+  <select id="from"></select>
+  <label for="head">Rumbo: <b id="hv">0</b>°</label>
+  <input id="head" type="range" min="0" max="359" value="0">
+  <button id="btnDemoDbg">▶ Recorrido de ejemplo</button>
+  <span>Con el mapa abierto, toca el plano para moverte.</span>
+</div>
+
+</div>
 
 <script src="grafo.js"></script>
 <script src="contornos.js"></script>
+<script src="datos.js"></script>
 <script>
 // ---------- Geometría ----------
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
@@ -167,8 +461,11 @@ GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph
 const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
 
 // ---------- Contornos de edificios y patios (contornos.js, generado con tools/contornos.py) ----------
-// La brújula apunta al borde más cercano del destino (no a su puerta) y se llega al estar a ARRIVE_BLD del borde.
-const ARRIVE_BLD = 15;   // m
+// La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al ENTRAR al cuadro del edificio o patio
+// (contorno en contornos.js), con ARRIVE_BLD de margen por el error del GPS (5 a 15 m): subirlo si no avisa, bajarlo si avisa antes.
+const ARRIVE_BLD = 5;    // m del borde (0 = dentro del cuadro)
+const ARRIVE_NODO = 12;  // m: destinos sin contorno (accesos), se llega al estar a esta distancia del punto del camino
+const REARMAR = 25;      // m: tras «Aún no llego», el aviso vuelve a armarse al alejarte esto del borde
 const CONT = { ...CONTORNOS.edificios, ...CONTORNOS.espacios };          // clave -> polígono en píxeles del plano
 const AREAS = Object.fromEntries(Object.entries(CONT).map(([k, pts]) => [k, pts.map(([px, py]) => { const m = fromPlan(px, py); return [m.x, m.y]; })]));
 const GROUPS = CONTORNOS.grupos;                                        // P2 cuenta como P, R2 como R
@@ -274,252 +571,532 @@ function guide() {
   return { snap, onGraph, pos, target, remaining: distance(pos, graph[target]) + pathLen(astar(graph, target, dest)) };
 }
 
+// ============================================================================
+//  INTERFAZ — sigue docs/PRD.md y design/plantillas/ (paleta confort, resplandor en el borde,
+//  pista siempre visible, datos por zona, foto al llegar, llegada coral). La lógica de arriba
+//  (grafo, A*, contornos, llegada al borde del edificio) no cambia.
+// ============================================================================
+
 // ---------- Estado ----------
-const DEBUG = new URLSearchParams(location.search).has("debug");   // ?debug muestra mapa y simulador
+const params = new URLSearchParams(location.search);
+const DEBUG = params.has("debug");                           // ?debug: panel para moverte sin GPS
 document.documentElement.classList.toggle("debug", DEBUG);
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {                          // si sale una versión nueva, la página se recarga sola una vez
+  const habiaSW = !!navigator.serviceWorker.controller; let recargado = false;
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (habiaSW && !recargado) { recargado = true; location.reload(); } });
+}
+const $ = id => document.getElementById(id);
 
 const state = {
-  active: false, fix: false,
+  vista: "permiso",
+  modo: "resplandor",                // señal: resplandor | flecha | mapa
+  active: false, fix: false,         // GPS activo / con posición
+  sim: DEBUG,                        // hay una posición simulada (debug o recorrido de ejemplo)
   mode: "sim",                       // "sim" | "gps"
   user: fromXY(0, 0),
   heading: 0,                        // rumbo suavizado
-  destId: DEST["edificio-c"] ? "edificio-c" : DESTS[0].id,
+  destId: DEST["edificio-a"] ? "edificio-a" : DESTS[0].id,
   accesible: false,                  // true = ruta sin escaleras
+  demo: false, gpsError: "",
+  hist: [],                          // [tiempo, metros al borde] para saber si te acercas o te alejas
+  llego: null,                       // destino cuya llegada ya se mostró (o se pospuso con «Aún no llego»)
+  zonasVistas: new Set(), zona: null, hojaAbierta: false, entradaCerrada: false,
 };
+const tieneUbicacion = () => state.sim || (state.mode === "gps" && state.fix);
+const claro = () => (document.documentElement.dataset || {}).tema === "claro";
+const info = id => INFO[id] || { nombre: DEST[id].name, letra: "", detalle: "" };
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sinTildes = t => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const vibrar = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };   // iOS no vibra desde la web
+const enDestino = n => /^(Biblioteca|Entrada|Piscina|Cancha|Cafeter|Tribuna)/.test(n) ? "en la " + n : /^(Edificio|Patio|Gimnasio|Casino|Museo|Acceso)/.test(n) ? "en el " + n : "en " + n;
+const aDestino = n => /^(Biblioteca|Entrada|Piscina|Cancha|Cafeter|Tribuna)/.test(n) ? "a la " + n : /^(Edificio|Patio|Gimnasio|Casino|Museo|Acceso)/.test(n) ? "al " + n : "a " + n;
 
-// ---------- UI ----------
-const $ = id => document.getElementById(id);
-$("dest").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
-$("dest").value = state.destId;
-$("dest").onchange = e => { state.destId = e.target.value; state.target = null; mapV.fitted = false; render(); };
-$("from").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
-$("from").onchange = e => { const n = graph[DEST[e.target.value].node]; state.user = { lat: n.lat, lng: n.lng }; render(); };
-$("accBtn").onclick = () => {
-  state.accesible = !state.accesible; state.target = null; mapV.fitted = false;
-  $("accBtn").classList.toggle("on", state.accesible); $("accBtn").setAttribute("aria-pressed", state.accesible);
-  $("accBtn").textContent = "♿ Ruta sin escaleras: " + (state.accesible ? "SÍ" : "NO"); render();
+// Distancia (m) en línea recta al borde del edificio o patio de un destino, o null sin ubicación.
+function distA(id) {
+  if (!tieneUbicacion()) return null;
+  const a = areaOf(id);
+  return a ? distToArea(state.user, a) : distance(state.user, graph[DEST[id].node]);
+}
+
+// ---------- Fotos de la comunidad (prototipo: se guardan solo en este teléfono) ----------
+const FOTOS_KEY = "fotosComunidad";
+let cacheFotos = null;                                       // se lee una vez: la brújula dibuja ~60 veces por segundo
+const leerFotos = () => { if (!cacheFotos) { try { cacheFotos = JSON.parse(localStorage.getItem(FOTOS_KEY)) || {}; } catch (e) { cacheFotos = {}; } } return cacheFotos; };
+function guardarFoto(id, data) {
+  try { const f = { ...leerFotos(), [id]: data }; localStorage.setItem(FOTOS_KEY, JSON.stringify(f)); cacheFotos = f; return true; } catch (e) { return false; }
+}
+function fotoDe(id) {                                        // la oficial con licencia libre o, si no hay, la de la comunidad
+  const f = info(id).foto;
+  if (f) return { src: f.src, pie: f.pie, cred: `Foto: ${f.autor} · ${f.licencia}`, oficial: true };
+  const c = leerFotos()[id];
+  return c ? { src: c, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false } : null;
+}
+function reducirFoto(file) {                                 // máx. 900 px y JPEG: cabe en el almacenamiento del teléfono
+  return new Promise((ok, mal) => {
+    const lector = new FileReader();
+    lector.onerror = () => mal(new Error("lectura"));
+    lector.onload = () => {
+      const img = new Image();
+      img.onerror = () => mal(new Error("imagen"));
+      img.onload = () => {
+        const k = Math.min(1, 900 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        ok(c.toDataURL("image/jpeg", 0.72));
+      };
+      img.src = lector.result;
+    };
+    lector.readAsDataURL(file);
+  });
+}
+
+// ---------- Navegación entre pantallas ----------
+const VISTAS = ["permiso", "buscar", "brujula", "llegada"];
+const idVista = v => "v" + v[0].toUpperCase() + v.slice(1);
+function ir(v, push = true) {
+  if (state.demo && v !== "brujula" && v !== "llegada") detenerDemo();
+  state.vista = v;
+  for (const x of VISTAS) $(idVista(x)).classList.toggle("activa", x === v);
+  if (push) { try { history.pushState({ v }, ""); } catch (e) {} }
+  if (v === "buscar") renderBuscar();
+  if (v === "brujula") { aplicarModo(); mapV.fitted = false; }
+  if (v === "llegada") renderLlegada();
+  render();
+  const h = $(idVista(v)).querySelector("h1"); if (h) { h.tabIndex = -1; try { h.focus({ preventScroll: true }); } catch (e) {} }
+}
+window.addEventListener("popstate", e => ir((e.state && e.state.v) || "buscar", false));
+try { history.replaceState({ v: "permiso" }, ""); } catch (e) {}
+
+function elegir(id) {                                        // desde la lista o tocando un edificio
+  setDest(id); ir("brujula");
+}
+function setDest(id) {
+  state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false;
+  if (state.llego === id) state.llego = null;
+  mapV.fitted = false; render();
+}
+
+// ---------- Permiso: ubicación y brújula ----------
+let watchId = null;
+async function enableGps() {
+  $("permisoError").textContent = ""; state.gpsError = "";
+  if (!navigator.geolocation) { $("permisoError").textContent = "Este navegador no tiene geolocalización. Puedes ver el mapa o el recorrido de ejemplo."; return false; }
+  try {
+    // iOS: debe llamarse directo desde el toque del usuario, antes de cualquier otro await
+    if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
+      const r = await DeviceOrientationEvent.requestPermission();
+      if (r !== "granted") throw new Error("Sin la brújula no podemos mostrarte hacia dónde queda. Cierra Safari por completo, vuelve a abrir la página y acepta el permiso. Mientras tanto puedes ver el mapa.");
+    }
+  } catch (e) { $("permisoError").textContent = e.message; return false; }
+  const onOri = e => {
+    let h = e.webkitCompassHeading;                                    // iOS
+    if (h == null && e.absolute && e.alpha != null) h = 360 - e.alpha;   // Android
+    if (h != null && !state.demo) setHeading(h);
+  };
+  window.addEventListener("deviceorientationabsolute", onOri, true);
+  window.addEventListener("deviceorientation", onOri, true);
+  watchId = navigator.geolocation.watchPosition(
+    p => {
+      if (state.demo) return;
+      if (!state.fix) setFollow(true);
+      state.fix = true; state.gpsError = "";
+      state.user = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
+      render();
+    },
+    err => {
+      state.gpsError = err.code === 1 ? "Ubicación denegada. Actívala en Ajustes > Privacidad > Localización, o usa el mapa." : "No pudimos obtener tu ubicación (" + err.message + ").";
+      if (state.vista === "permiso") $("permisoError").textContent = state.gpsError;
+      render();
+    },
+    { enableHighAccuracy: true, maximumAge: 1000 }
+  );
+  return true;
+}
+$("btnActivar").onclick = async () => {
+  if (!(await enableGps())) return;
+  state.mode = "gps"; state.active = true; state.sim = false;
+  ir("buscar");
 };
-$("head").oninput = e => { setHeading(+e.target.value); $("hv").textContent = e.target.value; };
+$("btnSoloMapa").onclick = () => { state.modo = "mapa"; ir("brujula"); };
+$("btnDemo").onclick = () => iniciarDemo();
+$("btnDemoDbg").onclick = () => iniciarDemo();
 
 // Rumbo suavizado con promedio circular (evita el salto 359° -> 0°)
 let hx = 1, hy = 0;
 function setHeading(deg) {
-  const k = state.mode === "sim" ? 1 : 0.2;
+  const k = state.mode === "sim" || state.demo ? 1 : 0.2;
   hx += k * (Math.cos(toRad(deg)) - hx);
   hy += k * (Math.sin(toRad(deg)) - hy);
   state.heading = norm360(toDeg(Math.atan2(hy, hx)));
   render();
 }
 
-// ---------- Modo GPS ----------
-let watchId = null;
-async function enableGps() {
-  $("warn").textContent = "";
-  if (!navigator.geolocation) { $("warn").textContent = "Este navegador no tiene geolocalización."; return false; }
-  try {
-    // iOS: debe llamarse directo desde el toque del usuario, antes de cualquier otro await
-    if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
-      const r = await DeviceOrientationEvent.requestPermission();
-      if (r !== "granted") throw new Error("Brújula denegada. Cierra Safari por completo y vuelve a abrir la página para permitirla.");
-    }
-  } catch (e) { $("warn").textContent = e.message; return false; }
-  const onOri = e => {
-    let h = e.webkitCompassHeading;                                  // iOS
-    if (h == null && e.absolute && e.alpha != null) h = 360 - e.alpha; // Android
-    if (h != null) setHeading(h);
-  };
-  window.addEventListener("deviceorientationabsolute", onOri, true);
-  window.addEventListener("deviceorientation", onOri, true);
-  watchId = navigator.geolocation.watchPosition(
-    p => { state.fix = true; $("warn").textContent = ""; state.user = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }; render(); },
-    err => { $("warn").textContent = err.code === 1 ? "Ubicación denegada. Actívala en Ajustes > Privacidad > Localización > Safari." : "GPS: " + err.message; },
-    { enableHighAccuracy: true, maximumAge: 1000 }
-  );
-  return true;
+// ---------- Buscar ----------
+function listaDestinos() {
+  return DESTS.map(d => {
+    const i = info(d.id), dist = distA(d.id);
+    return { id: d.id, letra: i.letra, nombre: i.nombre, detalle: i.detalle, dist, foto: !!fotoDe(d.id) };
+  });
 }
-if (DEBUG) { $("modeBtn").textContent = "Modo: simulado"; $("modeBtn").classList.remove("big"); }
-$("modeBtn").onclick = async () => {
-  if (state.mode === "sim") {
-    if (!(await enableGps())) return;
-    state.mode = "gps"; state.active = true; state.fix = false;
-    if (DEBUG) { $("modeBtn").textContent = "Modo: GPS real"; $("modeBtn").classList.add("on"); }
-    else $("modeBtn").style.display = "none";
+const metrosTxt = d => d == null ? "" : d < 20 ? "aquí" : (d < 100 ? Math.round(d / 5) * 5 : Math.round(d / 10) * 10) + " m";
+function filaHTML(e) {
+  const aria = `${e.nombre}, ${e.detalle}${e.dist == null ? "" : ", a " + Math.round(e.dist) + " metros"}${e.foto ? ", con fotos" : ""}`;
+  const ins = e.letra ? esc(e.letra) : '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+  return `<button class="fila" data-id="${esc(e.id)}" aria-label="${esc(aria)}"><span class="letra" aria-hidden="true">${ins}</span>` +
+    `<span class="txt"><b>${esc(e.nombre)}</b><small>${esc(e.detalle)}</small></span>` +
+    `<span class="der"><span class="dist" data-dist="${esc(e.id)}">${metrosTxt(e.dist)}</span>` +
+    (e.foto ? '<span class="fotos"><i aria-hidden="true"></i>con fotos</span>' : "") + `</span></button>`;
+}
+function renderBuscar() {
+  const crudo = $("q").value, q = sinTildes(crudo.trim());
+  $("qBorrar").hidden = !q;
+  let todos = listaDestinos();
+  todos.sort((a, b) => a.dist == null || b.dist == null ? a.nombre.localeCompare(b.nombre, "es") : a.dist - b.dist);
+  let secciones;
+  if (q) {
+    const exactos = todos.filter(e => sinTildes(e.letra) === q);
+    const hits = exactos.length ? exactos : todos.filter(e => sinTildes(e.nombre + " " + e.detalle).includes(q));
+    secciones = hits.length ? [{ t: "Resultados", f: hits }] : [];
   } else {
-    if (watchId != null) navigator.geolocation.clearWatch(watchId);
-    state.mode = "sim"; $("modeBtn").textContent = "Modo: simulado"; $("modeBtn").classList.remove("on");
+    const cerca = todos.filter(e => e.dist != null && e.dist <= 120).slice(0, 4);
+    secciones = [];
+    if (cerca.length) secciones.push({ t: "Cerca de ti", f: cerca });
+    secciones.push({ t: "Todos los destinos", f: todos.filter(e => !cerca.includes(e)) });
   }
-  render();
+  $("lista").innerHTML = (q && !secciones.length)
+    ? `<div class="vacio vidrio" role="status"><b>No encontramos «${esc(crudo.trim())}»</b><p>Prueba con la letra del edificio, o con un lugar como Biblioteca o Casino.</p><button id="verTodos">Ver todos los destinos</button></div>`
+    : secciones.map(s => `<div class="seccion"><span>${s.t}</span>${s.f.map(filaHTML).join("")}</div>`).join("");
+  // «Estás cerca de…»
+  const aqui = todos.filter(e => e.dist != null && e.dist <= 40).sort((a, b) => a.dist - b.dist)[0];
+  $("buscarAqui").innerHTML = aqui ? `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Estás cerca de ${esc(aqui.nombre)}` : "";
+  $("buscarPie").textContent = tieneUbicacion() ? "Distancias en línea recta. Tú eliges el camino." : "Activa la ubicación para ver qué tan lejos queda cada lugar. Tú eliges el camino.";
+}
+function actualizarDistBuscar() {                            // al moverte solo cambian los números, sin mover la lista
+  for (const el of document.querySelectorAll("[data-dist]")) el.textContent = metrosTxt(distA(el.dataset.dist));
+}
+$("q").oninput = renderBuscar;
+$("q").onkeydown = e => { if (e.key === "Enter") e.target.blur(); };
+$("qBorrar").onclick = () => { $("q").value = ""; renderBuscar(); $("q").focus(); };
+$("lista").onclick = e => {
+  if (e.target.closest("#verTodos")) { $("q").value = ""; renderBuscar(); return; }
+  const b = e.target.closest("[data-id]"); if (b) elegir(b.dataset.id);
 };
 
-// ---------- Render ----------
+// ---------- Resplandor (puerto de design/plantillas/Brujula.tpl.html, color en OKLCH) ----------
+const toLin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+const fromLin = v => { const w = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; return Math.max(0, Math.min(255, Math.round(w * 255))); };
+function aOk(h) {
+  const r = toLin(parseInt(h.slice(1, 3), 16)), g = toLin(parseInt(h.slice(3, 5), 16)), b = toLin(parseInt(h.slice(5, 7), 16));
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+  return [L, Math.sqrt(A * A + B * B), Math.atan2(B, A)];
+}
+function deOk(L, C, H) {
+  const A = C * Math.cos(H), B = C * Math.sin(H);
+  const l = Math.pow(L + 0.3963377774 * A + 0.2158037573 * B, 3), m = Math.pow(L - 0.1055613458 * A - 0.0638541728 * B, 3), s = Math.pow(L - 0.0894841775 * A - 1.2914855480 * B, 3);
+  return `rgb(${fromLin(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s)},${fromLin(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s)},${fromLin(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)})`;
+}
+function mezcla(a, b, k, Lfijo) {                            // frío -> cálido sin ensuciar el color
+  const p = aOk(a), q = aOk(b); let dh = q[2] - p[2];
+  if (dh > Math.PI) dh -= 2 * Math.PI; if (dh < -Math.PI) dh += 2 * Math.PI;
+  return deOk(Lfijo || p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k, p[2] + dh * k);
+}
+function pintarLuz(ev) {
+  const W = $("app").clientWidth || 390, H = $("app").clientHeight || 844, cx = W / 2, cy = H / 2;
+  const metros = ev.m, impreciso = ev.impreciso, esFlecha = state.modo === "flecha", cl = claro();
+  const c = Math.max(0, Math.min(1, 1 - metros / 220));     // 0 lejos (calma) … 1 cerca (calidez)
+  const c1 = mezcla("#8FA6FF", "#FF8A3D", c), c2 = mezcla("#B79CFF", "#FF5C7A", c);
+  const fuerte = cl ? mezcla("#8FA6FF", "#FF8A3D", c, 0.56) : c1;
+  const rad = toRad(ev.rel), dx = Math.sin(rad), dy = -Math.cos(rad);
+  const t = Math.min(cx / Math.max(Math.abs(dx), 1e-4), cy / Math.max(Math.abs(dy), 1e-4));
+  const x = cx + dx * t, y = cy + dy * t, ancho = impreciso ? 1.45 : 1;
+  const s1 = (260 + c * 400) * ancho, s2 = s1 * 0.8, largo = (70 + c * 190) * ancho, grosor = 5;
+  const vertical = Math.abs(x) < 1 || Math.abs(x - W) < 1;
+  const bw = vertical ? grosor : largo, bh = vertical ? largo : grosor;
+  const bx = Math.max(0, Math.min(W - bw, x - bw / 2)), by = Math.max(0, Math.min(H - bh, y - bh / 2));
+  const gop = (cl ? 0.95 : 0.85) * (esFlecha ? 0.45 : 1) * (impreciso ? 0.8 : 1);
+  const poner = (el, o) => { for (const k in o) el.style[k] = o[k]; };
+  poner($("g1"), { left: x + "px", top: y + "px", width: s1 + "px", height: s1 + "px", marginLeft: -s1 / 2 + "px", marginTop: -s1 / 2 + "px", opacity: gop });
+  poner($("g1").firstElementChild, { background: `radial-gradient(circle, ${c1} 0%, ${c1} 18%, transparent 68%)`, filter: `blur(${impreciso ? 44 : 28}px)`, animation: "respira 5s ease-in-out infinite" });
+  poner($("g2"), { left: x - dy * 90 + "px", top: y + dx * 90 + "px", width: s2 + "px", height: s2 + "px", marginLeft: -s2 / 2 + "px", marginTop: -s2 / 2 + "px", opacity: gop });
+  poner($("g2").firstElementChild, { background: `radial-gradient(circle, ${c2} 0%, transparent 66%)`, filter: `blur(${impreciso ? 52 : 36}px)`, animation: "respira 7s ease-in-out infinite" });
+  poner($("barra"), { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px", background: fuerte, boxShadow: `0 0 14px ${fuerte}`, opacity: esFlecha ? 0.4 : impreciso ? 0.55 : 1 });
+  $("g1").setAttribute("role", "img");
+  $("g1").setAttribute("aria-label", `El borde brilla hacia ${info(state.destId).nombre}, a ${metros} metros`);
+  $("flechaPath").setAttribute("fill", fuerte); $("flechaPath").setAttribute("stroke", fuerte);
+}
+
+// ---------- Evaluación del estado de la brújula ----------
+function evaluar() {
+  const dest = graph[destNode()], area = areaOf(state.destId), straight = distance(state.user, dest);
+  // La señal indica hacia dónde está el destino (el borde más cercano de su edificio o patio); el camino lo muestra el mapa.
+  const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
+  const llego = area ? aim.d <= ARRIVE_BLD : straight < ARRIVE_NODO;
+  const b = bearing(state.user, aim), rel = norm360(b - state.heading);
+  const g = llego ? null : guide();
+  if (llego) state.target = null;
+  // ¿te acercas o te alejas? (compara con lo más cerca que estuviste en los últimos 20 s)
+  const ahora = Date.now(), h = state.hist;
+  if (!h.length || ahora - h[h.length - 1][0] >= 1000) { h.push([ahora, aim.d]); while (h.length && ahora - h[0][0] > 20000) h.shift(); }
+  const minD = Math.min(...h.map(x => x[1]));
+  const aleja = !llego && h.length >= 3 && aim.d - minD >= 12;
+  const acc = state.user.acc || 0;
+  return { dest, aim, llego, b, rel, g, aleja, m: Math.max(0, Math.round(aim.d / 5) * 5), impreciso: acc > 30, acc };
+}
+
+// metros hasta la primera escalera de la ruta (0 si ya estás en una), o null si no hay
+function escalerasAdelante(g) {
+  if (g.onGraph && stairs.has(g.snap.a + "|" + g.snap.b)) return 0;
+  const path = routePath(g); if (!path) return null;
+  let acc = distance(g.pos, graph[g.target]);
+  for (let i = 0; i < path.length - 1; i++) {
+    if (stairs.has(path[i] + "|" + path[i + 1])) return acc;
+    acc += distance(graph[path[i]], graph[path[i + 1]]);
+  }
+  return null;
+}
+
+// ---------- Render de la brújula ----------
+function renderBrujula() {
+  const nombre = info(state.destId).nombre, ubic = tieneUbicacion(), mapa = state.modo === "mapa", flecha = state.modo === "flecha";
+  $("pillDest").textContent = nombre;
+  $("vBrujula").style.setProperty("--base-h", $("base").offsetHeight + "px");
+  mapV.baseH = $("base").offsetHeight;
+  let ev = null, g = null, alerta = "";
+  if (ubic) ev = evaluar();
+  if (ev) g = ev.g;
+  const detras = !!ev && !ev.llego && ev.rel > 135 && ev.rel < 225;
+  const casi = !!ev && !ev.llego && ev.aim.d <= 60;
+
+  // textos según el estado (PRD §4: vas bien · te alejas · detrás · casi llegas · sin ubicación)
+  let titulo, bajada;
+  if (!ubic) {
+    titulo = "No sabemos dónde estás";
+    bajada = state.gpsError || (state.mode === "gps" && state.active ? "Buscando señal GPS…" : "Revisa que la ubicación esté activada, o usa el mapa del campus.");
+  } else if (ev.llego) { titulo = "Estás " + enDestino(nombre); bajada = "Llegaste por tu cuenta."; }
+  else if (detras) { titulo = "Está detrás de ti"; bajada = flecha ? "Date vuelta hasta que la flecha apunte hacia arriba." : "Date vuelta hasta que la luz quede arriba."; }
+  else if (ev.aleja) { titulo = "Te estás alejando"; bajada = flecha ? "Gira hacia donde apunta la flecha." : "Gira hacia donde brilla el borde."; }
+  else if (casi) { titulo = "Casi llegas"; bajada = fotoDe(state.destId) ? "Mira la foto: así se ve al llegar." : "Estás muy cerca. Mira a tu alrededor."; }
+  else { titulo = "Vas bien. Vas a llegar."; bajada = ev.impreciso ? "La dirección es aproximada: por eso la luz es más ancha." : "Te acercas. El camino lo eliges tú."; }
+  $("titulo").textContent = titulo; $("bajada").textContent = bajada;
+  $("cifraN").textContent = ubic ? String(ev.m) : "—"; $("cifraM").hidden = !ubic;
+  $("btnAbrirMapa").hidden = ubic || mapa;
+
+  // pista siempre visible (PRD): la del destino o, si no tiene, lo que sabemos de él
+  const i = info(state.destId);
+  $("pistaTxt").textContent = i.pista || (ev && !ev.llego ? `${i.detalle}. Queda hacia el ${cardinal(ev.b).toLowerCase()}.` : i.detalle || "—");
+
+  // señal: resplandor / flecha / giro / aviso de GPS impreciso
+  $("flecha").hidden = !(flecha && ubic);
+  $("giro").hidden = !(detras && !flecha);
+  $("impreciso").hidden = !(ev && ev.impreciso && !flecha && !detras);
+  if (ubic) $("flecha").style.transform = `rotate(${ev.rel}deg)`;
+  const conLuz = !mapa && ubic;
+  $("luz").style.display = conLuz ? "" : "none"; $("velo").hidden = !conLuz;
+  if (conLuz) pintarLuz(ev);
+
+  // pastilla del mapa y alerta de escaleras
+  $("pillDist").hidden = !(mapa && ubic); if (mapa && ubic) $("pillDist").textContent = "· a " + ev.m + " m";
+  if (g) {
+    const esc = escalerasAdelante(g);
+    if (esc !== null && esc <= 30) {
+      alerta = esc < 3 ? "⚠️ Estás en una escalera" : `⚠️ Escaleras en ~${Math.round(esc / 5) * 5} m`;
+      const clave = state.target + "|" + state.destId;
+      if (esc <= 15 && state.avisoEsc !== clave) { state.avisoEsc = clave; vibrar([200, 100, 200]); }
+    } else if (esc === null) state.avisoEsc = null;
+  } else if (ev && !ev.llego && ubic) {
+    alerta = state.accesible ? "No hay camino sin escaleras hasta aquí" : "";
+  }
+  $("alerta").textContent = alerta;
+  $("alertaMapa").textContent = alerta; $("alertaMapa").classList.toggle("hay", !!alerta);
+
+  // tarjetas que brotan: dato de la zona y foto «así se ve al llegar»
+  if (ev && !state.zona && !casi && !ev.llego && !mapa) {
+    for (const z of ZONAS) {
+      if (state.zonasVistas.has(z.id) || z.area === areaOf(state.destId)) continue;
+      if (distToArea(state.user, z.area) <= z.radio) { state.zona = z; state.zonasVistas.add(z.id); vibrar(150); break; }
+    }
+  }
+  const z = state.zona;
+  $("dato").hidden = !(z && !mapa && !casi && !(ev && ev.llego) && !state.hojaAbierta);
+  if (z) { $("datoTitulo").textContent = z.titulo; $("datoGancho").textContent = z.gancho; $("datoTexto").textContent = z.texto; }
+  const foto = fotoDe(state.destId), verEntrada = casi && !mapa && !!foto && !state.entradaCerrada;
+  $("entrada").hidden = !verEntrada;
+  if (verEntrada) {
+    if ($("entradaImg").getAttribute("src") !== foto.src) $("entradaImg").src = foto.src;
+    $("entradaImg").alt = "Foto de " + nombre; $("entradaPie").textContent = foto.pie; $("entradaCred").textContent = foto.cred;
+  }
+  $("hoja").hidden = !(state.hojaAbierta && z);
+  if (state.hojaAbierta && z && $("hoja").dataset.zona !== z.id) {
+    $("hoja").dataset.zona = z.id; $("hojaEt").textContent = z.etiqueta; $("hojaTitulo").textContent = z.gancho;
+    $("hojaTexto").innerHTML = z.mas.map(t => `<p>${esc(t)}</p>`).join("");
+  }
+  $("chipDemo").hidden = !state.demo;
+  $("accBtn").setAttribute("aria-pressed", state.accesible);
+
+  // llegada automática por GPS (PRD §5: a ≤ 20 m del borde); «Aún no llego» la pospone hasta que te alejes
+  if (ev && state.vista === "brujula") {
+    if (ev.llego && state.llego !== state.destId) { state.llego = state.destId; vibrar([120, 70, 120, 70, 300]); ir("llegada"); return; }
+    if (!ev.llego && ev.aim.d > REARMAR && state.llego === state.destId) state.llego = null;
+  }
+  if (mapa) dibujarMapa(ev, g);
+}
+
+$("btnAtras").onclick = () => ir("buscar");
+$("btnYaLlegue").onclick = () => { state.llego = state.destId; ir("llegada"); };
+$("btnAbrirMapa").onclick = () => setModo("mapa");
+$("selRes").onclick = () => setModo("resplandor");
+$("selFle").onclick = () => setModo("flecha");
+$("selMap").onclick = () => setModo("mapa");
+function setModo(m) { state.modo = m; aplicarModo(); render(); }
+function aplicarModo() {
+  $("vBrujula").classList.toggle("modo-mapa", state.modo === "mapa");
+  [["selRes", "resplandor"], ["selFle", "flecha"], ["selMap", "mapa"]].forEach(([id, m]) => $(id).setAttribute("aria-pressed", state.modo === m));
+  mapV.fitted = false;
+}
+$("datoCerrar").onclick = () => { state.zona = null; render(); };
+$("datoMas").onclick = () => { state.hojaAbierta = true; render(); try { $("hojaCerrar").focus(); } catch (e) {} };
+$("hojaCerrar").onclick = () => { state.hojaAbierta = false; state.zona = null; render(); };
+$("accBtn").onclick = () => { state.accesible = !state.accesible; state.target = null; mapV.fitted = false; render(); };
+
+// ---------- Mapa: plano redibujado (design/assets) con tu posición y la ruta ----------
+const MAPA_VB = { x: 300, y: 60, w: 1000, h: 860 };          // zona del plano (píxeles) que cubre img/mapa-*.png
+const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0, sx: 0, sy: 0, baseH: 270,
+               theta: 0,        // giro en pantalla (rad): con «↻» activo, hacia donde miras queda arriba
+               follow: false, rotar: false };
+const Z_MIN = 0.3, Z_MAX = 4;
+const MAPAS = {};
+function cargarMapaImg(t) {
+  if (t in MAPAS) return;
+  MAPAS[t] = null;
+  const img = new Image(); img.onload = () => { MAPAS[t] = img; render(); }; img.src = `img/mapa-${t}.png`;
+}
+const TEMA = { oscuro: { bg: "#15131F", fg: "#F5F1EA", ruta: "#FF8A3D", yo: "#8FA6FF" }, claro: { bg: "#F6F1EA", fg: "#1D1A26", ruta: "#D2531A", yo: "#5B6FD6" } };
+const mapPx = n => toPlan(n.x, n.y);
+const posPx = p => { const q = toXY(p); return toPlan(q.x, q.y); };
+const toScr = (px, py) => {
+  const X = (px - mapV.cx) * mapV.z, Y = (py - mapV.cy) * mapV.z, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+  return [mapV.sx + X * c - Y * s, mapV.sy + X * s + Y * c];
+};
+const fromScr = (sx, sy) => {
+  const dx = sx - mapV.sx, dy = sy - mapV.sy, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+  return { px: mapV.cx + (dx * c + dy * s) / mapV.z, py: mapV.cy + (-dx * s + dy * c) / mapV.z };
+};
+const clampZ = z => Math.max(Z_MIN, Math.min(Z_MAX, z));
+
 function fit(c) {
   const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
   const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { ctx, w: r.width, h: r.height };
 }
-
-function drawDial(bDest, arrived) {
-  const { ctx, w, h } = fit($("dial"));
-  const cx = w / 2, cy = h / 2, R = w / 2 - 6;
-  ctx.clearRect(0, 0, w, h);
-  const pt = (deg, r) => [cx + r * Math.sin(toRad(deg)), cy - r * Math.cos(toRad(deg))];
-
-  // dial: rota con el rumbo (el rumbo actual queda arriba)
-  for (let a = 0; a < 360; a += 5) {
-    const th = a - state.heading, major = a % 30 === 0;
-    ctx.strokeStyle = a === 0 ? "#ff453a" : (major ? "#fff" : "#6b6b70");
-    ctx.lineWidth = major ? 2.5 : 1.5;
-    const [x1, y1] = pt(th, R), [x2, y2] = pt(th, R - (major ? 16 : 9));
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  }
-  const labels = { 0:"N", 90:"E", 180:"S", 270:"O" };
-  for (let a = 0; a < 360; a += 30) {
-    const th = a - state.heading, txt = labels[a] ?? String(a);
-    ctx.save(); ctx.translate(cx, cy); ctx.rotate(toRad(th));
-    ctx.fillStyle = a === 0 ? "#ff453a" : "#fff";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.font = labels[a] ? "600 26px system-ui" : "500 14px system-ui";
-    ctx.fillText(txt, 0, -(R - (labels[a] ? 44 : 38)));
-    ctx.restore();
-  }
-
-  // marcador del destino sobre el aro
-  if (!arrived && bDest != null) {
-    const th = bDest - state.heading, [x, y] = pt(th, R - 14);
-    ctx.fillStyle = "#ffd60a"; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
-    ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
-  }
-
-  // indicador fijo arriba (triángulo blanco)
-  ctx.fillStyle = "#fff"; ctx.beginPath();
-  ctx.moveTo(cx, cy - R - 2); ctx.lineTo(cx - 8, cy - R - 16); ctx.lineTo(cx + 8, cy - R - 16); ctx.closePath(); ctx.fill();
-
-  // centro: grados y punto cardinal
-  ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.font = "600 44px system-ui"; ctx.fillText(Math.round(state.heading) + "°", cx, cy - 8);
-  ctx.font = "500 18px system-ui"; ctx.fillStyle = arrived ? "#ffd60a" : "#8e8e93";
-  ctx.fillText(arrived ? "destino" : cardinal(state.heading), cx, cy + 28);
-}
-
-const label = id => NOMBRE_NODO[id] || "cruce";
-
-// ---------- Mapa (plano.jpeg de fondo, mismo estilo oscuro/amarillo que la brújula) ----------
-const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0 };
-const Z_MIN = 0.35, Z_MAX = 4;
-let planoDark = null;
-{ // el plano es claro: se invierte una sola vez en un canvas aparte para que combine con el tema oscuro
-  const img = new Image();
-  img.onload = () => {
-    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
-    const x = c.getContext("2d"); x.drawImage(img, 0, 0);
-    x.globalCompositeOperation = "difference"; x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
-    planoDark = c; render();
-  };
-  img.src = PLANO.src;
-}
-const mapPx = n => toPlan(n.x, n.y);                     // nodo -> {px,py}
-const posPx = p => { const q = toXY(p); return toPlan(q.x, q.y); };   // lat/lng -> {px,py}
-const toScr = (px, py) => [mapV.w / 2 + (px - mapV.cx) * mapV.z, mapV.h / 2 + (py - mapV.cy) * mapV.z];
-const fromScr = (sx, sy) => ({ px: mapV.cx + (sx - mapV.w / 2) / mapV.z, py: mapV.cy + (sy - mapV.h / 2) / mapV.z });
-const clampZ = z => Math.max(Z_MIN, Math.min(Z_MAX, z));
-
 function fitPoints(pts) {
   if (!pts.length || !mapV.w) return;
   const xs = pts.map(p => p.px), ys = pts.map(p => p.py), pad = 50;
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-  mapV.z = clampZ(Math.min((mapV.w - 2 * pad) / Math.max(x1 - x0, 60), (mapV.h - 2 * pad) / Math.max(y1 - y0, 60)));
+  const libreH = mapV.h - 70 - mapV.baseH - 16;               // zona visible: bajo la cabecera y sobre la base
+  mapV.z = clampZ(Math.min((mapV.w - 2 * pad) / Math.max(x1 - x0, 60), (libreH - 2 * pad) / Math.max(y1 - y0, 60)));
   mapV.cx = (x0 + x1) / 2; mapV.cy = (y0 + y1) / 2;
 }
-function routePath(g) {                                  // nodos que faltan hasta el destino
-  return g ? astar(graph, g.target, destNode()) : null;
-}
+function routePath(g) { return g ? astar(graph, g.target, destNode()) : null; }
 function fitRoute(g) {
   const path = routePath(g);
   const pts = path ? path.map(id => mapPx(graph[id])) : [mapPx(graph[destNode()])];
-  if (g) pts.push(posPx(g.pos)); else if (state.fix || DEBUG) pts.push(posPx(state.user));
+  if (g) pts.push(posPx(g.pos)); else if (tieneUbicacion()) pts.push(posPx(state.user));
   if (pts.length === 1) { mapV.cx = pts[0].px; mapV.cy = pts[0].py; mapV.z = Math.max(mapV.z, 1.2); }
   else fitPoints(pts);
 }
-
-function drawMap(g) {
-  const { ctx, w, h } = fit($("map"));
-  if (!w || !h) return;
-  mapV.w = w; mapV.h = h;
-  if (!mapV.fitted) { fitRoute(g); mapV.fitted = true; }
-  ctx.fillStyle = "#0b0e13"; ctx.fillRect(0, 0, w, h);
-  if (planoDark) {
-    const [x0, y0] = toScr(0, 0);
-    ctx.globalAlpha = .85; ctx.drawImage(planoDark, x0, y0, PLANO.w * mapV.z, PLANO.h * mapV.z); ctx.globalAlpha = 1;
-  }
-  const P = n => toScr(...Object.values(mapPx(n)));
-  ctx.lineCap = "round"; ctx.lineJoin = "round";
-  // caminos
-  ctx.lineWidth = 3;
-  for (const esc of [false, true]) {                         // primero caminos, luego escaleras (naranjo, punteado)
-    ctx.strokeStyle = esc ? "#ff9f43" : "#5b6b80"; ctx.setLineDash(esc ? [5, 4] : []); ctx.beginPath();
-    for (const [a, b] of edgePairs) if (stairs.has(a + "|" + b) === esc) { const [x1, y1] = P(graph[a]), [x2, y2] = P(graph[b]); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
-  // contorno del destino (edificio o patio), calcado del plano
-  const ak = areaOf(state.destId);
-  if (ak) {
-    ctx.strokeStyle = "#ffd23f"; ctx.fillStyle = "rgba(255,210,63,.14)"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-    for (const k of grupo(ak)) {
-      ctx.beginPath(); CONT[k].forEach(([px, py], i) => { const [x, y] = toScr(px, py); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-  }
-  // ruta restante (amarilla, desde tu posición ajustada)
-  const path = routePath(g);
-  if (path) {
-    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 6; ctx.beginPath();
-    ctx.moveTo(...toScr(...Object.values(posPx(g.pos))));
-    for (const id of path) ctx.lineTo(...P(graph[id]));
-    ctx.stroke();
-  }
-  // nodos y etiquetas
-  ctx.font = "600 13px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.lineJoin = "round";
-  for (const d of DESTS) {
-    const [x, y] = P(graph[d.node]), isDest = d.id === state.destId;
-    const corto = d.name.split(" - ")[0].replace("Edificio ", "");   // "Edificio A" -> "A"
-    ctx.fillStyle = isDest ? "#ffd23f" : "#e8edf3";
-    ctx.beginPath(); ctx.arc(x, y, isDest ? 9 : 6, 0, 7); ctx.fill();
-    ctx.strokeStyle = "#000"; ctx.strokeText(isDest ? d.name : corto, x, y - 13);
-    ctx.fillStyle = isDest ? "#ffd23f" : "#fff"; ctx.fillText(isDest ? d.name : corto, x, y - 13);
-  }
-  if (g) {
-    const [tx, ty] = P(graph[g.target]);
-    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(tx, ty, 13, 0, 7); ctx.stroke();
-  }
-  // tú: GPS crudo (azul), ajustado al camino (verde) y hacia dónde miras
-  if (g || state.fix || DEBUG) {
-    const raw = posPx(state.user), [ux, uy] = toScr(raw.px, raw.py);
-    const sn = g ? posPx(g.pos) : raw, [sx, sy] = toScr(sn.px, sn.py);
-    if (state.user.acc) { ctx.fillStyle = "#6aa9ff22"; ctx.beginPath(); ctx.arc(ux, uy, state.user.acc / PLANO.mpp * mapV.z, 0, 7); ctx.fill(); }
-    if (g && g.onGraph) {
-      ctx.strokeStyle = "#6aa9ff"; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
-      ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = "#6aa9ff"; ctx.beginPath(); ctx.arc(ux, uy, 5, 0, 7); ctx.fill();
-    }
-    const th = toRad(state.heading - PLANO.rot);          // el "arriba" del plano puede no ser el norte
-    ctx.save(); ctx.translate(sx, sy); ctx.rotate(th);
-    ctx.fillStyle = "#4cd96488"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 34, -Math.PI / 2 - .5, -Math.PI / 2 + .5); ctx.closePath(); ctx.fill();
-    ctx.restore();
-    ctx.fillStyle = "#4cd964"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(sx, sy, 8, 0, 7); ctx.fill(); ctx.stroke();
+function polyPath(ctx, key) {                                // contorno (en píxeles del plano) -> trazo en pantalla
+  for (const k of grupo(key)) {
+    const pts = CONT[k]; if (!pts) continue;
+    ctx.beginPath(); pts.forEach(([px, py], i) => { const [x, y] = toScr(px, py); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath();
+    ctx.fill(); ctx.stroke();
   }
 }
+function dibujarMapa(ev, g) {
+  const { ctx, w, h } = fit($("map"));
+  if (!w || !h) return;
+  const T = TEMA[claro() ? "claro" : "oscuro"], tema = claro() ? "claro" : "oscuro";
+  cargarMapaImg(tema);
+  mapV.w = w; mapV.h = h; mapV.sx = w / 2; mapV.sy = Math.max(h * 0.3, (70 + (h - mapV.baseH - 16)) / 2);
+  mapV.theta = mapV.rotar ? -toRad(state.heading - PLANO.rot) : 0;
+  if (mapV.follow && ev) { const u = posPx(g ? g.pos : state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.fitted = true; }
+  if (!mapV.fitted) { fitRoute(g); mapV.fitted = true; }
+  ctx.fillStyle = T.bg; ctx.fillRect(0, 0, w, h);
+  const img = MAPAS[tema];
+  if (img) {
+    ctx.save(); ctx.translate(mapV.sx, mapV.sy); ctx.rotate(mapV.theta);
+    ctx.drawImage(img, (MAPA_VB.x - mapV.cx) * mapV.z, (MAPA_VB.y - mapV.cy) * mapV.z, MAPA_VB.w * mapV.z, MAPA_VB.h * mapV.z);
+    ctx.restore();
+  }
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  // el edificio o patio de destino
+  const area = areaOf(state.destId);
+  if (area) { ctx.fillStyle = T.ruta + "30"; ctx.strokeStyle = T.ruta; ctx.lineWidth = 2.5; polyPath(ctx, area); }
+  // caminos del grafo (solo con ?debug)
+  if (DEBUG) {
+    ctx.lineWidth = 1.5; ctx.strokeStyle = T.fg + "40"; ctx.beginPath();
+    for (const [a, b] of edgePairs) { const [x1, y1] = toScr(...Object.values(mapPx(graph[a]))), [x2, y2] = toScr(...Object.values(mapPx(graph[b]))); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+    ctx.stroke();
+  }
+  // ruta restante: los tramos con escaleras van punteados
+  const path = routePath(g);
+  if (path) {
+    let prev = toScr(...Object.values(posPx(g.pos))), prevId = null;
+    ctx.lineWidth = 6;
+    for (const id of path) {
+      const cur = toScr(...Object.values(mapPx(graph[id]))), esc = prevId !== null && stairs.has(prevId + "|" + id);
+      ctx.strokeStyle = T.ruta; ctx.setLineDash(esc ? [9, 7] : []); ctx.globalAlpha = esc ? 0.9 : 1;
+      ctx.beginPath(); ctx.moveTo(...prev); ctx.lineTo(...cur); ctx.stroke(); prev = cur; prevId = id;
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+  // etiqueta del destino
+  const [dx, dy] = toScr(...Object.values(mapPx(graph[destNode()])));
+  ctx.fillStyle = T.ruta; ctx.beginPath(); ctx.arc(dx, dy, 7, 0, 7); ctx.fill();
+  ctx.strokeStyle = T.bg; ctx.lineWidth = 2.5; ctx.stroke();
+  const nom = info(state.destId).nombre; ctx.font = "700 14px 'Chakra Petch', system-ui, sans-serif";
+  const tw = ctx.measureText(nom).width + 22, tx = Math.max(8, Math.min(w - tw - 8, dx - tw / 2)), ty = dy - 40;
+  ctx.fillStyle = T.fg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(tx, ty, tw, 30, 15) : ctx.rect(tx, ty, tw, 30); ctx.fill();
+  ctx.fillStyle = T.bg; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(nom, tx + tw / 2, ty + 16);
+  // tú: punto con borde, «Tú» y un cono hacia donde miras
+  if (ev) {
+    const raw = posPx(state.user), [ux, uy] = toScr(raw.px, raw.py);
+    const sn = g ? posPx(g.pos) : raw, [sx, sy] = toScr(sn.px, sn.py);
+    if (state.user.acc) { ctx.fillStyle = T.yo + "22"; ctx.beginPath(); ctx.arc(ux, uy, state.user.acc / PLANO.mpp * mapV.z, 0, 7); ctx.fill(); }
+    if (DEBUG && g && g.onGraph) { ctx.fillStyle = "#4cd964"; ctx.beginPath(); ctx.arc(ux, uy, 4, 0, 7); ctx.fill(); }
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate(toRad(state.heading - PLANO.rot) + mapV.theta);   // el «arriba» del plano no es el norte
+    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 60); grad.addColorStop(0, T.yo + "d9"); grad.addColorStop(1, T.yo + "00");
+    ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 60, -Math.PI / 2 - .55, -Math.PI / 2 + .55); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = T.yo; ctx.strokeStyle = T.fg; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(sx, sy, 10, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.font = "600 13px 'Instrument Sans', system-ui, sans-serif"; const yw = ctx.measureText("Tú").width + 16;
+    ctx.fillStyle = T.fg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx + 16, sy - 12, yw, 24, 12) : ctx.rect(sx + 16, sy - 12, yw, 24); ctx.fill();
+    ctx.fillStyle = T.bg; ctx.textAlign = "left"; ctx.fillText("Tú", sx + 24, sy + 1);
+  }
+  // el plano no tiene el norte arriba: una brújula chica lo marca
+  const bx = 38, by = h / 2, psi = toRad(-PLANO.rot) + mapV.theta;
+  ctx.fillStyle = T.bg + "d0"; ctx.beginPath(); ctx.arc(bx, by, 20, 0, 7); ctx.fill();
+  ctx.strokeStyle = T.fg + "44"; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.save(); ctx.translate(bx, by); ctx.rotate(psi);
+  ctx.fillStyle = "#ff453a"; ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(5.5, 2); ctx.lineTo(-5.5, 2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = T.fg; ctx.beginPath(); ctx.moveTo(0, 16); ctx.lineTo(5.5, 2); ctx.lineTo(-5.5, 2); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.font = "700 11px system-ui, sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = "#ff453a"; ctx.strokeStyle = T.bg; ctx.lineWidth = 3;
+  const nx = bx + 31 * Math.sin(psi), ny = by - 31 * Math.cos(psi) + 4; ctx.strokeText("N", nx, ny); ctx.fillText("N", nx, ny);
+  // atribución obligatoria (ODbL)
+  ctx.font = "11px system-ui, sans-serif"; ctx.textAlign = "left"; ctx.fillStyle = T.fg + "99";
+  ctx.fillText("© colaboradores de OpenStreetMap", 12, h - mapV.baseH - 28);
+}
 
-// gestos: arrastrar, pellizcar, rueda y toque (elige destino; con ?debug mueve tu posición)
+// gestos: arrastrar, pellizcar, rueda y toque (toca un edificio para ir a él; con ?debug mueve tu posición)
 const ptrs = new Map(); let gest = null;
 const mapEl = $("map");
 const zoomAt = (sx, sy, z2) => {
-  const before = fromScr(sx, sy); mapV.z = clampZ(z2);
-  mapV.cx = before.px - (sx - mapV.w / 2) / mapV.z; mapV.cy = before.py - (sy - mapV.h / 2) / mapV.z;
+  const antes = fromScr(sx, sy); mapV.z = clampZ(z2);
+  const dx = sx - mapV.sx, dy = sy - mapV.sy, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+  mapV.cx = antes.px - (dx * c + dy * s) / mapV.z; mapV.cy = antes.py - (-dx * s + dy * c) / mapV.z;
 };
 const rel = e => { const r = mapEl.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
 mapEl.onpointerdown = e => {
@@ -534,7 +1111,11 @@ mapEl.onpointermove = e => {
   if (ptrs.size === 2 && gest.d0) {
     const [a, b] = [...ptrs.values()];
     zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, gest.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gest.d0);
-  } else if (ptrs.size === 1) { mapV.cx -= (cur.x - prev.x) / mapV.z; mapV.cy -= (cur.y - prev.y) / mapV.z; }
+  } else if (ptrs.size === 1) {                              // arrastrar (con el giro del mapa) y soltar el seguimiento
+    const mx = cur.x - prev.x, my = cur.y - prev.y, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+    mapV.cx -= (mx * c + my * s) / mapV.z; mapV.cy -= (-mx * s + my * c) / mapV.z;
+    if (gest.moved > 8) setFollow(false);
+  }
   render();
 };
 const endPtr = e => {
@@ -545,114 +1126,119 @@ const endPtr = e => {
 mapEl.onpointerup = endPtr; mapEl.onpointercancel = endPtr;
 mapEl.onwheel = e => { e.preventDefault(); const p = rel(e); zoomAt(p.x, p.y, mapV.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); render(); };
 
+// destino que corresponde al edificio o patio bajo un punto del plano (el principal de cada área)
+const DEST_DE_AREA = {}; DESTS.forEach(d => { const a = areaOf(d.id); if (a && !(a in DEST_DE_AREA)) DEST_DE_AREA[a] = d.id; });
+function destEnPunto(sx, sy) {
+  const q = fromScr(sx, sy), m = fromPlan(q.px, q.py); let mejor = null, md = 6 / Math.max(mapV.z, 0.5) + 4;
+  for (const [a, id] of Object.entries(DEST_DE_AREA)) { const d = Math.min(...grupo(a).map(k => AREAS[k] ? nearestOnPoly(m, AREAS[k]).d : Infinity)); if (d < md) { md = d; mejor = id; } }
+  return mejor;
+}
 function tapMap(sx, sy) {
-  let best = null, bd = 28;                              // toque cerca de un lugar con nombre -> nuevo destino
-  for (const n of DESTS) { const [x, y] = toScr(...Object.values(mapPx(graph[n.node]))), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = n; } }
-  if (best) { state.destId = best.id; state.target = null; mapV.fitted = false; $("dest").value = best.id; render(); return; }
-  if (DEBUG && state.mode === "sim") {
-    const q = fromScr(sx, sy), m = fromPlan(q.px, q.py);
-    state.user = fromXY(m.x, m.y); render();
-  }
+  const id = destEnPunto(sx, sy);
+  if (id) { setDest(id); return; }
+  if (DEBUG && state.mode === "sim") { const q = fromScr(sx, sy), m = fromPlan(q.px, q.py); state.user = fromXY(m.x, m.y); render(); }
 }
-$("zIn").onclick  = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z * 1.4); render(); };
-$("zOut").onclick = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z / 1.4); render(); };
-$("mYo").onclick  = () => {
-  if (!DEBUG && !state.fix) { $("mapInfo").textContent = "Aún no tengo tu ubicación: activa el GPS."; return; }
-  const u = posPx(state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.z = Math.max(mapV.z, 1.3); render();
+function setFollow(on) { mapV.follow = on; $("mYo").setAttribute("aria-pressed", on); }
+$("zIn").onclick = () => { zoomAt(mapV.sx, mapV.sy, mapV.z * 1.4); render(); };
+$("zOut").onclick = () => { zoomAt(mapV.sx, mapV.sy, mapV.z / 1.4); render(); };
+$("mYo").onclick = () => {
+  if (!tieneUbicacion()) { $("alertaMapa").textContent = "Aún no tengo tu ubicación: activa el GPS."; $("alertaMapa").classList.add("hay"); return; }
+  setFollow(!mapV.follow); if (mapV.follow) mapV.z = Math.max(mapV.z, 1.3); render();
 };
-$("mRuta").onclick = () => { mapV.fitted = false; render(); };
+$("mRot").onclick = () => {
+  mapV.rotar = !mapV.rotar; $("mRot").setAttribute("aria-pressed", mapV.rotar);
+  if (mapV.rotar && !mapV.follow && tieneUbicacion()) { setFollow(true); mapV.z = Math.max(mapV.z, 1.3); }
+  render();
+};
+$("mRuta").onclick = () => { setFollow(false); mapV.fitted = false; render(); };
 
-// pestañas
-function setTab(t) {
-  const m = t === "mapa";
-  document.body.classList.toggle("tabMapa", m);
-  $("tabBrujula").classList.toggle("on", !m); $("tabMapa").classList.toggle("on", m);
-  $("tabBrujula").setAttribute("aria-selected", !m); $("tabMapa").setAttribute("aria-selected", m);
-  mapV.fitted = false; render();
+// ---------- Llegada ----------
+let fotoNueva = null;
+function mostrarLl(parte) {
+  $("llInicio").style.display = parte === "inicio" ? "contents" : "none";
+  $("llVista").style.display = parte === "vista" ? "flex" : "none";
+  $("llGracias").style.display = parte === "gracias" ? "flex" : "none";
 }
-$("tabBrujula").onclick = () => setTab("brujula");
-$("tabMapa").onclick = () => setTab("mapa");
+function renderLlegada() {
+  const i = info(state.destId), f = fotoDe(state.destId);
+  mostrarLl("inicio"); $("llError").textContent = ""; fotoNueva = null;
+  $("llTitulo").textContent = "Llegaste " + aDestino(i.nombre);
+  $("llFoto").hidden = !f; $("llSinFoto").hidden = !!f;
+  if (f) { $("llFotoImg").src = f.src; $("llFotoImg").alt = "Foto de " + i.nombre; $("llFotoPie").textContent = `${f.cred} · ${f.pie}`; }
+  const sab = SABIAS[state.destId]; $("llSabias").hidden = !sab; if (sab) $("llSabiasTxt").textContent = sab;
+  $("llNombre2").textContent = i.nombre; $("llNombre3").textContent = i.nombre;
+}
+$("btnTomar").onclick = () => { $("inpFoto").value = ""; $("inpFoto").click(); };
+$("btnRepetir").onclick = () => $("btnTomar").onclick();
+$("inpFoto").onchange = async e => {
+  const file = e.target.files && e.target.files[0]; if (!file) return;
+  try {
+    fotoNueva = await reducirFoto(file); $("llPrev").src = fotoNueva; $("llegadaError").textContent = ""; mostrarLl("vista");
+  } catch (err) { $("llError").textContent = "No pudimos leer la foto. Prueba de nuevo."; }
+};
+$("btnPublicar").onclick = () => {
+  if (!fotoNueva) return;
+  if (!guardarFoto(state.destId, fotoNueva)) { $("llegadaError").textContent = "No pudimos guardar la foto (poco espacio en el teléfono). Prueba de nuevo."; return; }
+  mostrarLl("gracias");
+};
+$("btnAunNo").onclick = () => { state.llego = state.destId; ir("brujula"); };
+$("btnOtro").onclick = () => ir("buscar");
+$("btnOtro2").onclick = () => ir("buscar");
 
-function render() {
-  const enMapa = document.body.classList.contains("tabMapa");
-  const draw = g => { if (enMapa) drawMap(g); }
-  const waiting = (!DEBUG && !state.active) ? "Toca «Activar» para empezar"
-                : (state.mode === "gps" && !state.fix) ? "Buscando señal GPS…" : null;
-  if (waiting) {
-    $("dir").textContent = "—"; $("dist").textContent = waiting; $("sub").textContent = "";
-    $("mapInfo").innerHTML = `<b>${DEST[state.destId].name}</b> · ${waiting}`;
-    if (!enMapa) drawDial(null, false); draw(null);
-    return;
-  }
-  const dest = Object.assign({}, graph[destNode()], { name: DEST[state.destId].name });
-  const straight = distance(state.user, dest);
-  // La brújula solo indica hacia dónde está el destino (el borde más cercano de su edificio o patio);
-  // el camino lo muestra el mapa.
-  const area = areaOf(state.destId);
-  const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
-  const arrived = area ? aim.d < ARRIVE_BLD : straight < 20;
-  let b = bearing(state.user, aim), g = null, resumen;
-  if (arrived) {
-    state.target = null;
-    $("dir").textContent = "Estás llegando";
-    $("dist").textContent = dest.name;
-    $("sub").textContent = "";
-    resumen = `Estás llegando a <b>${dest.name}</b>`;
-  } else if ((g = guide())) {
-    const min = Math.max(1, Math.round(g.remaining / 80));
-    const m = aim.d < 30 ? Math.round(aim.d) : Math.round(aim.d / 5) * 5;
-    $("dir").textContent = cardinal(b);
-    $("dist").textContent = `${m} m en línea recta`;
-    $("sub").textContent = `Ruta a pie: ~${Math.round(g.remaining / 10) * 10} m · ${min} min` +
-      (g.onGraph ? "" : " · lejos del camino") + (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
-    resumen = `<b>${dest.name}</b> · ~${Math.round(g.remaining / 10) * 10} m · ${min} min · ${cardinal(b)}` + (g.onGraph ? "" : " · lejos del camino");
-  } else {
-    $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = state.accesible ? "No hay camino sin escaleras" : "Destino no conectado al grafo";
-    resumen = state.accesible ? "Sin ruta sin escaleras: prueba desactivando la opción" : "Sin ruta: destino no conectado";
-  }
-  $("mapInfo").innerHTML = resumen;
-  if (!enMapa) drawDial(b, arrived);
-  draw(g);
+// ---------- Recorrido de ejemplo (PRD: de la Entrada Av. Los Placeres al Edificio A) ----------
+let demoTimer = null, demoPrev = null;
+function iniciarDemo() {
+  detenerDemo();
+  demoPrev = { mode: state.mode, fix: state.fix, active: state.active, sim: state.sim, user: state.user };
+  const ini = DEST["entrada-placeres"] || DESTS[0], fin = DEST["edificio-a"];
+  state.accesible = false; state.target = null; state.destId = fin.id;
+  const ruta = astar(graph, ini.node, fin.node);
+  if (!ruta) return;
+  const pts = ruta.map(id => ({ lat: graph[id].lat, lng: graph[id].lng }));
+  state.demo = true; state.sim = true; state.active = true; state.mode = "sim"; state.fix = true;
+  state.modo = "resplandor"; state.hist = []; state.llego = null; state.zona = null; state.zonasVistas.clear(); state.hojaAbierta = false; state.entradaCerrada = false;
+  let i = 0, t = 0; const paso = 1.4;                         // metros por tick (~5,6 m/s: el recorrido dura ~35 s)
+  state.user = pts[0]; setHeading(bearing(pts[0], pts[1]));
+  ir("brujula");
+  demoTimer = setInterval(() => {
+    t += paso;
+    while (i < pts.length - 1 && t >= distance(pts[i], pts[i + 1])) { t -= distance(pts[i], pts[i + 1]); i++; }
+    if (i >= pts.length - 1) { clearInterval(demoTimer); demoTimer = null; state.user = pts[pts.length - 1]; render(); return; }
+    const a = pts[i], b = pts[i + 1], k = t / Math.max(1, distance(a, b));
+    state.user = { lat: a.lat + (b.lat - a.lat) * k, lng: a.lng + (b.lng - a.lng) * k };
+    setHeading(bearing(a, b));                                // setHeading ya vuelve a dibujar
+  }, 250);
 }
-// ---------- Panel de prueba de fotos (solo ?debug; la UI real viene del diseño) ----------
-if (DEBUG) {
-  let fdFoto = null, fdVista = null;
-  const fdMsg = t => { $("fdMsg").textContent = t; };
-  const fdLado = () => $("fdLadoSel").value || window.Fotos.ladoDesde(state.user, areaOf(state.destId));
-  const fdRefresh = () => {
-    if (!window.Fotos) return;
-    $("fdDest").textContent = DEST[state.destId].name;
-    $("fdLado").textContent = fdLado() || "—";
-    $("fdAprox").textContent = window.Fotos.ladoAproximacion(state.destId) || "—";
-    $("fdAviso").textContent = window.Fotos.AVISO_LICENCIA;
-  };
-  const renderOrig = render; render = function () { renderOrig(); fdRefresh(); };
-  $("fdTomar").onclick = async () => {
-    try {
-      fdFoto = await window.Fotos.capturarFoto(); if (!fdFoto) return;
-      $("fdPrev").src = fdFoto.dataUrl; $("fdPrev").style.display = "block"; $("fdPub").disabled = false;
-      fdMsg(`Foto lista: ${Math.round(fdFoto.bytes / 1000)} KB`);
-    } catch (e) { fdMsg("Error: " + e.message); }
-  };
-  $("fdPub").onclick = async () => {
-    const lado = fdLado(); if (!lado) return fdMsg("No se pudo detectar el lado: elígelo a mano.");
-    try { fdMsg("Subiendo…"); const id = await window.Fotos.publicarFoto(state.destId, lado, fdFoto.dataUrl); fdMsg(`Publicada (${lado}) id ${id}`); }
-    catch (e) { fdMsg("Error: " + e.message); }
-  };
-  $("fdVer").onclick = async () => {
-    try {
-      const lado = window.Fotos.ladoAproximacion(state.destId);
-      fdVista = await window.Fotos.fotoPara(state.destId, lado);
-      if (!fdVista) { $("fdPrev").style.display = "none"; $("fdRep").disabled = true; return fdMsg("Sin fotos: sé el primero."); }
-      $("fdPrev").src = fdVista.foto; $("fdPrev").style.display = "block"; $("fdRep").disabled = false;
-      fdMsg(`Foto del lado ${fdVista.lado} (llegada por ${lado || "?"})`);
-    } catch (e) { fdMsg("Error: " + e.message); }
-  };
-  $("fdRep").onclick = async () => { try { await window.Fotos.reportar(fdVista.id); fdMsg("Reportada"); $("fdRep").disabled = true; } catch (e) { fdMsg("Error: " + e.message); } };
+function detenerDemo() {
+  if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
+  if (state.demo && demoPrev) { Object.assign(state, demoPrev); }     // vuelve al GPS real (o a la posición de depuración)
+  state.demo = false; demoPrev = null;
+}
+$("demoSalir").onclick = () => { detenerDemo(); ir("buscar"); };
+
+// ---------- Depuración (?debug) ----------
+$("from").innerHTML = DESTS.map(d => `<option value="${esc(d.id)}">${esc(info(d.id).nombre)}</option>`).join("");
+$("from").onchange = e => { const n = graph[DEST[e.target.value].node]; state.user = { lat: n.lat, lng: n.lng }; render(); };
+$("head").oninput = e => { setHeading(+e.target.value); $("hv").textContent = e.target.value; };
+
+// ---------- Render ----------
+let pendiente = false;
+function render() {                                          // junta varios cambios (la brújula emite ~60 por segundo)
+  if (pendiente) return;
+  pendiente = true;
+  requestAnimationFrame(() => { pendiente = false; renderAhora(); });
+}
+let ultimoBuscar = 0;
+function renderAhora() {
+  if (state.vista === "brujula") renderBrujula();
+  else if (state.vista === "buscar") { const t = Date.now(); if (t - ultimoBuscar > 1000) { ultimoBuscar = t; actualizarDistBuscar(); } }
 }
 window.addEventListener("resize", render);
-if (location.hash === "#mapa") setTab("mapa"); else render();   // index.html#mapa abre directo el mapa
+
+// ---------- Arranque ----------
+if (params.has("demo")) iniciarDemo();
+else if (DEBUG || location.hash === "#mapa") { if (location.hash === "#mapa") state.modo = "mapa"; ir(location.hash === "#mapa" ? "brujula" : "buscar", false); }
+else ir("permiso", false);
 </script>
-<script type="module" src="fotos.js"></script>
 </body>
 </html>

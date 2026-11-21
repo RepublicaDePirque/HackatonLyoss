@@ -1,0 +1,68 @@
+{
+	"descripcion": "Transformación afín entre GPS (WGS84) y píxeles del plano oficial de Casa Central (docs/plano-casa-central.png y plano.jpeg del repo, 1311x1006 px). El mapa SVG usa las mismas coordenadas de píxel.",
+	"gps_a_px": {
+		"formula": "px_x = a*lng + b*lat + c ; px_y = d*lng + e*lat + f",
+		"a": -180749.81750682846,
+		"b": -101068.91757058853,
+		"c": -16278863.33719626,
+		"d": -83191.95450730185,
+		"e": 216632.3234418215,
+		"f": 1200966.5954243056
+	},
+	"metros_por_px": 0.4666,
+	"rumbo_del_arriba_del_plano_grados": 154.8,
+	"nota_orientacion": "El plano NO tiene el norte arriba: «arriba» apunta al sur-sureste (rumbo ~155°). Av. España y el mar quedan abajo.",
+	"metodo": "Ajuste por mínimos de distancia entre los contornos de 12 edificios en OpenStreetMap (A, C, D, E, F, K, M, M2, P, R, T, U) y los bordes de los edificios en el plano.",
+	"error": {
+		"mediana_por_edificio_m": "0.5 a 1.9",
+		"validacion_cruzada": "Ajustando sin A, F, K, R y U, esos edificios caen a 0.5-2.3 m (mediana) de su contorno en el plano.",
+		"limite": "Mide plano vs. OpenStreetMap, no contra GPS en terreno. El GPS del teléfono agrega 5 m o más."
+	},
+	"puntos_de_prueba": [
+		{
+			"nombre": "M",
+			"lat": -33.03494,
+			"lng": -71.59301,
+			"px": [
+				365.8,
+				493.2
+			]
+		},
+		{
+			"nombre": "T",
+			"lat": -33.035188,
+			"lng": -71.59761,
+			"px": [
+				1222.3,
+				822.2
+			]
+		},
+		{
+			"nombre": "P",
+			"lat": -33.036805,
+			"lng": -71.594274,
+			"px": [
+				782.7,
+				194.4
+			]
+		},
+		{
+			"nombre": "F",
+			"lat": -33.034819,
+			"lng": -71.596678,
+			"px": [
+				1016.5,
+				824.6
+			]
+		},
+		{
+			"nombre": "C",
+			"lat": -33.036019,
+			"lng": -71.5946,
+			"px": [
+				762.2,
+				391.7
+			]
+		}
+	]
+}

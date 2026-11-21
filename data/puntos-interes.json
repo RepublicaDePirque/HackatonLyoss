@@ -1,0 +1,408 @@
+{
+	"nota": "Puntos de interés de Casa Central. No se verificó en terreno que sigan existiendo; OSM puede estar desactualizado.",
+	"atribucion": "© colaboradores de OpenStreetMap (ODbL), salvo donde se indica al equipo.",
+	"puntos": [
+		{
+			"nombre": "Entrada Av. España",
+			"tipo": "acceso",
+			"lat": -33.034172,
+			"lng": -71.595702,
+			"px": [
+				775,
+				884
+			],
+			"fuente": "equipo (rama wip/brujula), punto GPS real",
+			"coordenada": "tomada por el equipo"
+		},
+		{
+			"nombre": "Entrada Av. Los Placeres",
+			"tipo": "acceso",
+			"lat": -33.036665,
+			"lng": -71.595144,
+			"px": [
+				926,
+				297
+			],
+			"fuente": "equipo (rama wip/brujula), punto GPS real",
+			"coordenada": "tomada por el equipo"
+		},
+		{
+			"nombre": "Portería M",
+			"tipo": "acceso",
+			"lat": -33.034867,
+			"lng": -71.592865,
+			"px": [
+				332,
+				497
+			],
+			"fuente": "equipo (rama wip/brujula), punto GPS real",
+			"coordenada": "tomada por el equipo"
+		},
+		{
+			"nombre": "Patio Central",
+			"tipo": "patio",
+			"lat": -33.035187,
+			"lng": -71.595721,
+			"px": [
+				881,
+				665
+			],
+			"fuente": "equipo (rama wip/brujula), sin verificar",
+			"coordenada": "estimada"
+		},
+		{
+			"nombre": "Admisión (Patio Central)",
+			"tipo": "servicio",
+			"lat": -33.035115,
+			"lng": -71.59578,
+			"px": [
+				884,
+				686
+			],
+			"fuente": "equipo (rama wip/brujula), sin verificar",
+			"coordenada": "estimada"
+		},
+		{
+			"nombre": "Patio de los Ceibos",
+			"tipo": "patio",
+			"lat": -33.034991,
+			"lng": -71.596505,
+			"px": [
+				1003,
+				773
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Patio del Cañón",
+			"tipo": "patio",
+			"lat": -33.035137,
+			"lng": -71.596947,
+			"px": [
+				1097,
+				778
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Cancha",
+			"tipo": "deporte",
+			"lat": -33.034837,
+			"lng": -71.594,
+			"px": [
+				534,
+				598
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Piscina",
+			"tipo": "deporte",
+			"lat": -33.035576,
+			"lng": -71.595176,
+			"px": [
+				822,
+				536
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Gimnasio 1",
+			"tipo": "deporte",
+			"lat": -33.035233,
+			"lng": -71.59535,
+			"px": [
+				818,
+				624
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Gimnasio 2 (M2)",
+			"tipo": "deporte",
+			"lat": -33.034893,
+			"lng": -71.593312,
+			"px": [
+				416,
+				529
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Gimnasio 3",
+			"tipo": "deporte",
+			"lat": -33.034705,
+			"lng": -71.595139,
+			"px": [
+				727,
+				721
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Cafetería Vivendum",
+			"tipo": "comida",
+			"lat": -33.035818,
+			"lng": -71.595989,
+			"px": [
+				993,
+				551
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Casino",
+			"tipo": "comida",
+			"lat": -33.035443,
+			"lng": -71.595821,
+			"px": [
+				925,
+				618
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Kiosko",
+			"tipo": "comida",
+			"lat": -33.035378,
+			"lng": -71.595564,
+			"px": [
+				872,
+				611
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Sala de Estar y Ocio",
+			"tipo": "descanso",
+			"lat": -33.035455,
+			"lng": -71.595477,
+			"px": [
+				864,
+				587
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Biblioteca (U)",
+			"tipo": "estudio",
+			"lat": -33.034951,
+			"lng": -71.59504,
+			"px": [
+				734,
+				660
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Sansanito (atención médica)",
+			"tipo": "salud",
+			"lat": -33.035684,
+			"lng": -71.593282,
+			"px": [
+				490,
+				355
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Sansamed (dental)",
+			"tipo": "salud",
+			"lat": -33.035881,
+			"lng": -71.593384,
+			"px": [
+				528,
+				320
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Radio USM",
+			"tipo": "servicio",
+			"lat": -33.035017,
+			"lng": -71.595886,
+			"px": [
+				893,
+				716
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "OSI (fotocopias)",
+			"tipo": "fotocopias",
+			"lat": -33.034826,
+			"lng": -71.595163,
+			"px": [
+				743,
+				697
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Librería USM Fotocopiadora",
+			"tipo": "fotocopias",
+			"lat": -33.035256,
+			"lng": -71.596078,
+			"px": [
+				952,
+				680
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Museo Institucional",
+			"tipo": "cultura",
+			"lat": -33.03436,
+			"lng": -71.59466,
+			"px": [
+				605,
+				756
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM",
+			"nota": "Coincide con el edificio H del plano."
+		},
+		{
+			"nombre": "Cajero Banco Santander",
+			"tipo": "cajero",
+			"lat": -33.036245,
+			"lng": -71.59466,
+			"px": [
+				796,
+				348
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Cajero (banco sin identificar)",
+			"tipo": "cajero",
+			"lat": -33.036625,
+			"lng": -71.595195,
+			"px": [
+				931,
+				310
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM",
+			"nota": "En Av. Los Placeres; OSM no indica el banco."
+		},
+		{
+			"nombre": "Baños (C, piso 2)",
+			"tipo": "baños",
+			"lat": -33.036068,
+			"lng": -71.594344,
+			"px": [
+				721,
+				360
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Estacionamiento de bicicletas (entrada España)",
+			"tipo": "bicicletas",
+			"lat": -33.034368,
+			"lng": -71.595927,
+			"px": [
+				835,
+				860
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Estacionamiento de bicicletas (C)",
+			"tipo": "bicicletas",
+			"lat": -33.036055,
+			"lng": -71.595673,
+			"px": [
+				960,
+				473
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Estacionamiento de bicicletas (Placeres)",
+			"tipo": "bicicletas",
+			"lat": -33.036547,
+			"lng": -71.595142,
+			"px": [
+				914,
+				322
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Obelisco a Diego Portales",
+			"tipo": "monumento",
+			"lat": -33.035866,
+			"lng": -71.592834,
+			"px": [
+				428,
+				278
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM",
+			"nota": "En Av. Los Placeres, junto al edificio R. Según OpenStreetMap, monolito encargado por Nicanor Parra en honor a Diego Portales; candidato a dato curioso, verificar la historia antes de usarla."
+		},
+		{
+			"nombre": "Mirador",
+			"tipo": "mirador",
+			"lat": -33.034468,
+			"lng": -71.595497,
+			"px": [
+				768,
+				802
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM"
+		},
+		{
+			"nombre": "Mirador Paseo Wheelwright",
+			"tipo": "mirador",
+			"lat": -33.033798,
+			"lng": -71.595915,
+			"px": [
+				775,
+				982
+			],
+			"fuente": "OpenStreetMap",
+			"coordenada": "verificada en OSM",
+			"nota": "Fuera del campus, al otro lado de Av. España."
+		}
+	],
+	"pendientes": [
+		{
+			"nombre": "Cajero BancoEstado",
+			"motivo": "OpenStreetMap no tiene un cajero identificado como BancoEstado; hay uno sin banco indicado en Av. Los Placeres (-33.036625, -71.595195) que podría serlo. Confirmar. Sale en Google Maps, pero no se extrajo: su API es de pago y sus términos no permiten copiar datos en bloque. Marcar a mano (clic derecho en Google Maps copia las coordenadas) o en terreno."
+		},
+		{
+			"nombre": "Testamento de Federico Santa María (entrada)",
+			"motivo": "No figura en OpenStreetMap (consultado el 21-11-2026). Trabajo futuro: marcar en terreno."
+		},
+		{
+			"nombre": "Memorial del reloj de sol",
+			"motivo": "No figura en OpenStreetMap (consultado el 21-11-2026). Trabajo futuro: marcar en terreno."
+		}
+	]
+}
