@@ -121,7 +121,7 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 - Estimado o sin verificar: las pistas (borradores redactados desde el plano) y el contenido de cada edificio (aportado por el equipo).
 - Fotos con licencia libre solo para A, F y B (Wikimedia Commons; las de A y B con la letra inferida). C, M, P, Biblioteca, Comedores y Federación: pendientes de sacar en terreno.
 - Sin ubicar (trabajo futuro): testamento de la entrada y memorial del reloj de sol; no figuran en OpenStreetMap. Cajero BancoEstado: hay un cajero sin banco indicado en Av. Los Placeres que podría serlo, por confirmar.
-- Letra por confirmar: la cafetería Vivendum es «Q» en OpenStreetMap y «O» en el plano oficial. El punto del edificio P es el centro de P y P2 juntos. Los datos de Google Maps no se extrajeron: API de pago y términos que no permiten copiarlos en bloque.
+- La cafetería Vivendum es el Edificio Q, confirmado por el equipo y coincidente con OpenStreetMap; el plano oficial la rotula «O». El punto del edificio P es el centro de P y P2 juntos. Los datos de Google Maps no se extrajeron: API de pago y términos que no permiten copiarlos en bloque.
 - Datos curiosos por zona: sin recolectar.
 - Punto de entrada: sin definir por ahora, por decisión del equipo (QR en las entradas del campus o enlace previo). Hoy la app siempre parte en la bienvenida, aunque la persona ya haya pasado por ella.
 - Sin definir: nombre del producto, moderación de fotos, dónde se guardan las fotos, stack concreto.
