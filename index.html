@@ -53,6 +53,7 @@
 <body>
 <main>
 <select id="dest" aria-label="Destino"></select>
+<button id="accBtn" aria-pressed="false" style="min-height:44px;padding:8px;font-size:16px">♿ Ruta sin escaleras: NO</button>
 <div id="tabs" role="tablist">
   <button id="tabBrujula" class="on" role="tab" aria-selected="true">🧭 Brújula</button>
   <button id="tabMapa" role="tab" aria-selected="false">🗺️ Mapa</button>
@@ -76,7 +77,7 @@
     <button id="mRuta">🧭 Ruta</button>
   </div>
   <div id="mapInfo" class="mut">—</div>
-  <div class="mut" style="text-align:center;font-size:12px">Plano del campus · calibración con OpenStreetMap (~5 m) y nodos por verificar en terreno.</div>
+  <div class="mut" style="text-align:center;font-size:12px">Plano del campus · caminos © OpenStreetMap · posición aproximada (±10 m)</div>
 </section>
 
 <div id="warn"></div>
@@ -92,6 +93,7 @@
 <div id="hint" class="mut">Mantén la pantalla encendida. Si la flecha se ve rara, mueve el teléfono en forma de 8 para calibrar la brújula.</div>
 </main>
 
+<script src="grafo.js"></script>
 <script>
 // ---------- Geometría ----------
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
@@ -117,8 +119,7 @@ const cardinal = deg => DIRS[Math.round(deg / 45) % 8];
 // CALIBRACIÓN: ajuste por mínimos cuadrados (semejanza) entre el centro de 12 edificios del plano
 // (A, C, D, E, F, K, L, M, M2, R, T, U; letra -> píxel) y el centro de su contorno en OpenStreetMap.
 // Error medio ~4 m, máximo ~11 m. Verificado superponiendo los contornos de OSM sobre plano.jpeg.
-// Para afinar: sumar puntos medidos en terreno con GPS. Los nodos están puestos "a ojo" sobre
-// plano.jpeg (1311×1006 px): verificar que sigan pasillos reales.
+// Si cambia, actualizar también las constantes de tools/generar-grafo.py.
 const ORIGIN = { lat: -33.034358, lng: -71.595779 };      // = píxel (ax,ay), acceso Av. España
 const fromXY = (x, y) => ({
   lat: ORIGIN.lat + y / 111320,
@@ -140,50 +141,40 @@ const toPlan = (x, y) => {
   const X = x * Math.cos(ROT) - y * Math.sin(ROT), Y = x * Math.sin(ROT) + y * Math.cos(ROT);
   return { px: PLANO.ax + X / PLANO.mpp, py: PLANO.ay - Y / PLANO.mpp };
 };
-const N = (id, name, px, py) => { const { x, y } = fromPlan(px, py); return { id, name, px, py, x, y, ...fromXY(x, y), edges: [] }; };
-const nodesList = [
-  N("espana","Acceso Av. España", 810, 850),
-  N("a","Edificio A",             813, 776),
-  N("w1","",                      713, 780),
-  N("w2","",                      700, 600),
-  N("w3","",                      690, 500),
-  N("w4","",                      700, 458),
-  N("c","Edificio C",             770, 457),
-  N("cn","",                      935, 458),
-  N("ne","",                      950, 485),
-  N("b","Edificio B",             947, 555),
-  N("d","Edificio D",             905, 612),
-  N("pc","Patio Central",         873, 680),
-  N("e1","",                      880, 775),
-  N("f1","",                      915, 805),
-  N("f","Edificio F",             990, 808),
-  N("g1","",                     1150, 800),
-  N("t","Edificio T",            1195, 805),
-];
-const edgePairs = [
-  ["espana","a"],["a","w1"],["w1","w2"],["w2","w3"],["w3","w4"],["w4","c"],["c","cn"],["cn","ne"],["ne","b"],
-  ["b","d"],["d","pc"],["pc","e1"],["e1","a"],["e1","f1"],["f1","f"],["f","g1"],["g1","t"],
-];
+const toXY = p => ({ x: (p.lng - ORIGIN.lng) * 111320 * Math.cos(toRad(ORIGIN.lat)), y: (p.lat - ORIGIN.lat) * 111320 });
+
+// Grafo de caminos: viene de OpenStreetMap (grafo.js, generado con tools/generar-grafo.py).
+// Cada tramo puede ser una escalera; los destinos son edificios unidos a su camino más cercano.
+const nodesList = GRAFO.nodos.map(([lat, lng], i) => ({ id: "n" + i, lat, lng, ...toXY({ lat, lng }), edges: [] }));
 const graph = Object.fromEntries(nodesList.map(n => [n.id, n]));
-edgePairs.forEach(([a, b]) => { graph[a].edges.push(b); graph[b].edges.push(a); });
-const DESTS = nodesList.filter(n => n.name);
+const edgePairs = GRAFO.aristas.map(([a, b]) => ["n" + a, "n" + b]);
+const stairs = new Set();                                   // "a|b" de los tramos que son escaleras
+GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph["n" + b].edges.push("n" + a); if (t === 1) { stairs.add(`n${a}|n${b}`); stairs.add(`n${b}|n${a}`); } });
+const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
+const DEST = Object.fromEntries(DESTS.map(d => [d.id, d]));
+const NOMBRE_NODO = {}; DESTS.forEach(d => { NOMBRE_NODO[d.node] ??= d.name; });
+const destNode = () => DEST[state.destId].node;             // nodo del grafo del destino elegido
+const PENAL_ESCALERA = 15;                                  // m extra por escalera cuando se permiten
 
 // ---------- A* ----------
 function astar(graph, start, goal) {
-  const h = id => distance(graph[id], graph[goal]);
-  const open = new Set([start]), came = {}, g = { [start]: 0 }, f = { [start]: h(start) };
-  while (open.size) {
-    let cur = null;
-    for (const id of open) if (cur === null || f[id] < f[cur]) cur = id;
+  const sinEscaleras = state.accesible, h = id => distance(graph[id], graph[goal]);
+  const heap = [], came = {}, g = { [start]: 0 }, done = new Set();
+  const push = it => { heap.push(it); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i;
+    if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+  push([h(start), start]);
+  while (heap.length) {
+    let [, cur] = pop(); if (done.has(cur)) continue; done.add(cur);
     if (cur === goal) {
       const path = [cur];
       while (came[cur]) { cur = came[cur]; path.unshift(cur); }
       return path;
     }
-    open.delete(cur);
     for (const n of graph[cur].edges) {
-      const t = g[cur] + distance(graph[cur], graph[n]);
-      if (t < (g[n] ?? Infinity)) { came[n] = cur; g[n] = t; f[n] = t + h(n); open.add(n); }
+      const esc = stairs.has(cur + "|" + n); if (esc && sinEscaleras) continue;
+      const t = g[cur] + distance(graph[cur], graph[n]) + (esc ? PENAL_ESCALERA : 0);
+      if (t < (g[n] ?? Infinity)) { came[n] = cur; g[n] = t; push([t + h(n), n]); }
     }
   }
   return null;
@@ -200,8 +191,6 @@ const SNAP_MAX = 40;   // m: más lejos que esto del camino, se usa la posición
 const ARRIVE_R = 15;   // m: radio para dar un nodo por alcanzado
 const HYST = 15;       // m: ventaja mínima para cambiar de nodo objetivo
 
-const toXY = p => ({ x: (p.lng - ORIGIN.lng) * 111320 * Math.cos(toRad(ORIGIN.lat)), y: (p.lat - ORIGIN.lat) * 111320 });
-
 // Proyecta la posición sobre la arista más cercana del grafo.
 function snapToGraph(p) {
   const q = toXY(p); let best = null;
@@ -216,7 +205,7 @@ function snapToGraph(p) {
 
 // Devuelve el siguiente nodo de la ruta, la posición ajustada y la distancia restante.
 function guide() {
-  const dest = state.destId, snap = snapToGraph(state.user);
+  const dest = destNode(), snap = snapToGraph(state.user);
   const onGraph = snap.d <= SNAP_MAX;
   const pos = onGraph ? snap : state.user;
   const cands = onGraph ? [snap.a, snap.b] : [nearest(graph, state.user)];
@@ -244,7 +233,8 @@ const state = {
   mode: "sim",                       // "sim" | "gps"
   user: fromXY(0, 0),
   heading: 0,                        // rumbo suavizado
-  destId: "c",
+  destId: DEST["edificio-c"] ? "edificio-c" : DESTS[0].id,
+  accesible: false,                  // true = ruta sin escaleras
 };
 
 // ---------- UI ----------
@@ -252,8 +242,13 @@ const $ = id => document.getElementById(id);
 $("dest").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
 $("dest").value = state.destId;
 $("dest").onchange = e => { state.destId = e.target.value; state.target = null; mapV.fitted = false; render(); };
-$("from").innerHTML = nodesList.map(n => `<option value="${n.id}">${n.name || "Cruce " + n.id}</option>`).join("");
-$("from").onchange = e => { state.user = { lat: graph[e.target.value].lat, lng: graph[e.target.value].lng }; render(); };
+$("from").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+$("from").onchange = e => { const n = graph[DEST[e.target.value].node]; state.user = { lat: n.lat, lng: n.lng }; render(); };
+$("accBtn").onclick = () => {
+  state.accesible = !state.accesible; state.target = null; mapV.fitted = false;
+  $("accBtn").classList.toggle("on", state.accesible); $("accBtn").setAttribute("aria-pressed", state.accesible);
+  $("accBtn").textContent = "♿ Ruta sin escaleras: " + (state.accesible ? "SÍ" : "NO"); render();
+};
 $("head").oninput = e => { setHeading(+e.target.value); $("hv").textContent = e.target.value; };
 
 // Rumbo suavizado con promedio circular (evita el salto 359° -> 0°)
@@ -357,7 +352,7 @@ function drawDial(bDest, arrived) {
   ctx.fillText(arrived ? "destino" : cardinal(state.heading), cx, cy + 28);
 }
 
-const label = id => graph[id].name || "cruce";
+const label = id => NOMBRE_NODO[id] || "cruce";
 
 // ---------- Mapa (plano.jpeg de fondo, mismo estilo oscuro/amarillo que la brújula) ----------
 const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0 };
@@ -387,11 +382,11 @@ function fitPoints(pts) {
   mapV.cx = (x0 + x1) / 2; mapV.cy = (y0 + y1) / 2;
 }
 function routePath(g) {                                  // nodos que faltan hasta el destino
-  return g ? astar(graph, g.target, state.destId) : null;
+  return g ? astar(graph, g.target, destNode()) : null;
 }
 function fitRoute(g) {
   const path = routePath(g);
-  const pts = path ? path.map(id => mapPx(graph[id])) : [mapPx(graph[state.destId])];
+  const pts = path ? path.map(id => mapPx(graph[id])) : [mapPx(graph[destNode()])];
   if (g) pts.push(posPx(g.pos)); else if (state.fix || DEBUG) pts.push(posPx(state.user));
   if (pts.length === 1) { mapV.cx = pts[0].px; mapV.cy = pts[0].py; mapV.z = Math.max(mapV.z, 1.2); }
   else fitPoints(pts);
@@ -410,8 +405,13 @@ function drawMap(g) {
   const P = n => toScr(...Object.values(mapPx(n)));
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   // caminos
-  ctx.strokeStyle = "#5b6b80"; ctx.lineWidth = 3;
-  for (const [a, b] of edgePairs) { const [x1, y1] = P(graph[a]), [x2, y2] = P(graph[b]); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  ctx.lineWidth = 3;
+  for (const esc of [false, true]) {                         // primero caminos, luego escaleras (naranjo, punteado)
+    ctx.strokeStyle = esc ? "#ff9f43" : "#5b6b80"; ctx.setLineDash(esc ? [5, 4] : []); ctx.beginPath();
+    for (const [a, b] of edgePairs) if (stairs.has(a + "|" + b) === esc) { const [x1, y1] = P(graph[a]), [x2, y2] = P(graph[b]); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
   // ruta restante (amarilla, desde tu posición ajustada)
   const path = routePath(g);
   if (path) {
@@ -422,14 +422,13 @@ function drawMap(g) {
   }
   // nodos y etiquetas
   ctx.font = "600 13px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.lineJoin = "round";
-  for (const n of nodesList) {
-    const [x, y] = P(n), isDest = n.id === state.destId;
-    ctx.fillStyle = isDest ? "#ffd23f" : (n.name ? "#e8edf3" : "#8a94a3");
-    ctx.beginPath(); ctx.arc(x, y, isDest ? 9 : (n.name ? 6 : 3.5), 0, 7); ctx.fill();
-    if (n.name) {
-      ctx.strokeStyle = "#000"; ctx.strokeText(n.name, x, y - 13);
-      ctx.fillStyle = isDest ? "#ffd23f" : "#fff"; ctx.fillText(n.name, x, y - 13);
-    }
+  for (const d of DESTS) {
+    const [x, y] = P(graph[d.node]), isDest = d.id === state.destId;
+    const corto = d.name.split(" - ")[0].replace("Edificio ", "");   // "Edificio A" -> "A"
+    ctx.fillStyle = isDest ? "#ffd23f" : "#e8edf3";
+    ctx.beginPath(); ctx.arc(x, y, isDest ? 9 : 6, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.strokeText(isDest ? d.name : corto, x, y - 13);
+    ctx.fillStyle = isDest ? "#ffd23f" : "#fff"; ctx.fillText(isDest ? d.name : corto, x, y - 13);
   }
   if (g) {
     const [tx, ty] = P(graph[g.target]);
@@ -487,7 +486,7 @@ mapEl.onwheel = e => { e.preventDefault(); const p = rel(e); zoomAt(p.x, p.y, ma
 
 function tapMap(sx, sy) {
   let best = null, bd = 28;                              // toque cerca de un lugar con nombre -> nuevo destino
-  for (const n of DESTS) { const [x, y] = toScr(...Object.values(mapPx(n))), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = n; } }
+  for (const n of DESTS) { const [x, y] = toScr(...Object.values(mapPx(graph[n.node]))), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = n; } }
   if (best) { state.destId = best.id; state.target = null; mapV.fitted = false; $("dest").value = best.id; render(); return; }
   if (DEBUG && state.mode === "sim") {
     const q = fromScr(sx, sy), m = fromPlan(q.px, q.py);
@@ -520,11 +519,11 @@ function render() {
                 : (state.mode === "gps" && !state.fix) ? "Buscando señal GPS…" : null;
   if (waiting) {
     $("dir").textContent = "—"; $("dist").textContent = waiting; $("sub").textContent = "";
-    $("mapInfo").innerHTML = `<b>${graph[state.destId].name}</b> · ${waiting}`;
+    $("mapInfo").innerHTML = `<b>${DEST[state.destId].name}</b> · ${waiting}`;
     if (!enMapa) drawDial(null, false); draw(null);
     return;
   }
-  const dest = graph[state.destId];
+  const dest = Object.assign({}, graph[destNode()], { name: DEST[state.destId].name });
   const straight = distance(state.user, dest);
   const arrived = straight < 20;
   let b = bearing(state.user, dest), g = null, resumen;
@@ -543,8 +542,8 @@ function render() {
       (g.onGraph ? "" : " · lejos del camino") + (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
     resumen = `<b>${dest.name}</b> · ~${Math.round(g.remaining / 10) * 10} m · ${min} min · ${cardinal(b)}` + (g.onGraph ? "" : " · lejos del camino");
   } else {
-    $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = "Destino no conectado al grafo";
-    resumen = "Sin ruta: destino no conectado";
+    $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = state.accesible ? "No hay camino sin escaleras" : "Destino no conectado al grafo";
+    resumen = state.accesible ? "Sin ruta sin escaleras: prueba desactivando la opción" : "Sin ruta: destino no conectado";
   }
   $("mapInfo").innerHTML = resumen;
   if (!enMapa) drawDial(b, arrived);
