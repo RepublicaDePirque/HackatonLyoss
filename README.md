@@ -2,57 +2,41 @@
 
 <img src="logo.png" alt="Logo de Brújula USM: un faro con un haz dorado" width="120">
 
-Una brújula para orientarse en Casa Central (USM, Valparaíso). Eliges un destino y ves hacia dónde queda y a qué distancia. No te lleva de la mano con giros: tú decides por dónde caminar y, en el camino, conoces el campus. Al llegar ves cómo se ve el edificio y puedes dejar tu propia foto para quien venga después.
+Hackathon LYOSS USM 2026, desafío «Campus sin barreras».
 
-Hackathon LYOSS USM 2026, desafío «Campus sin barreras». Es una web/PWA: se abre con un enlace, sin instalar nada, y se publica con GitHub Pages.
+## Propósito
 
-## Qué hace hoy
+Orientarse en Casa Central (USM, Valparaíso) es difícil para quien no conoce el campus: hay cerro, desniveles y edificios nombrados con letras. Las apps habituales llevan al destino con una ruta giro a giro, pero no ayudan a conocer el lugar.
 
-- **Brújula con distancia.** Apunta hacia el borde más cercano del edificio o patio de destino (no hacia un punto en el centro) y muestra la dirección cardinal y los metros en línea recta.
-- **Aviso de llegada.** Cuando estás a 15 m del borde del edificio, la brújula muestra «Estás llegando».
-- **Tiempo y ruta a pie estimados.** Calcula un camino sobre los senderos del campus (algoritmo A*) y muestra distancia y minutos aproximados.
-- **Mapa del campus.** Pestaña con el plano de Casa Central, tu posición, el destino y la ruta que falta. Se puede arrastrar, hacer zoom y tocar un edificio para elegirlo como destino.
-- **Ruta sin escaleras.** Un botón activa el modo accesible, que evita los tramos con escaleras.
-- **21 destinos.** Edificios A, B, C, D, E, F, K, L, M, M2, P, Q (Cafetería Vivendum), R, T, U (Biblioteca), Comedores, Innovación Tecnológica, Gimnasio 1, Museo Institucional, Patio Central y el acceso por Av. España.
-- **Posición ajustada al camino.** Si estás a menos de 40 m de un sendero, la posición se «pega» a él para que la ruta no salte; si estás más lejos, avisa «lejos del camino».
-- **Funciona sin conexión.** El service worker guarda la app y el plano, así que sigue andando sin internet (siempre intenta primero la versión nueva).
-- **Instalable.** Tiene manifest e íconos, así que se puede agregar a la pantalla de inicio.
-- **Fotos comunitarias (en construcción).** La captura, compresión y subida de fotos ya funcionan, con el lado del edificio (N/S/E/O) desde el que se tomaron. Solo se usan hoy en un panel de prueba (ver más abajo); falta la pantalla final del diseño.
-- **Modo de prueba.** Con `?debug` en la URL se puede simular la posición y el rumbo sin salir de casa.
+Brújula USM propone otra cosa: eliges un destino y el borde de la pantalla brilla hacia él, con la distancia. No te damos una ruta; tú decides por dónde caminar y, en el trayecto, descubres el campus. La idea de fondo es que la barrera se reduce cuando la persona conoce su universidad, y que la comunidad ayuda al siguiente que llega, por ejemplo con fotos de cómo se ve cada edificio.
 
-### Lo que falta
+Pensada primero para mechones y estudiantes que no conocen bien el campus. Es una web/PWA: se abre con un enlace, sin instalar nada.
 
-- La interfaz final del diseño (resplandor direccional, pantalla de llegada con foto, datos curiosos por zona). La interfaz actual es funcional, no la definitiva.
-- Conectar las fotos comunitarias a esa interfaz. Hoy solo existe el panel de prueba.
-- Medir la precisión real del GPS en el campus y validar en terreno las coordenadas.
+Más detalle: [docs/PRD.md](docs/PRD.md) (producto y decisiones de diseño), [docs/implementacion.md](docs/implementacion.md) (cómo está construida) y [docs/pendientes-datos.md](docs/pendientes-datos.md) (datos que faltan).
 
-## Tecnologías
+## Funcionalidades
 
-- **Web/PWA sin compilación:** HTML, CSS y JavaScript (módulos ES). No hay framework ni paso de build.
-- **Canvas 2D** para dibujar la brújula y el mapa.
-- **APIs del navegador:** Geolocalización (`watchPosition`), orientación del dispositivo (`DeviceOrientationEvent`) y Service Worker.
-- **Grafo de caminos de OpenStreetMap**, consultado con la Overpass API, y búsqueda de rutas con A*.
-- **Contornos de edificios** calcados del plano oficial con Python (NumPy, SciPy, Pillow y Matplotlib).
-- **Firebase** para las fotos: Authentication anónima y Firestore, sin Cloud Storage. Las fotos se comprimen a JPEG (máximo ~250 KB y 1024 px) y se guardan en base64.
-- **GitHub Pages** para el despliegue.
+- **Brújula con resplandor.** El borde de la pantalla brilla del lado del destino: frío y estrecho si está lejos, cálido y ancho si está cerca. La cifra en metros queda al centro. Se puede cambiar a una flecha o al mapa.
+- **Ayuda para no perderse.** Una pista de texto por destino siempre visible y un mensaje según el estado: vas bien, te estás alejando, está detrás de ti o casi llegas. Si el GPS es impreciso, lo avisa.
+- **37 destinos con buscador.** Lista «Cerca de ti» y «Todos los destinos», ordenados por distancia; busca por nombre, lugar o letra («C»). Marca los que tienen fotos.
+- **Datos curiosos por zona.** Al pasar por ciertos lugares aparece una tarjeta con un dato del campus.
+- **Llegada.** Automática al entrar al cuadro del edificio o patio (con un margen de 5 m por el error del GPS), con botón «Ya llegué» por si el GPS falla.
+- **Fotos de cómo se ve el destino.** En los últimos 60 m aparece «Así se ve al llegar», y al llegar el usuario puede tomar y dejar su propia foto.
+- **Mapa del campus.** Plano de Casa Central con tu posición, el destino y la ruta sobre los caminos de OpenStreetMap, con aviso de escaleras y la opción «sin escaleras».
+- **Recorrido de ejemplo.** Un recorrido simulado de unos 35 s para mostrar la app sin depender del GPS.
+- **Tema claro y oscuro** según el teléfono, y animaciones reducidas si el usuario lo pide.
+- **Funciona sin conexión** e instalable en la pantalla de inicio.
 
-## Estructura del repo
+### Estado actual
 
-| Archivo | Qué es |
-|---|---|
-| [index.html](index.html) | La app: interfaz, brújula, mapa, cálculo de rutas y panel de prueba de fotos |
-| [grafo.js](grafo.js) | Caminos y destinos del campus (generado con `tools/generar-grafo.py`) |
-| [contornos.js](contornos.js) | Contornos de edificios y patios (generado con `tools/contornos.py`) |
-| [fotos.js](fotos.js) | Captura, compresión, subida y lectura de fotos con Firestore |
-| [sw.js](sw.js) | Service worker para uso sin conexión |
-| [manifest.webmanifest](manifest.webmanifest) | Datos para instalar la app |
-| [plano.jpeg](plano.jpeg) | Plano del campus, base del mapa |
-| [firebase/firestore.rules](firebase/firestore.rules) | Reglas de seguridad de la base de datos |
-| [tools/](tools) | Scripts que regeneran `grafo.js` y `contornos.js` |
+- Las fotos de la comunidad hoy **se guardan solo en el teléfono** (`localStorage`); todavía no se comparten entre personas. El código para subirlas a Firestore existe ([fotos.js](fotos.js) y [firebase/firestore.rules](firebase/firestore.rules)), pero **aún no está conectado** a la interfaz.
+- Los datos curiosos y varias pistas son contenido de ejemplo sin verificar. Faltan fotos propias de varios edificios y validar las coordenadas en terreno. La lista completa está en [docs/pendientes-datos.md](docs/pendientes-datos.md).
+- La interfaz se probó con un DOM simulado, no en un teléfono real.
+- Fuera del alcance del prototipo: accesibilidad para personas ciegas y en silla de ruedas (hay trabajo previo en la rama `accesibilidad/modo-voz`) y asignación de salas.
 
-## Cómo levantarlo
+## Cómo ejecutarla
 
-No necesita instalar nada. Clona el repo y sírvelo como sitio estático:
+No tiene dependencias ni paso de compilación: es un sitio estático.
 
 ```bash
 git clone https://github.com/RepublicaDePirque/HackatonLyoss.git
@@ -60,54 +44,77 @@ cd HackatonLyoss
 python3 -m http.server 8000
 ```
 
-Abre <http://localhost:8000>. La geolocalización solo funciona en `localhost` o con HTTPS.
+Abre <http://localhost:8000>. El GPS y la brújula reales solo funcionan por HTTPS (o en `localhost`), por ejemplo publicando el repo en GitHub Pages (*Settings → Pages*). En iPhone la brújula además exige un toque del usuario para dar el permiso, por eso la app lo pide en la primera pantalla.
 
-- **Sin salir de casa:** abre <http://localhost:8000/?debug>. Aparece un simulador para mover tu posición (tocando el mapa) y girar el celular, más el panel de prueba de fotos.
-- **En un teléfono real:** publícalo en GitHub Pages (*Settings → Pages*), que da HTTPS. En iPhone la brújula pide HTTPS y un toque del usuario para dar permiso; por eso la app tiene el botón «Activar ubicación y brújula».
-- **Si cambias archivos que usa el service worker:** súbele el número a `CACHE` en [sw.js](sw.js) para que los teléfonos descarguen la versión nueva.
+| Enlace | Para qué |
+|---|---|
+| `/` | Flujo real (pide GPS y brújula; necesita HTTPS) |
+| `/?demo` | Arranca directo el recorrido de ejemplo |
+| `/?debug` | Panel para mover la posición y el rumbo sin GPS |
+| `/#mapa` | Abre directo en modo mapa |
+| `/?tema=claro` o `/?tema=oscuro` | Fuerza el tema |
 
-### Regenerar los datos del campus
+Se pueden combinar, por ejemplo `/?debug&tema=claro`. Si cambias archivos que usa el service worker, sube el número de `CACHE` en [sw.js](sw.js) para que los teléfonos descarguen la versión nueva.
 
-Estos pasos solo hacen falta si cambias el mapa o los destinos.
+### Regenerar los datos del campus (opcional)
 
-- **Caminos y destinos** (`grafo.js`): necesita internet y solo la biblioteca estándar de Python. Si algo falta en el mapa, se corrige en openstreetmap.org y se vuelve a correr.
+Solo hace falta si cambias el mapa o los destinos. Necesitas Python 3; `contornos.py` además necesita `numpy`, `scipy`, `pillow` y `matplotlib`.
 
-  ```bash
-  python3 tools/generar-grafo.py
-  ```
+| Script | Genera | Notas |
+|---|---|---|
+| `python3 tools/generar-grafo.py` | `grafo.js` (caminos y destinos) | Necesita internet (Overpass API) |
+| `python3 tools/contornos.py` | `contornos.js` (contornos de edificios y patios) | Con `--preview` solo deja una imagen de revisión |
+| `python3 tools/generar-datos.py` | `datos.js` (nombre, pista y foto de cada destino) | Lee `data/edificios.json` |
 
-- **Contornos de edificios** (`contornos.js`): necesita `numpy`, `scipy`, `pillow` y `matplotlib`.
+### Fotos compartidas con Firebase (opcional, aún no conectado a la interfaz)
 
-  ```bash
-  pip install numpy scipy pillow matplotlib
-  python3 tools/contornos.py
-  ```
-
-  Para revisar el resultado sin escribir nada: `python3 tools/contornos.py --preview`, que deja una imagen en `tools/preview.png`.
-
-### Fotos comunitarias: usa tu propio proyecto Firebase
-
-Las fotos se guardan en Firestore. El `firebaseConfig` de [fotos.js](fotos.js) apunta al proyecto del equipo original; **si haces un fork, no lo uses**, porque tus pruebas escribirían en su base de datos. Crea el tuyo:
+El `firebaseConfig` de [fotos.js](fotos.js) apunta al proyecto del equipo original. **Si haces un fork, crea el tuyo**, para no escribir en su base de datos:
 
 1. En la [consola de Firebase](https://console.firebase.google.com/) crea un proyecto y registra una app web.
 2. Activa *Authentication → Anonymous* y crea una base *Firestore*.
 3. Pega el contenido de [firebase/firestore.rules](firebase/firestore.rules) en *Firestore → Reglas* y publícalo.
 4. Reemplaza `FIREBASE_CONFIG` en [fotos.js](fotos.js) por el de tu proyecto. Ese objeto es público por diseño; la seguridad está en las reglas.
-5. En Google Cloud (*APIs y servicios → Credenciales*) restringe la API key a tu dominio de Pages.
+5. En Google Cloud (*APIs y servicios → Credenciales*) restringe la API key a tu dominio.
 
-Las reglas limitan cada foto a ~300 KB en JPEG y solo dejan sumar reportes (no editar ni borrar). Las fotos con 3 o más reportes dejan de mostrarse; para eliminarlas hay que hacerlo desde la consola de Firebase. Al comprimir se vuelve a dibujar la imagen, lo que elimina sus metadatos (EXIF y GPS).
+Las reglas limitan cada foto a ~300 KB en JPEG y solo dejan sumar reportes (no editar ni borrar). Las fotos con 3 o más reportes dejan de mostrarse; para eliminarlas hay que hacerlo desde la consola.
+
+## Tecnologías, APIs y servicios
+
+| Categoría | Qué se usa |
+|---|---|
+| Lenguajes | HTML, CSS y JavaScript (módulos ES); Python 3 para los scripts de datos |
+| Frameworks y librerías de la app | Ninguno: JavaScript puro, canvas 2D para la brújula y el mapa |
+| Librerías de los scripts | NumPy, SciPy, Pillow y Matplotlib (`tools/contornos.py`) |
+| APIs del navegador | Geolocalización, orientación del dispositivo (brújula), Service Worker, `localStorage`, cámara (`<input capture>`) |
+| Datos de mapas | OpenStreetMap vía Overpass API (caminos, contornos y puntos de interés), contrastado con el plano oficial |
+| Rutas | Algoritmo A* propio sobre el grafo de caminos |
+| Servicios externos | Firebase Authentication (anónima) y Firestore, con el SDK 10.12.2 desde el CDN de Google; GitHub Pages para publicar |
+| Tipografías | Chakra Petch e Instrument Sans, alojadas en `fonts/` |
+
+## Herramientas de inteligencia artificial
+
+Todo el equipo usó **Claude** (Anthropic) durante el desarrollo: **Claude Code** para escribir y revisar código y documentación, y **Claude Design** para el prototipo de interfaz (el lienzo está en [design/](design/)). El **logo** se creó con **GPT** (OpenAI). Las decisiones de producto, el diseño y la revisión del resultado son del equipo.
+
+## Integrantes
+
+| Integrante | Rol principal |
+|---|---|
+| Agustín Venegas Fellenberg | Visor de mapa e integración de toda la aplicación |
+| Eduardo Ignacio Morales | Producto (PRD), prototipo de interfaz, datos del campus y accesibilidad |
+| Pía Correa Brenni | Base de la app (PWA, GPS y brújula), grafo de caminos, contornos de edificios, llegada por cercanía al borde y fotos comunitarias con Firebase |
 
 ## Licencia
 
 - **Código:** [MIT](LICENSE) © 2026 Equipo Brújula USM.
-- **Fotos subidas por usuarios:** quien publica una foto la entrega al dominio público bajo [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.es). La app lo avisa antes de publicar. Las fotos viven en la base de datos del servicio, no en este repo.
+- **Fotos subidas por usuarios:** quien publique una foto la entrega al dominio público bajo [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.es). Las fotos compartidas viven en la base de datos del servicio, no en este repo.
 - **Datos y material de terceros:** conservan su propia licencia (ver abajo); la MIT no los cubre.
 
 ## Atribuciones
 
-- Datos de caminos y edificios: © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright), licencia [ODbL](https://opendatacommons.org/licenses/odbl/). La app lo indica en la pestaña Mapa.
-- Fotos de fachada de Wikimedia Commons (el autor y la licencia de cada una están en `data/edificios.json`, que viene en la rama de diseño):
+- Datos de caminos y edificios: © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright), licencia [ODbL](https://opendatacommons.org/licenses/odbl/).
+- Fotos de fachada de Wikimedia Commons (autor y licencia de cada una en `data/edificios.json`):
   - Edificio A: Alexxxos, CC BY-SA 3.0.
   - Edificio F: Falk2, CC BY-SA 4.0.
   - Edificio B: Carigval.97, CC BY 4.0.
 - El plano del campus (`plano.jpeg`) proviene de [infraestructura.usm.cl](https://infraestructura.usm.cl/informacion-general/) y no está cubierto por la licencia MIT; sus derechos pertenecen a la USM.
+- Las fuentes citadas en el pitch están en [docs/fuentes.md](docs/fuentes.md).
