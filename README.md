@@ -1,6 +1,6 @@
-# Luz Guía
+# Solem
 
-<img src="assets/logo/logo.png" alt="Logo de Luz Guía: un faro con un haz dorado" width="120">
+<img src="assets/logo/logo.png" alt="Logo de Solem: un faro con un haz dorado" width="120">
 
 Hackathon LYOSS USM 2026, desafío «Campus sin barreras».
 
@@ -8,7 +8,7 @@ Hackathon LYOSS USM 2026, desafío «Campus sin barreras».
 
 Orientarse en Casa Central (USM, Valparaíso) es difícil para quien no conoce el campus: hay cerro, desniveles y edificios nombrados con letras. Las apps habituales llevan al destino con una ruta giro a giro, pero no ayudan a conocer el lugar.
 
-Luz Guía propone otra cosa: eliges un destino y el borde de la pantalla brilla hacia él, con la distancia. No te damos una ruta; tú decides por dónde caminar y, en el trayecto, descubres el campus. La idea de fondo es que la barrera se reduce cuando la persona conoce su universidad, y que la comunidad ayuda al siguiente que llega, por ejemplo con fotos de cómo se ve cada edificio.
+Solem propone otra cosa: eliges un destino y el borde de la pantalla brilla hacia él, con la distancia. No te damos una ruta; tú decides por dónde caminar y, en el trayecto, descubres el campus. La idea de fondo es que la barrera se reduce cuando la persona conoce su universidad, y que la comunidad ayuda al siguiente que llega, por ejemplo con fotos de cómo se ve cada edificio.
 
 Pensada primero para mechones y estudiantes que no conocen bien el campus. Es una web/PWA: se abre con un enlace, sin instalar nada.
 
@@ -157,7 +157,7 @@ Todo el equipo usó **Claude** (Anthropic) durante el desarrollo: **Claude Code*
 
 ## Licencia
 
-- **Código:** [MIT](LICENSE) © 2026 Equipo Luz Guía.
+- **Código:** [MIT](LICENSE) © 2026 Equipo Solem.
 - **Fotos subidas por usuarios:** quien publique una foto la entrega al dominio público bajo [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.es). Las fotos compartidas viven en la base de datos del servicio, no en este repo.
 - **Datos y material de terceros:** conservan su propia licencia (ver abajo); la MIT no los cubre.
 
