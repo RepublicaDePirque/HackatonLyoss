@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Llegada sin fotos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Chakra+Petch:wght@500;600;700&display=swap">
+<style>
+body{margin:0}
+a{text-decoration:none}a:hover{opacity:0.9}
+a:focus-visible,button:focus-visible{outline:3px solid #1D1A26;outline-offset:3px}
+@keyframes respira{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes sube{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; width: 390px; height: 844px; box-sizing: border-box; padding: 48px 20px 24px; background: linear-gradient(162deg, #FF5C39 0%, #FF7A2E 48%, #FFB800 100%); color: #1D1A26; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px">
+<div aria-hidden="true" style="position: absolute; left: -120px; top: -180px; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(255,233,194,0.55) 0%, transparent 65%); filter: blur(20px); animation: respira 7s ease-in-out infinite"></div>
+<sc-if value="{{esInicio}}" hint-placeholder-val="{{true}}">
+<div style="position: relative; display: flex; flex-direction: column; gap: 10px; animation: sube 900ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<span style="width: 52px; height: 52px; border-radius: 26px; background: #1D1A26; color: #FFB877; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</span>
+<h1 style="margin: 0; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 36px; line-height: 1.05">Llegaste al {{nombre}}</h1>
+<p style="margin: 0; font-size: 17px; line-height: 1.45; font-weight: 500">Encontraste el camino por tu cuenta.</p>
+</div>
+<sc-if value="{{conFoto}}" hint-placeholder-val="{{true}}">
+<figure style="position: relative; margin: 0; display: flex; flex-direction: column; gap: 6px; animation: sube 900ms 150ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<img src="/_blob/090edd597bcd85f7dc024ed7f02f0788" alt="Fachada del Edificio A hacia Av. España, con su torre" style="width: 350px; height: 196px; object-fit: cover; border-radius: 20px; box-shadow: 0 14px 30px rgba(120, 30, 0, 0.25)">
+<figcaption style="font-size: 12px; font-weight: 600">Foto: Alexxxos · CC BY-SA 3.0 · Fachada hacia Av. España</figcaption>
+</figure>
+</sc-if>
+<sc-if value="{{sinFoto}}" hint-placeholder-val="{{false}}">
+<div style="position: relative; height: 176px; box-sizing: border-box; padding: 20px; border-radius: 20px; border: 2px dashed rgba(29,26,38,0.45); background: rgba(255,255,255,0.22); display: flex; flex-direction: column; justify-content: center; gap: 6px; animation: sube 900ms 150ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 20px">Nadie ha dejado una foto de este lugar</span>
+<span style="font-size: 15px; line-height: 1.4; font-weight: 500">Sé el primero: así quien venga después lo reconocerá al llegar.</span>
+</div>
+</sc-if>
+<div style="position: relative; padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,0.32); border: 1px solid rgba(29,26,38,0.10); display: flex; flex-direction: column; gap: 4px; animation: sube 900ms 300ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<span style="font-size: 13px; font-weight: 700">Sabías que</span>
+<span style="font-size: 15px; line-height: 1.4; font-weight: 500">{{sabias}}</span>
+</div>
+<div style="position: relative; margin-top: auto; display: flex; flex-direction: column; gap: 8px; animation: sube 900ms 450ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<span style="font-size: 15px; line-height: 1.4; font-weight: 600">Ayuda al siguiente: toma una foto de lo que ves ahora.</span>
+<button type="button" onClick="{{tomar}}" style="height: 56px; border: 0; border-radius: 18px; background: #1D1A26; color: #FFE3C4; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; cursor: pointer">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><circle cx="12" cy="13" r="3.5"></circle><path d="M9 6l1.5-2h3L15 6"></path></svg>
+Tomar foto
+</button>
+<div style="display: flex; gap: 8px">
+<a href="Main.dc.html" style="flex: 1 1 0; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: #1D1A26">Aún no llego</a>
+<a href="Buscar.dc.html" style="flex: 1 1 0; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: #1D1A26">Otro destino</a>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{esVista}}" hint-placeholder-val="{{false}}">
+<div style="position: relative; display: flex; flex-direction: column; gap: 8px; animation: sube 700ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<h1 style="margin: 0; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 30px; line-height: 1.1">Tu foto del {{nombre}}</h1>
+<p style="margin: 0; font-size: 16px; line-height: 1.45; font-weight: 500">Revísala antes de publicarla.</p>
+</div>
+<div role="img" aria-label="Vista previa de tu foto" style="position: relative; flex-grow: 1; border-radius: 24px; background: rgba(29,26,38,0.82); color: #FFE3C4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; animation: sube 700ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><circle cx="12" cy="13" r="3.5"></circle><path d="M9 6l1.5-2h3L15 6"></path></svg>
+<span style="font-size: 15px">Aquí se ve la foto que tomaste</span>
+</div>
+<span style="position: relative; font-size: 14px; line-height: 1.4; font-weight: 600">Se publica sin tu nombre. Evita fotografiar a personas.</span>
+<div style="position: relative; display: flex; flex-direction: column; gap: 8px">
+<button type="button" onClick="{{publicar}}" style="height: 56px; border: 0; border-radius: 18px; background: #1D1A26; color: #FFE3C4; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; cursor: pointer">Publicar foto</button>
+<button type="button" onClick="{{repetir}}" style="height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1D1A26; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer">Tomar otra</button>
+</div>
+</sc-if>
+<sc-if value="{{esGracias}}" hint-placeholder-val="{{false}}">
+<div role="status" style="position: relative; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; animation: sube 900ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<span style="width: 64px; height: 64px; border-radius: 32px; background: #1D1A26; color: #FFB877; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>
+</span>
+<h1 style="margin: 0; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 36px; line-height: 1.05">Gracias por ayudar al siguiente</h1>
+<p style="margin: 0; font-size: 17px; line-height: 1.45; font-weight: 500">Quien busque el {{nombre}} verá tu foto al acercarse.</p>
+</div>
+<a href="Buscar.dc.html" style="position: relative; height: 56px; border-radius: 18px; background: #1D1A26; color: #FFE3C4; display: flex; align-items: center; justify-content: center; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px">Elegir otro destino</a>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"destino": {"editor": "enum", "options": ["A", "C"], "section": "Estado", "default": "C"}, "estado": {"editor": "enum", "options": ["inicio", "vista", "gracias"], "section": "Estado", "default": "inicio"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+var self = this;
+var D = {"destino": "C", "estado": "inicio"};
+var P = this.props || {};
+var S = this.state || {};
+var val = function (k) { return P[k] !== undefined && P[k] !== null ? P[k] : D[k]; };
+var destino = val('destino');
+var estado = S.estado || val('estado');
+var esA = destino === 'A';
+return {
+nombre: esA ? 'Edificio A' : 'Edificio C',
+conFoto: esA, sinFoto: !esA,
+sabias: esA ? 'Su reloj funciona con un sistema eléctrico suizo, anterior a los relojes de cuarzo.' : 'Fue el hall de montaje: aquí se armaban los aparatos que estudiaban los de Mecánica.',
+esInicio: estado === 'inicio', esVista: estado === 'vista', esGracias: estado === 'gracias',
+tomar: function () { self.setState({ estado: 'vista' }); },
+repetir: function () { self.setState({ estado: 'vista' }); },
+publicar: function () { self.setState({ estado: 'gracias' }); }
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+- Edificioa A. Fue creado por 2 arquitectos que fueron papa e hijo, fue el primer edificio en construirse. Solía ser sala de clases y biblioteca
+- Edificio E (quienes pagaban) y F (becados), antes era un dormitorio para estudiantes
+- El laboratorio labcomp era una sala de bowling
+- Edificio C, es el ex hall de montaje, por que antes se montaban los aparatos que veían los de mecanica
+- El reloj en el edificio A tiene una manera peculiar de funcionar distinta a los convencionsles, usa un sistema electrico d efrabricacion suiza anterior a la era del cuarzo.
+- Federico Santa maria fue una de las personas mas importantes de la época, haciendo de su fortuna vendiendo azucar , [hacer una analogía de forbes pero de la época para poder dimensionar su riqueza].
+- El departamenteo de arquitectura tiene arquitectura distintas porque fue construirdo después de consturir el casino
+- El rector antes vivía aca en lo que ahora es el museo, (edificio H)
+- En la biblioteca se podían pedir prestamos de películas, dvds y vhs
+- EN la radio (edificio a) tienen un montón de vinilos, discos guardados de la época de oro.
+- Puedes pedir hora para tocar piano de cola en una pqueña salita del aula magna.
+

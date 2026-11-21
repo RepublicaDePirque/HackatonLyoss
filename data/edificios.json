@@ -1,0 +1,412 @@
+{
+	"nota": "lat/lng en WGS84. px = píxel en el plano oficial y en data/mapa-casa-central.svg. «verificada» = huella de OpenStreetMap que calza con el plano oficial (~2 m); no es una medición en terreno ni la puerta del edificio. Las pistas son borradores. «que_hay» viene del equipo y no está verificado.",
+	"atribucion": "Coordenadas: © colaboradores de OpenStreetMap (ODbL). Plano: infraestructura.usm.cl.",
+	"georef": {
+		"gps_a_px": {
+			"formula": "px_x = a*lng + b*lat + c ; px_y = d*lng + e*lat + f",
+			"a": -180749.81750682846,
+			"b": -101068.91757058853,
+			"c": -16278863.33719626,
+			"d": -83191.95450730185,
+			"e": 216632.3234418215,
+			"f": 1200966.5954243056
+		},
+		"metros_por_px": 0.4666,
+		"rumbo_del_arriba_del_plano_grados": 154.8,
+		"norte_arriba": false,
+		"puntos_de_control": [
+			{
+				"nombre": "M",
+				"lat": -33.03494,
+				"lng": -71.59301,
+				"px": [
+					365.8,
+					493.2
+				]
+			},
+			{
+				"nombre": "T",
+				"lat": -33.035188,
+				"lng": -71.59761,
+				"px": [
+					1222.3,
+					822.2
+				]
+			},
+			{
+				"nombre": "P",
+				"lat": -33.036805,
+				"lng": -71.594274,
+				"px": [
+					782.7,
+					194.4
+				]
+			},
+			{
+				"nombre": "F",
+				"lat": -33.034819,
+				"lng": -71.596678,
+				"px": [
+					1016.5,
+					824.6
+				]
+			},
+			{
+				"nombre": "C",
+				"lat": -33.036019,
+				"lng": -71.5946,
+				"px": [
+					762.2,
+					391.7
+				]
+			}
+		]
+	},
+	"edificios": [
+		{
+			"id": "c",
+			"letra": "C",
+			"nombre": "Edificio C",
+			"lat": -33.036019,
+			"lng": -71.5946,
+			"px": [
+				762,
+				392
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343193); calza con el plano oficial a ~2 m",
+			"destino_demo": true,
+			"pista": "El edificio más largo del campus, en la parte alta, paralelo a Av. Los Placeres.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Salas de clases",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "a",
+			"letra": "A",
+			"nombre": "Edificio A",
+			"lat": -33.034866,
+			"lng": -71.595537,
+			"px": [
+				815,
+				719
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/128370180); calza con el plano oficial a ~2 m",
+			"destino_demo": true,
+			"pista": "El edificio de la torre, arriba de la escalinata de Av. España. El Patio Central queda a su espalda.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": {
+				"url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Central_Building%2C_Universidad_T%C3%A9cnica_Federico_Santa_Mar%C3%ADa%2C_Valpara%C3%ADso%2C_Chile.jpg/500px-Central_Building%2C_Universidad_T%C3%A9cnica_Federico_Santa_Mar%C3%ADa%2C_Valpara%C3%ADso%2C_Chile.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+				"pagina": "https://commons.wikimedia.org/wiki/File:Central_Building,_Universidad_T%C3%A9cnica_Federico_Santa_Mar%C3%ADa,_Valpara%C3%ADso,_Chile.jpg",
+				"autor": "Alexxxos",
+				"licencia": "CC BY-SA 3.0",
+				"nota": "Fachada hacia Av. España. Que sea el «A» se infiere por su posición en el plano; el autor solo la describe como edificio central."
+			},
+			"foto_estado": "con licencia libre"
+		},
+		{
+			"id": "f",
+			"letra": "F",
+			"nombre": "Edificio F",
+			"lat": -33.034819,
+			"lng": -71.596678,
+			"px": [
+				1017,
+				825
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343112); calza con el plano oficial a ~2 m",
+			"destino_demo": true,
+			"pista": "En el borde que mira al mar, al poniente del A, pasando el Patio de los Ceibos.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Informática, Matemática, Industrias y Comercial",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"alias": [
+				"Edificio Miramar"
+			],
+			"foto": {
+				"url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/J28_208_Universidad_tecnica_Federico_Santa_Mar%C3%ADa.jpg/500px-J28_208_Universidad_tecnica_Federico_Santa_Mar%C3%ADa.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+				"pagina": "https://commons.wikimedia.org/wiki/File:J28_208_Universidad_tecnica_Federico_Santa_Mar%C3%ADa.jpg",
+				"autor": "Falk2",
+				"licencia": "CC BY-SA 4.0",
+				"nota": "Vista desde la ciclovía, al otro lado de Av. España; el autor la identifica como edificio F."
+			},
+			"foto_estado": "con licencia libre"
+		},
+		{
+			"id": "m",
+			"letra": "M",
+			"nombre": "Edificio M",
+			"lat": -33.03494,
+			"lng": -71.59301,
+			"px": [
+				366,
+				493
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/173079185); calza con el plano oficial a ~2 m",
+			"destino_demo": true,
+			"pista": "Al oriente de la cancha, junto al gimnasio M2; da al pasaje Valdés.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Salas de clases",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "p",
+			"letra": "P",
+			"nombre": "Edificio P",
+			"lat": -33.036805,
+			"lng": -71.594274,
+			"px": [
+				783,
+				194
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella «Edificio P» de OpenStreetMap (way/687247034), que une P y P2: el punto queda unos 20 m corrido hacia el P2 respecto del P del plano.",
+			"destino_demo": true,
+			"pista": "Fuera del recinto principal: cruza Av. Los Placeres y sube por San Guillermo.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Salas de clases",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "u",
+			"letra": "U",
+			"nombre": "Biblioteca (Edificio U)",
+			"lat": -33.034957,
+			"lng": -71.595048,
+			"px": [
+				736,
+				659
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343033); calza con el plano oficial a ~2 m",
+			"destino_demo": true,
+			"pista": "Pegada al costado oriente del edificio A, entre el A y la cancha.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Biblioteca",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "comedores",
+			"letra": "D",
+			"nombre": "Comedores / Casino",
+			"lat": -33.03549,
+			"lng": -71.596069,
+			"px": [
+				974,
+				629
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343071); calza con el plano oficial a ~2 m",
+			"destino_demo": true,
+			"pista": "En el edificio D, al costado poniente del Patio Central.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Casino en el piso 1 del D; Arquitectura en los pisos 2 y 3",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "federacion",
+			"letra": null,
+			"nombre": "Federación de Estudiantes",
+			"lat": -33.034965,
+			"lng": -71.59269,
+			"px": [
+				310,
+				461
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/577285640). Ubicación confirmada por el equipo: pasaje Valdés, frente a la portería M. El rótulo «FEDERACION» del plano oficial, junto al P, no corresponde.",
+			"destino_demo": true,
+			"pista": "En pasaje Valdés, frente a la portería del M.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "b",
+			"letra": "B",
+			"nombre": "Edificio B",
+			"lat": -33.0356,
+			"lng": -71.595179,
+			"px": [
+				825,
+				531
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Huella vectorizada desde el plano oficial; no está en OpenStreetMap.",
+			"destino_demo": false,
+			"pista": "Entre el C y el A; rodea el patio de la piscina.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": {
+				"url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/UTFSM_4.jpg/500px-UTFSM_4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+				"pagina": "https://commons.wikimedia.org/wiki/File:UTFSM_4.jpg",
+				"autor": "Carigval.97",
+				"licencia": "CC BY 4.0",
+				"nota": "Fachada hacia la piscina. Que sea el «B» se infiere porque la piscina queda en su patio según OpenStreetMap; sin confirmar."
+			},
+			"foto_estado": "con licencia libre"
+		},
+		{
+			"id": "d",
+			"letra": "D",
+			"nombre": "Edificio D",
+			"lat": -33.035315,
+			"lng": -71.596109,
+			"px": [
+				964,
+				670
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343048); calza con el plano oficial a ~2 m",
+			"destino_demo": false,
+			"pista": "Al poniente del Patio Central.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Casino (piso 1) y Arquitectura (pisos 2 y 3)",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "e",
+			"letra": "E",
+			"nombre": "Edificio E",
+			"lat": -33.035198,
+			"lng": -71.596382,
+			"px": [
+				1001,
+				718
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/154421339); calza con el plano oficial a ~2 m",
+			"destino_demo": false,
+			"pista": "Detrás del D, camino al F.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Física",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "k",
+			"letra": "K",
+			"nombre": "Edificio K (CIAC)",
+			"lat": -33.036216,
+			"lng": -71.595671,
+			"px": [
+				976,
+				438
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/336761854); calza con el plano oficial a ~2 m",
+			"destino_demo": false,
+			"pista": "Al poniente del C, bajando hacia la subida San Luis.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "m2",
+			"letra": "M2",
+			"nombre": "Gimnasio 2 (Edificio M2)",
+			"lat": -33.034893,
+			"lng": -71.593312,
+			"px": [
+				416,
+				529
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343096); calza con el plano oficial a ~2 m",
+			"destino_demo": false,
+			"pista": "Al lado del M, frente a la cancha.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "r",
+			"letra": "R",
+			"nombre": "Edificio R",
+			"lat": -33.035713,
+			"lng": -71.593039,
+			"px": [
+				449,
+				328
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343117); calza con el plano oficial a ~2 m",
+			"destino_demo": false,
+			"pista": "En la esquina de Av. Los Placeres con pasaje Valdés.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"que_hay": "Portería Diego Portales",
+			"fuente_que_hay": "equipo (rama wip/brujula), sin verificar",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "t",
+			"letra": "T",
+			"nombre": "Edificio T",
+			"lat": -33.035188,
+			"lng": -71.59761,
+			"px": [
+				1222,
+				822
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/313489304); calza con el plano oficial a ~2 m",
+			"destino_demo": false,
+			"pista": "En el extremo poniente del campus, bajo la subida San Luis.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "l",
+			"letra": "L",
+			"nombre": "Tribuna (Edificio L)",
+			"lat": -33.03499,
+			"lng": -71.594391,
+			"px": [
+				620,
+				597
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343141); calza con el plano oficial a ~2 m",
+			"destino_demo": false,
+			"pista": "En el borde poniente de la cancha.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		},
+		{
+			"id": "vivendum",
+			"letra": null,
+			"nombre": "Cafetería Vivendum",
+			"lat": -33.035818,
+			"lng": -71.595989,
+			"px": [
+				993,
+				551
+			],
+			"coordenada": "verificada",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343091). Sin letra a propósito: OpenStreetMap lo llama «Q» y el plano oficial «O»; confirmar en terreno.",
+			"destino_demo": false,
+			"pista": "Al poniente del B, junto a la subida San Luis.",
+			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
+			"foto": null,
+			"foto_estado": "pendiente: sacar en terreno"
+		}
+	]
+}
