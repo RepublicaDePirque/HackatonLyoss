@@ -1,7 +1,7 @@
-// Pruebas de «Evitar escaleras»: node tools/probar-escaleras.js
+// Pruebas de «Evitar escaleras»: node tests/probar-escaleras.js
 // 1) frases y conteo; 2) sobre el grafo real, que evitar escaleras nunca deje sin ruta y que use cero si se puede.
 const assert = require("assert"), fs = require("fs"), path = require("path");
-const { contarEscaleras, fraseEscaleras } = require("../escaleras.js");
+const { contarEscaleras, fraseEscaleras } = require("../js/escaleras.js");
 const esc = new Set(["b|c", "c|d", "e|f"]), es = (a, b) => esc.has(a + "|" + b);
 assert.strictEqual(contarEscaleras(["a", "b", "c", "d", "e", "f"], es), 2);   // b-c-d es una sola escalera
 assert.strictEqual(contarEscaleras(["a", "b"], es), 0);
@@ -12,7 +12,7 @@ assert.strictEqual(fraseEscaleras({ corto: { m: 100, esc: 3 }, evita: { m: 150, 
 assert.strictEqual(fraseEscaleras({ corto: { m: 100, esc: 1 }, evita: { m: 100, esc: 1 } }), "No hay camino sin escaleras: este tiene 1 escalera." + fin);
 
 // Grafo real: mismo costo que astar() de index.html (15 m por tramo de escalera, 400 m al evitarlas).
-const G = new Function(fs.readFileSync(path.join(__dirname, "../grafo.js"), "utf8") + "; return GRAFO;")();
+const G = new Function(fs.readFileSync(path.join(__dirname, "../js/generado/grafo.js"), "utf8") + "; return GRAFO;")();
 const R = 6371000, rad = d => d * Math.PI / 180;
 const dist = (a, b) => { const dLat = rad(b[0] - a[0]), dLon = rad(b[1] - a[1]), h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
 const adj = G.nodos.map(() => []);
