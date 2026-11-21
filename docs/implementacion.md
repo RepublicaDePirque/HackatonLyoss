@@ -61,13 +61,13 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 La señal apunta a la **puerta** del edificio (no a su borde) y la ruta termina ahí.
 
-- **Datos:** `data/entradas.json` es la fuente (exportado de `marcar-entradas.html`). `python3 tools/generar-entradas.py` lo valida y escribe `js/generado/entradas.js`. Hoy hay 40 puertas en 19 edificios, marcadas a mano sobre el plano, **aproximadas**: falta afinarlas en terreno.
+- **Datos:** `data/entradas.json` es la fuente (exportado de `marcar-entradas.html`). `python3 tools/generar-entradas.py` lo valida y escribe `js/generado/entradas.js`. Hoy hay 41 puertas en 20 edificios (42 marcadas, una descartada), marcadas a mano sobre el plano, **aproximadas**: falta afinarlas en terreno.
 - **En la app:** cada puerta es un nodo del grafo, unido al camino más cercano que no atraviese el edificio. Si el destino tiene varias, elige la de menor costo desde donde estás (se recalcula cada 1,5 s y no cambia de puerta por menos de 20 m de diferencia).
 - **Evitar escaleras:** una puerta marcada «con escalera» cuenta como un tramo de escalera, así que con la opción activa se prefiere una puerta sin escaleras si existe. Si no existe (B, F y T no tienen ninguna marcada), usa la que hay: nunca queda sin ruta. Con la opción apagada también pesa un poco (15 m).
 - **Pista y mapa:** la pista muestra «Entrada principal · con escalera» y el mapa dibuja las puertas del destino (verde sin escaleras, rojo con escalera, gris sin confirmar), con un aro en la elegida.
 - **La llegada no cambia:** sigue midiéndose contra la zona del edificio (ver arriba), no contra la puerta.
 - **Destinos que comparten edificio:** Casino, Arquitectura, Comedores y Gimnasio 1 usan solo las puertas cuyo nombre los menciona (`PUERTA_PALABRA` en `index.html`).
-- **Sin puertas marcadas** (Federación, Acceso, Entrada Placeres, patios y canchas) la señal sigue apuntando al borde.
+- **Sin puertas marcadas** (Federación, Entrada Placeres, Comedores, Gimnasio 1 sin puertas propias, patios y canchas) la señal sigue apuntando al borde.
 - **Puertas descartadas:** el generador omite las que quedan a más de 25 m de su edificio. Hoy una: «Entrada calle edificio IDP» (asignada al R, queda a 52 m; es el Edificio Matta/IDP, que no es un destino).
 - **Para agregar o afinar:** marcar en `marcar-entradas.html`, guardar el JSON en `data/entradas.json` y correr el generador. La prueba `node tests/probar-entradas.js` valida los datos.
 
@@ -80,7 +80,10 @@ Atajos que cruzan un edificio de puerta a puerta (un pasillo del A, por ejemplo)
 - **En la app:** cada punto del trazo es un nodo del grafo; los extremos se unen a la puerta marcada a 6 m o menos (si no hay, al camino más cercano). Los tramos cuentan por su largo real, sin penalización. Si el paso está marcado «con escalera», pesa como una escalera y «evitar escaleras» lo esquiva.
 - **Aviso en la ruta:** «Atajo por dentro (Edificio A) en ~20 m» y, ya adentro, «Vas por dentro (Edificio A)», con el aviso del paso al final. En el mapa el tramo va con puntos (las escaleras van con rayas).
 - **Posición:** estando dentro del edificio, la posición se ajusta al paso; desde la calle no (si no, te «pegaría» a un pasillo al otro lado del muro).
-- **Pendiente:** hoy no hay pasos marcados (`PASOS = []`). Un paso de prueba por dentro del A acortó Acceso→Gimnasio 1 de 258 a 177 m. No hay forma de saber si un pasillo está abierto a cierta hora: el campo de aviso es la única forma de avisarlo.
+- **Cadenas:** un paso puede visitar varias puertas seguidas (los pasillos del B y del C se marcaron así). Cualquier punto del trazo que caiga a 6 m o menos de una puerta es esa puerta, no solo los extremos. Cada tramo entre dos puertas es una recta, aunque el pasillo real tenga esquinas.
+- **Hoy hay 11 pasos** (A ×4, B, C, D, F, M, P y R2). Sobre los 820 pares de puertas, 505 (61 %) acortan, con una mediana de 77 m y un máximo de 753 m. Casi todo lo grande viene de P2, que antes quedaba sin conexión (rodeo de ~800 m) y ahora se llega por el paso P→P2 (46 m). 12 pares suman unos metros pero evitan escaleras (cada tramo con escalera pesa 15 m); ninguno cuesta más que antes.
+- **Pasos «con escalera»:** el de R2 («Escaleras R»), el de M (entre pisos) y el A «entrada principal a biblioteca y patio central» cuentan como escalera.
+- **Limitación:** no hay forma de saber si un pasillo está abierto a cierta hora; el campo de aviso es la única forma de advertirlo.
 
 
 ## Herramienta temporal: marcar entradas
