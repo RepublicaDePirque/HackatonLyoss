@@ -59,6 +59,12 @@
   .item .pto { width:14px; height:14px; border-radius:7px; flex-shrink:0; }
   .item .t { flex:1; min-width:0; display:flex; flex-direction:column; }
   .item .t b { font-size:15px; } .item .t small { color:var(--muted); font-size:12px; }
+  .seg { display:flex; border:1px solid var(--line); border-radius:12px; overflow:hidden; flex-shrink:0; }
+  .seg button { height:44px; padding:0 12px; border:0; background:var(--hoja); font-weight:600; font-size:14px; }
+  .seg button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
+  #accionesP { display:flex; gap:8px; } #accionesP .btn { flex:1; padding:0 8px; }
+  h3 { margin:6px 0 0; font-size:14px; color:var(--muted); font-weight:600; }
+  .item .pto.paso { border-radius:3px; }
   .chips { display:flex; flex-wrap:wrap; gap:6px; }
   .chip { padding:6px 12px; border-radius:16px; border:1px solid var(--line); background:var(--bg); font-size:14px; font-weight:600; }
   .progreso { font-size:14px; color:var(--muted); }
@@ -68,6 +74,7 @@
 <body>
 <div id="app">
   <header>
+    <div class="seg" role="group" aria-label="Qué marcar"><button id="modoEnt" aria-pressed="true">Puertas</button><button id="modoPas" aria-pressed="false">Pasos</button></div>
     <select id="selEdif" aria-label="Edificio"></select>
     <button id="btnLista" class="btn">Lista <span id="nTotal">0</span></button>
   </header>
@@ -80,6 +87,7 @@
   <div id="barra">
     <div id="ayuda"><b>Toca la puerta</b> del edificio en el plano. Acércate con los dedos para ser más preciso.</div>
     <div id="acciones" hidden><button id="btnAqui" class="btn pri">Marcar donde estoy</button></div>
+    <div id="accionesP" hidden><button id="pDeshacer" class="btn">Deshacer punto</button><button id="pCancelar" class="btn peligro">Cancelar</button><button id="pTerminar" class="btn pri" disabled>Terminar paso</button></div>
   </div>
 
   <!-- Editor de una entrada -->
@@ -100,12 +108,33 @@
     <div class="fila-btns"><button id="edBorrar" class="btn peligro" hidden>Borrar</button><button id="edCancelar" class="btn">Cancelar</button><button id="edGuardar" class="btn pri">Guardar</button></div>
   </div>
 
+  <!-- Editor de un paso por dentro de un edificio -->
+  <div id="hojaPaso" class="hoja" role="dialog" aria-modal="true" aria-labelledby="psTitulo" hidden>
+    <h2 id="psTitulo">Nuevo paso por dentro</h2>
+    <label>Edificio por el que pasa <select id="psEdif"></select></label>
+    <label>Cómo lo describirías <input id="psNombre" type="text" placeholder="Ej.: pasillo del A, del patio central a Av. España" autocomplete="off"></label>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px">¿Se puede pasar sin escaleras?</div>
+      <div class="opciones" role="radiogroup" aria-label="Paso accesible">
+        <label><input type="radio" name="accp" value="si">Sí</label>
+        <label><input type="radio" name="accp" value="no">No</label>
+        <label><input type="radio" name="accp" value="nose" checked>No sé</label>
+      </div>
+    </div>
+    <label>Aviso opcional (horario, acceso) <input id="psNota" type="text" placeholder="Ej.: solo en horario de clases" autocomplete="off"></label>
+    <div id="psAviso" class="aviso"></div>
+    <div class="fila-btns"><button id="psBorrar" class="btn peligro" hidden>Borrar</button><button id="psCancelar" class="btn">Cancelar</button><button id="psGuardar" class="btn pri">Guardar</button></div>
+  </div>
+
   <!-- Lista y exportación -->
   <div id="hojaLista" class="hoja" role="dialog" aria-modal="true" aria-labelledby="liTitulo" hidden>
     <h2 id="liTitulo">Entradas marcadas</h2>
     <div class="progreso" id="progreso"></div>
     <div id="faltan" class="chips"></div>
     <div id="lista"></div>
+    <h3 id="liPasosT">Pasos por dentro de edificios</h3>
+    <div id="listaPasos"></div>
+    <button id="btnCargar" class="btn">Cargar lo guardado en el proyecto</button>
     <label>Resultado para enviar <textarea id="salida" readonly></textarea></label>
     <div class="fila-btns"><button id="btnCopiar" class="btn pri">Copiar</button><button id="btnDescargar" class="btn">Descargar</button><button id="btnCompartir" class="btn" hidden>Compartir</button></div>
     <div id="liAviso" class="aviso"></div>
@@ -151,6 +180,12 @@ const EDIFICIOS = Object.keys(CONT).map(k => ({ key: k, nombre: nombreDe(k) })).
 const KEY = "entradasMarcadas";
 let marcas = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } })();
 const guardar = () => { try { localStorage.setItem(KEY, JSON.stringify(marcas)); } catch (e) { $("liAviso").textContent = "No pude guardar en el teléfono: copia el resultado antes de cerrar."; } };
+const KEY_P = "pasosMarcados";
+let pasos = (() => { try { return JSON.parse(localStorage.getItem(KEY_P)) || []; } catch (e) { return []; } })();   // { key, nombre, pts:[[px,py]…], acc, nota }
+const guardarP = () => { try { localStorage.setItem(KEY_P, JSON.stringify(pasos)); } catch (e) { $("liAviso").textContent = "No pude guardar en el teléfono: copia el resultado antes de cerrar."; } };
+let modo = "entradas";                                       // «entradas» (puertas) o «pasos» (por dentro de edificios)
+let trazo = null;                                            // paso en trazado: { pts:[[px,py]…] }
+let pendP = null;                                            // paso en edición: { id?, pts, key, nombre, acc, nota }
 let sel = EDIFICIOS[0].key;                                  // edificio elegido
 let pend = null;                                             // punto en edición: { px, py, origen, prec, id? }
 let gps = null, watchId = null;
@@ -198,7 +233,7 @@ function dibujar() {
   const ruta = cssVar("--ruta"), fg = cssVar("--fg"), bg = cssVar("--bg"), si = cssVar("--si"), no = cssVar("--no");
   g.lineJoin = "round"; g.lineCap = "round";
   for (const k of Object.keys(CONT)) {                       // contornos: el elegido resaltado
-    const on = k === sel; g.beginPath();
+    const on = modo === "entradas" && k === sel; g.beginPath();
     CONT[k].forEach(([px, py], i) => { const [x, y] = toScr(px, py); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath();
     if (on) { g.fillStyle = ruta + "30"; g.fill(); }
     g.strokeStyle = on ? ruta : fg + "33"; g.lineWidth = on ? 2.5 : 1; g.stroke();
@@ -208,6 +243,18 @@ function dibujar() {
     g.fillStyle = col; g.strokeStyle = bg; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.stroke();
     g.fillStyle = "#fff"; g.font = "700 11px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(i + 1), x, y + 0.5);
   });
+  const poli = (pts, ancho, col, dash) => { g.beginPath(); pts.forEach(([px, py], i) => { const [x, y] = toScr(px, py); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.strokeStyle = col; g.lineWidth = ancho; g.setLineDash(dash); g.stroke(); g.setLineDash([]); };
+  g.globalAlpha = modo === "pasos" ? 1 : 0.55;
+  pasos.forEach(p => {                                       // pasos por dentro ya guardados (punteados; verde sin escaleras, rojo con escalera)
+    const col = p.acc === true ? si : p.acc === false ? no : "#9A94A6";
+    poli(p.pts, 5, col, [1, 8]);
+    for (const q of [p.pts[0], p.pts[p.pts.length - 1]]) { const [x, y] = toScr(q[0], q[1]); g.fillStyle = col; g.strokeStyle = bg; g.lineWidth = 2; g.fillRect(x - 5, y - 5, 10, 10); g.strokeRect(x - 5, y - 5, 10, 10); }
+  });
+  g.globalAlpha = 1;
+  if (trazo) {                                               // paso que se está trazando
+    poli(trazo.pts, 5, ruta, []);
+    trazo.pts.forEach(([px, py], i) => { const [x, y] = toScr(px, py); g.fillStyle = ruta; g.strokeStyle = bg; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, 8, 0, 7); g.fill(); g.stroke(); g.fillStyle = "#fff"; g.font = "700 10px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(i + 1), x, y + 0.5); });
+  }
   if (gps) {                                                 // tu ubicación
     const p = latLngAPx(gps), [x, y] = toScr(p.px, p.py);
     g.fillStyle = "#5B8CFF30"; g.beginPath(); g.arc(x, y, Math.max(6, gps.acc / PLANO.mpp * V.z), 0, 7); g.fill();
@@ -246,7 +293,8 @@ $("zOut").onclick = () => { zoomEn(V.w / 2, V.h / 2, V.z / 1.4); dibujar(); };
 
 // ---------- Marcar ----------
 function tocar(sx, sy) {
-  if (!$("hojaEd").hidden || !$("hojaLista").hidden) return;
+  if (!$("hojaEd").hidden || !$("hojaLista").hidden || !$("hojaPaso").hidden) return;
+  if (modo === "pasos") return tocarPaso(sx, sy);
   for (let i = 0; i < marcas.length; i++) {                  // ¿tocó una entrada ya marcada? -> editarla
     const [x, y] = toScr(marcas[i].px, marcas[i].py); if (Math.hypot(x - sx, y - sy) <= 24) return abrirEditor({ ...marcas[i], id: i });
   }
@@ -283,14 +331,76 @@ $("edGuardar").onclick = () => {
 };
 $("edBorrar").onclick = () => { if (pend && pend.id != null && confirm("¿Borrar esta entrada?")) { marcas.splice(pend.id, 1); guardar(); cerrarEditor(); refrescarSelect(); } };
 
+// ---------- Pasos por dentro de edificios ----------
+// Un paso es un trazo de puerta a puerta que cruza un edificio (con un punto en cada esquina del pasillo). La app lo usa
+// como atajo en la ruta. Los extremos se pegan a las puertas ya marcadas para que queden conectados.
+const distSegPx = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)) : 0; return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy)); };
+const largoM = pts => pts.reduce((s, q, i) => i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) * PLANO.mpp : 0, 0);
+function snapPunto(sx, sy) {                                 // pega al extremo de una puerta o de otro paso si queda a ≤ 18 px
+  const q = fromScr(sx, sy), cand = [...marcas.map(m => [m.px, m.py]), ...pasos.flatMap(p => [p.pts[0], p.pts[p.pts.length - 1]])];
+  let mejor = null;
+  for (const [px, py] of cand) { const [x, y] = toScr(px, py), d = Math.hypot(x - sx, y - sy); if (d <= 18 && (!mejor || d < mejor.d)) mejor = { d, px, py }; }
+  return mejor ? [mejor.px, mejor.py] : [q.px, q.py];
+}
+function edificioDelTrazo(pts) {                             // el edificio que más recorre el trazo (o el más cercano a su punto medio)
+  const cuenta = {}, tot = largoM(pts); let acum = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const L = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]), n = Math.max(1, Math.round(L / 3));
+    for (let j = 0; j <= n; j++) { const q = fromPlan(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * j / n, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * j / n); for (const k of Object.keys(AREAS)) if (nearestOnPoly(q, AREAS[k]).inside) cuenta[k] = (cuenta[k] || 0) + 1; }
+  }
+  const dentro = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0];
+  if (dentro) return dentro[0];
+  const m = pts[Math.floor(pts.length / 2)], r = interpretar(m[0], m[1]); return r.key || sel;
+}
+function actualizarBarraP() {
+  $("accionesP").hidden = !trazo; $("pTerminar").disabled = !(trazo && trazo.pts.length >= 2);
+  if (trazo) $("ayuda").innerHTML = trazo.pts.length < 2 ? `<b>Punto 1.</b> Ahora toca cada esquina del pasillo hasta la otra puerta.` : `<b>${trazo.pts.length} puntos · ~${Math.round(largoM(trazo.pts))} m.</b> Sigue hasta la otra puerta y toca «Terminar paso».`;
+}
+function tocarPaso(sx, sy) {
+  if (!trazo) for (let i = 0; i < pasos.length; i++) for (let j = 0; j < pasos[i].pts.length - 1; j++)    // ¿tocó un paso guardado? -> editarlo
+    if (distSegPx([sx, sy], toScr(...pasos[i].pts[j]), toScr(...pasos[i].pts[j + 1])) <= 16) return abrirPaso({ ...pasos[i], id: i });
+  const [px, py] = snapPunto(sx, sy);
+  (trazo = trazo || { pts: [] }).pts.push([px, py]); actualizarBarraP(); dibujar();
+}
+$("pDeshacer").onclick = () => { if (!trazo) return; trazo.pts.pop(); if (!trazo.pts.length) { trazo = null; $("ayuda").innerHTML = "<b>Toca el punto de partida</b> (una puerta) y luego cada esquina hasta la otra puerta."; } actualizarBarraP(); dibujar(); };
+$("pCancelar").onclick = () => { trazo = null; actualizarBarraP(); $("ayuda").innerHTML = "<b>Toca el punto de partida</b> (una puerta) y luego cada esquina hasta la otra puerta."; dibujar(); };
+$("pTerminar").onclick = () => { if (trazo && trazo.pts.length >= 2) abrirPaso({ pts: trazo.pts.map(q => [...q]), key: edificioDelTrazo(trazo.pts), nombre: "", acc: null, nota: "" }); };
+function abrirPaso(m) {
+  pendP = m; $("psTitulo").textContent = m.id != null ? "Editar paso " + (m.id + 1) : "Nuevo paso por dentro";
+  $("psEdif").innerHTML = EDIFICIOS.map(e => `<option value="${esc(e.key)}">${esc(e.nombre)}</option>`).join("");
+  $("psEdif").value = m.key; $("psNombre").value = m.nombre || ""; $("psNota").value = m.nota || "";
+  document.querySelector(`input[name=accp][value=${m.acc === true ? "si" : m.acc === false ? "no" : "nose"}]`).checked = true;
+  marcarOpciones(); $("psBorrar").hidden = m.id == null;
+  const cerca = q => marcas.some(d => Math.hypot(d.px - q[0], d.py - q[1]) * PLANO.mpp <= 4), sinPuerta = !cerca(m.pts[0]) || !cerca(m.pts[m.pts.length - 1]);
+  $("psAviso").textContent = `Largo: ~${Math.round(largoM(m.pts))} m.` + (sinPuerta ? " Un extremo no coincide con una puerta marcada: se conectará al camino más cercano." : "");
+  $("hojaPaso").hidden = false; dibujar();
+}
+const cerrarPaso = () => { pendP = null; $("hojaPaso").hidden = true; dibujar(); };
+$("psCancelar").onclick = cerrarPaso;
+$("psGuardar").onclick = () => {
+  const acc = document.querySelector("input[name=accp]:checked").value, key = $("psEdif").value;
+  const reg = { key, nombre: $("psNombre").value.trim() || "Paso por el " + nombreDe(key), pts: pendP.pts, acc: acc === "si" ? true : acc === "no" ? false : null, nota: $("psNota").value.trim() };
+  if (pendP.id != null) pasos[pendP.id] = reg; else pasos.push(reg);
+  guardarP(); trazo = null; cerrarPaso(); actualizarBarraP(); refrescarSelect(); resumen("Paso guardado.");
+};
+$("psBorrar").onclick = () => { if (pendP && pendP.id != null && confirm("¿Borrar este paso?")) { pasos.splice(pendP.id, 1); guardarP(); cerrarPaso(); refrescarSelect(); resumen("Paso borrado."); } };
+function setModo(m) {
+  modo = m; trazo = null; pendP = null; $("hojaPaso").hidden = true;
+  $("modoEnt").setAttribute("aria-pressed", m === "entradas"); $("modoPas").setAttribute("aria-pressed", m === "pasos");
+  $("selEdif").hidden = m === "pasos"; actualizarBarraP();
+  $("ayuda").innerHTML = m === "pasos" ? "<b>Toca el punto de partida</b> (una puerta) y luego cada esquina hasta la otra puerta. Los extremos se pegan a las puertas marcadas." : "<b>Toca la puerta</b> del edificio en el plano. Acércate con los dedos para ser más preciso.";
+  dibujar();
+}
+$("modoEnt").onclick = () => setModo("entradas"); $("modoPas").onclick = () => setModo("pasos");
+
 // ---------- Selector de edificio ----------
 function refrescarSelect() {
   const n = k => marcas.filter(m => m.key === k).length;
   $("selEdif").innerHTML = EDIFICIOS.map(e => `<option value="${esc(e.key)}">${n(e.key) ? "✓ " : ""}${esc(e.nombre)}${n(e.key) ? " · " + n(e.key) : ""}</option>`).join("");
-  $("selEdif").value = sel; $("nTotal").textContent = marcas.length;
+  $("selEdif").value = sel; $("nTotal").textContent = marcas.length + (pasos.length ? "+" + pasos.length : "");
 }
 $("selEdif").onchange = () => { sel = $("selEdif").value; enfocar(sel); };
-function resumen(t) { $("ayuda").innerHTML = `<b>${esc(t)}</b> ${marcas.length} entradas en ${new Set(marcas.map(m => m.key)).size} de ${EDIFICIOS.length} edificios.`; }
+function resumen(t) { $("ayuda").innerHTML = `<b>${esc(t)}</b> ${marcas.length} puertas en ${new Set(marcas.map(m => m.key)).size} de ${EDIFICIOS.length} edificios` + (pasos.length ? ` · ${pasos.length} pasos por dentro.` : "."); }
 
 // ---------- Mi ubicación ----------
 $("btnGps").onclick = () => {
@@ -303,24 +413,33 @@ $("btnGps").onclick = () => {
     $("btnAqui").textContent = `Marcar donde estoy (±${Math.round(gps.acc)} m)`; dibujar();
   }, err => { resumen(err.code === 1 ? "Permiso de ubicación denegado." : "No pude obtener tu ubicación."); }, { enableHighAccuracy: true, maximumAge: 1000 });
 };
-$("btnAqui").onclick = () => { if (!gps) return; const q = latLngAPx(gps), r = interpretar(q.px, q.py); abrirEditor({ px: q.px, py: q.py, origen: "gps", prec: gps.acc, key: r.key || sel, sinEdificio: !r.key }); };
+$("btnAqui").onclick = () => {
+  if (!gps) return; const q = latLngAPx(gps);
+  if (modo === "pasos") { (trazo = trazo || { pts: [] }).pts.push([q.px, q.py]); actualizarBarraP(); return dibujar(); }   // en modo pasos suma un punto
+  const r = interpretar(q.px, q.py); abrirEditor({ px: q.px, py: q.py, origen: "gps", prec: gps.acc, key: r.key || sel, sinEdificio: !r.key });
+};
 
 // ---------- Lista y exportación ----------
 const colorTxt = a => a === true ? "var(--si)" : a === false ? "var(--no)" : "#9A94A6";
 function exportar() {
   return {
     proyecto: "Brújula USM", archivo: "entradas", generado: new Date().toISOString(),
-    nota: "Una fila por puerta. «edificio» es la clave del contorno en contornos.js; «destinos» son los destinos de la app que usan ese edificio. lat/lng salen de px/py con la calibración del plano.",
+    nota: "«entradas»: una fila por puerta. «pasos»: atajos por dentro de edificios, de puerta a puerta (puntos en orden). «edificio» es la clave del contorno en contornos.js; «destinos» son los destinos de la app que usan ese edificio. px/py son los píxeles del plano (la fuente de verdad); lat/lng salen de ellos con la calibración. «accesible»: true = sin escaleras, false = con escalera, null = sin confirmar.",
     calibracion: { origen: ORIGIN, mpp: PLANO.mpp, rot: PLANO.rot, ax: PLANO.ax, ay: PLANO.ay },
     entradas: marcas.map(m => { const ll = pxALatLng(m.px, m.py); return {
       edificio: m.key, nombre: nombreDe(m.key), destinos: destinosDe(m.key), punto: m.punto,
       lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6), px: +m.px.toFixed(1), py: +m.py.toFixed(1),
       accesible: m.acc, origen: m.origen, precision_m: m.prec ? Math.round(m.prec) : null }; }),
+    pasos: pasos.map(p => ({
+      edificio: p.key, nombre: nombreDe(p.key), descripcion: p.nombre, largo_m: Math.round(largoM(p.pts)),
+      puntos: p.pts.map(([px, py]) => { const ll = pxALatLng(px, py); return { px: +px.toFixed(1), py: +py.toFixed(1), lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6) }; }),
+      accesible: p.acc, nota: p.nota || null })),
   };
 }
 function abrirLista() {
   const por = k => marcas.filter(m => m.key === k).length, hechos = EDIFICIOS.filter(e => por(e.key));
-  $("progreso").innerHTML = `<b>${marcas.length}</b> entradas en <b>${hechos.length}</b> de ${EDIFICIOS.length} edificios.`;
+  $("progreso").innerHTML = `<b>${marcas.length}</b> puertas en <b>${hechos.length}</b> de ${EDIFICIOS.length} edificios · <b>${pasos.length}</b> pasos por dentro.`;
+  $("listaPasos").innerHTML = pasos.length ? pasos.map((p, i) => `<button class="item" data-p="${i}"><span class="pto paso" style="background:${colorTxt(p.acc)}"></span><span class="t"><b>${i + 1}. ${esc(p.nombre)}</b><small>${esc(nombreDe(p.key))} · ~${Math.round(largoM(p.pts))} m · ${p.acc === true ? "sin escaleras" : p.acc === false ? "con escalera" : "sin confirmar"}${p.nota ? " · " + esc(p.nota) : ""}</small></span></button>`).join("") : '<span class="progreso">Aún no hay pasos. Cambia a «Pasos» arriba para trazar uno.</span>';
   const faltan = EDIFICIOS.filter(e => !por(e.key));
   $("faltan").innerHTML = faltan.length ? '<span class="progreso">Faltan:</span>' + faltan.map(e => `<button class="chip" data-k="${esc(e.key)}">${esc(e.nombre.replace(/^Edificio /, ""))}</button>`).join("") : '<span class="progreso">¡Están todos los edificios!</span>';
   $("lista").innerHTML = marcas.map((m, i) => `<button class="item" data-i="${i}"><span class="pto" style="background:${colorTxt(m.acc)}"></span><span class="t"><b>${i + 1}. ${esc(nombreDe(m.key))}</b><small>${esc(m.punto || "sin descripción")} · ${m.acc === true ? "accesible" : m.acc === false ? "con escalera" : "accesibilidad sin confirmar"}</small></span></button>`).join("");
@@ -328,6 +447,16 @@ function abrirLista() {
 }
 $("btnLista").onclick = abrirLista; $("liCerrar").onclick = () => { $("hojaLista").hidden = true; };
 $("faltan").onclick = e => { const b = e.target.closest("[data-k]"); if (b) { sel = b.dataset.k; $("hojaLista").hidden = true; refrescarSelect(); enfocar(sel); } };
+$("listaPasos").onclick = e => { const b = e.target.closest("[data-p]"); if (b) { const i = +b.dataset.p; setModo("pasos"); $("hojaLista").hidden = true; const q = pasos[i].pts[0]; V.cx = q[0]; V.cy = q[1]; V.z = Math.max(V.z, 2); abrirPaso({ ...pasos[i], id: i }); } };
+$("btnCargar").onclick = async () => {
+  try {
+    const r = await fetch("data/entradas.json", { cache: "no-store" }); if (!r.ok) throw new Error(r.status); const j = await r.json();
+    if ((marcas.length || pasos.length) && !confirm("Esto reemplaza lo que tienes marcado por lo guardado en el proyecto. ¿Seguir?")) return;
+    marcas = (j.entradas || []).map(e => ({ key: e.edificio, punto: e.punto || "", px: e.px, py: e.py, acc: e.accesible ?? null, origen: e.origen || "mapa", prec: e.precision_m || null }));
+    pasos = (j.pasos || []).map(p => ({ key: p.edificio, nombre: p.descripcion || "", pts: p.puntos.map(q => [q.px, q.py]), acc: p.accesible ?? null, nota: p.nota || "" }));
+    guardar(); guardarP(); refrescarSelect(); abrirLista(); dibujar(); $("liAviso").textContent = `Cargado: ${marcas.length} puertas y ${pasos.length} pasos.`;
+  } catch (e) { $("liAviso").textContent = "No pude cargar lo guardado en el proyecto (¿sin conexión?)."; }
+};
 $("lista").onclick = e => { const b = e.target.closest("[data-i]"); if (b) { const i = +b.dataset.i; $("hojaLista").hidden = true; abrirEditor({ ...marcas[i], id: i }); const q = marcas[i]; V.cx = q.px; V.cy = q.py; V.z = Math.max(V.z, 2); dibujar(); } };
 $("btnCopiar").onclick = async () => {
   const t = $("salida").value;
@@ -338,7 +467,7 @@ $("btnDescargar").onclick = () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([$("salida").value], { type: "application/json" })); a.download = "entradas.json"; a.click();
 };
 if (navigator.share) { $("btnCompartir").hidden = false; $("btnCompartir").onclick = () => navigator.share({ title: "Entradas de edificios", text: $("salida").value }).catch(() => {}); }
-$("btnVaciar").onclick = () => { if (marcas.length && confirm(`¿Borrar las ${marcas.length} entradas marcadas? No se puede deshacer.`)) { marcas = []; guardar(); refrescarSelect(); abrirLista(); dibujar(); } };
+$("btnVaciar").onclick = () => { if ((marcas.length || pasos.length) && confirm(`¿Borrar las ${marcas.length} puertas y los ${pasos.length} pasos marcados? No se puede deshacer.`)) { marcas = []; pasos = []; guardar(); guardarP(); refrescarSelect(); abrirLista(); dibujar(); } };
 
 // ---------- Arranque ----------
 window.addEventListener("resize", dibujar);

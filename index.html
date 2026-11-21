@@ -650,6 +650,37 @@ function cruzaEdificio(a, b, k) {                           // ¿el tramo puerta
     });
   }
 })();
+// ---------- Pasos por dentro de edificios (PASOS en js/generado/entradas.js, de data/entradas.json) ----------
+// Atajos que cruzan un edificio de puerta a puerta. Cada punto del trazo es un nodo del grafo; los extremos se unen a la puerta
+// marcada a ≤ 6 m (si no hay, al camino más cercano). Un paso «con escalera» cuenta como tramo de escalera. La ruta avisa cuándo
+// pasa por dentro (con la nota del paso, por ejemplo el horario) y el mapa los dibuja punteados.
+const interiores = new Set();           // "a|b" de los tramos por dentro (en los dos sentidos)
+const infoInterior = new Map();         // "a|b" -> { nombre, nota, area }
+const segInterior = [];                 // { a, b, k }: solo se ajusta la posición a un paso si estás dentro de ese edificio
+const PUERTA_PASO_M = 6;
+(function conectarPasos() {
+  if (typeof PASOS === "undefined") return;
+  const puertas = Object.values(PUERTAS).flat();
+  PASOS.forEach((s, i) => {
+    if (!AREAS[s.k] || s.p.length < 2) return;
+    const ids = s.p.map(([px, py], j) => {
+      const m = fromPlan(px, py), extremo = j === 0 || j === s.p.length - 1;
+      if (extremo) { const pu = puertas.find(d => Math.hypot(d.x - m.x, d.y - m.y) <= PUERTA_PASO_M); if (pu) return pu.id; }
+      const ll = fromXY(m.x, m.y), id = `i:${i}:${j}`;
+      graph[id] = { id, lat: ll.lat, lng: ll.lng, x: m.x, y: m.y, edges: [], interior: true, area: s.k };
+      if (extremo) {                                         // sin puerta cerca: se une al camino más cercano
+        const n = nodesList.map(n => [Math.hypot(n.x - m.x, n.y - m.y), n]).sort((a, b) => a[0] - b[0])[0][1];
+        n.edges.push(id); graph[id].edges.push(n.id);
+      }
+      return id;
+    });
+    for (let j = 0; j < ids.length - 1; j++) {
+      const a = ids[j], b = ids[j + 1]; if (a === b) continue;
+      graph[a].edges.push(b); graph[b].edges.push(a); segInterior.push({ a, b, k: s.k });
+      for (const k of [a + "|" + b, b + "|" + a]) { interiores.add(k); infoInterior.set(k, { nombre: s.n, nota: s.h, area: s.k }); if (s.a === false) stairs.add(k); }
+    }
+  });
+})();
 function puertasDe(id) {                                    // puertas del destino (vacío si no hay marcadas)
   const esp = PUERTA_PALABRA[id];
   if (esp) { const f = (PUERTAS[esp[0]] || []).filter(p => sinTildes(p.nombre).includes(esp[1])); if (f.length) return f; }
@@ -714,7 +745,7 @@ function astar(graph, start, goal) {
 }
 function nearest(graph, p) {
   let best = null, bd = Infinity;
-  for (const id in graph) { if (graph[id].puerta) continue; const d = distance(p, graph[id]); if (d < bd) { bd = d; best = id; } }
+  for (const id in graph) { if (graph[id].puerta || graph[id].interior) continue; const d = distance(p, graph[id]); if (d < bd) { bd = d; best = id; } }
   return best;
 }
 const pathLen = path => { let s = 0; for (let i = 0; i < path.length - 1; i++) s += distance(graph[path[i]], graph[path[i + 1]]); return s; };
@@ -727,7 +758,9 @@ const HYST = 15;       // m: ventaja mínima para cambiar de nodo objetivo
 // Proyecta la posición sobre la arista más cercana del grafo.
 function snapToGraph(p) {
   const q = toXY(p); let best = null;
-  for (const [a, b] of edgePairs) {
+  // los pasos por dentro de un edificio solo cuentan si estás dentro de ese edificio (si no, te «pegarían» a un pasillo desde la calle)
+  const lista = segInterior.length ? edgePairs.concat(segInterior.filter(s => profundidad(q, AREAS[s.k]) > 0).map(s => [s.a, s.b])) : edgePairs;
+  for (const [a, b] of lista) {
     const A = graph[a], B = graph[b], dx = B.x - A.x, dy = B.y - A.y, L2 = dx * dx + dy * dy;
     const t = L2 ? Math.max(0, Math.min(1, ((q.x - A.x) * dx + (q.y - A.y) * dy) / L2)) : 0;
     const x = A.x + t * dx, y = A.y + t * dy, d = Math.hypot(q.x - x, q.y - y);
@@ -1106,6 +1139,16 @@ function evaluar() {
   return { dest, aim, dArea, llego, enZona, b, rel, g, aleja, m: Math.max(0, Math.round(aim.d / 5) * 5), impreciso: acc > 30, acc };
 }
 
+// primer tramo por dentro de un edificio en la ruta: { d, info } (d = metros hasta él; 0 si ya vas por dentro) o null
+function interiorAdelante(g) {
+  const tomar = (a, b) => interiores.has(a + "|" + b) ? infoInterior.get(a + "|" + b) : null;
+  if (g.onGraph) { const t = tomar(g.snap.a, g.snap.b); if (t) return { d: 0, info: t }; }
+  const path = routePath(g); if (!path) return null;
+  let acc = distance(g.pos, graph[g.target]);
+  for (let i = 0; i < path.length - 1; i++) { const t = tomar(path[i], path[i + 1]); if (t) return { d: acc, info: t }; acc += distance(graph[path[i]], graph[path[i + 1]]); }
+  return null;
+}
+
 // metros hasta la primera escalera de la ruta (0 si ya estás en una), o null si no hay
 function escalerasAdelante(g) {
   if (g.onGraph && stairs.has(g.snap.a + "|" + g.snap.b)) return 0;
@@ -1169,6 +1212,13 @@ function renderBrujula() {
       const clave = state.target + "|" + state.destId;
       if (esc <= 15 && state.avisoEsc !== clave) { state.avisoEsc = clave; vibrar([200, 100, 200]); }
     } else if (esc === null) state.avisoEsc = null;
+  }
+  if (g && !alerta) {                                        // atajo por dentro de un edificio (con su aviso, p. ej. el horario)
+    const it = interiorAdelante(g);
+    if (it && it.d <= 30) {
+      const nom = DEST_DE_AREA[it.info.area] ? info(DEST_DE_AREA[it.info.area]).nombre : "edificio " + it.info.area;
+      alerta = (it.d < 3 ? `🏢 Vas por dentro (${nom})` : `🏢 Atajo por dentro (${nom}) en ~${Math.round(it.d / 5) * 5} m`) + (it.info.nota ? " · " + it.info.nota : "");
+    }
   }
   $("alerta").textContent = alerta;
   // con «Evitar escaleras»: cuánto se alarga el camino y cuántas escaleras quedan (escaleras.js)
@@ -1354,8 +1404,8 @@ function dibujarMapa(ev, g) {
     let prev = toScr(...Object.values(posPx(g.pos))), prevId = null;
     ctx.lineWidth = 6;
     for (const id of path) {
-      const cur = toScr(...Object.values(mapPx(graph[id]))), esc = prevId !== null && stairs.has(prevId + "|" + id);
-      ctx.strokeStyle = T.ruta; ctx.setLineDash(esc ? [9, 7] : []); ctx.globalAlpha = esc ? 0.9 : 1;
+      const cur = toScr(...Object.values(mapPx(graph[id]))), esc = prevId !== null && stairs.has(prevId + "|" + id), dentro = prevId !== null && interiores.has(prevId + "|" + id);
+      ctx.strokeStyle = T.ruta; ctx.setLineDash(esc ? [9, 7] : dentro ? [1, 10] : []); ctx.globalAlpha = esc || dentro ? 0.9 : 1;   // escalera: rayas · por dentro de un edificio: puntos
       ctx.beginPath(); ctx.moveTo(...prev); ctx.lineTo(...cur); ctx.stroke(); prev = cur; prevId = id;
     }
     ctx.setLineDash([]); ctx.globalAlpha = 1;

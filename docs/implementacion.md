@@ -71,6 +71,18 @@ La señal apunta a la **puerta** del edificio (no a su borde) y la ruta termina 
 - **Puertas descartadas:** el generador omite las que quedan a más de 25 m de su edificio. Hoy una: «Entrada calle edificio IDP» (asignada al R, queda a 52 m; es el Edificio Matta/IDP, que no es un destino).
 - **Para agregar o afinar:** marcar en `marcar-entradas.html`, guardar el JSON en `data/entradas.json` y correr el generador. La prueba `node tests/probar-entradas.js` valida los datos.
 
+## Pasos por dentro de edificios
+
+Atajos que cruzan un edificio de puerta a puerta (un pasillo del A, por ejemplo). La ruta los usa cuando acortan el camino.
+
+- **Cómo marcarlos:** en `marcar-entradas.html`, cambiar a **«Pasos»** arriba. Tocar la puerta de partida (el punto se pega a la puerta ya marcada), tocar cada esquina del pasillo y terminar en la otra puerta; luego «Terminar paso» y completar la descripción, si se puede pasar sin escaleras y un aviso opcional (por ejemplo «solo en horario de clases»). Tocar un paso guardado lo edita. «Cargar lo guardado en el proyecto» trae `data/entradas.json` (puertas y pasos) para seguir desde ahí.
+- **Datos:** el JSON exportado trae `entradas` y `pasos`. Guardarlo en `data/entradas.json` y correr `python3 tools/generar-entradas.py` (valida, y avisa si un extremo no coincide con una puerta o si un paso mide más de 250 m).
+- **En la app:** cada punto del trazo es un nodo del grafo; los extremos se unen a la puerta marcada a 6 m o menos (si no hay, al camino más cercano). Los tramos cuentan por su largo real, sin penalización. Si el paso está marcado «con escalera», pesa como una escalera y «evitar escaleras» lo esquiva.
+- **Aviso en la ruta:** «Atajo por dentro (Edificio A) en ~20 m» y, ya adentro, «Vas por dentro (Edificio A)», con el aviso del paso al final. En el mapa el tramo va con puntos (las escaleras van con rayas).
+- **Posición:** estando dentro del edificio, la posición se ajusta al paso; desde la calle no (si no, te «pegaría» a un pasillo al otro lado del muro).
+- **Pendiente:** hoy no hay pasos marcados (`PASOS = []`). Un paso de prueba por dentro del A acortó Acceso→Gimnasio 1 de 258 a 177 m. No hay forma de saber si un pasillo está abierto a cierta hora: el campo de aviso es la única forma de avisarlo.
+
+
 ## Herramienta temporal: marcar entradas
 
 `marcar-entradas.html` (en Pages: `/marcar-entradas.html`) sirve para levantar la puerta de cada edificio y exportar un `entradas.json`. No es parte de la app ni de su caché; se borra cuando las entradas estén integradas.

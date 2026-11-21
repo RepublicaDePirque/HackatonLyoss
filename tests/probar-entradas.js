@@ -3,7 +3,7 @@
 // y que index.html lo use. La elección de puerta se prueba aparte, con el código de la página.
 const assert = require("assert"), fs = require("fs"), path = require("path");
 const leer = f => fs.readFileSync(path.join(__dirname, "..", f), "utf8");
-const ENTRADAS = new Function(leer("js/generado/entradas.js") + "; return ENTRADAS;")();
+const { ENTRADAS, PASOS } = new Function(leer("js/generado/entradas.js") + "; return { ENTRADAS, PASOS };")();
 const CONTORNOS = new Function(leer("js/generado/contornos.js") + "; return CONTORNOS;")();
 const fuente = JSON.parse(leer("data/entradas.json"));
 const MPP = fuente.calibracion.mpp, MAX_M = 25;
@@ -39,10 +39,21 @@ assert.ok(omitidas >= 0 && omitidas <= 3, `se omitieron ${omitidas} puertas: rev
 // Cada edificio con puertas corresponde a un destino de la app (P2 y R2 son parte de P y R).
 const destinos = new Set([...Object.values(CONTORNOS.areaDe), ...CONTORNOS.extra.map(e => e.area)]);
 for (const k of Object.keys(ENTRADAS)) assert.ok(destinos.has(k) || ["P2", "R2"].includes(k), `«${k}» tiene puertas pero ningún destino lo usa`);
+// Pasos por dentro de edificios (atajos de puerta a puerta): trazos válidos dentro del plano y de un edificio que existe.
+for (const s of PASOS) {
+  assert.ok(CONTORNOS.edificios[s.k], `paso «${s.n}»: el edificio «${s.k}» no tiene contorno`);
+  assert.ok(Array.isArray(s.p) && s.p.length >= 2, `paso «${s.n}»: necesita al menos 2 puntos`);
+  for (const [x, y] of s.p) assert.ok(x > -60 && x < 1371 && y > -60 && y < 1066, `paso «${s.n}»: un punto cae fuera del plano`);
+  assert.ok([true, false, null].includes(s.a), `paso «${s.n}»: accesible debe ser true, false o null`);
+  const largo = s.p.reduce((t, q, i) => i ? t + Math.hypot(q[0] - s.p[i - 1][0], q[1] - s.p[i - 1][1]) * MPP : 0, 0);
+  assert.ok(largo > 3 && largo <= 250, `paso «${s.n}» mide ${largo.toFixed(0)} m: ¿está bien trazado?`);
+}
+assert.strictEqual(PASOS.length, (fuente.pasos || []).length, "algún paso de data/entradas.json no llegó a la salida: correr tools/generar-entradas.py");
 // La página carga las entradas y las usa.
 const html = leer("index.html"), sw = leer("sw.js");
 assert.ok(html.includes('src="js/generado/entradas.js"'), "index.html no carga entradas.js");
 assert.ok(/function elegirPuerta/.test(html) && /function miraDe/.test(html), "index.html no elige puerta");
+assert.ok(/function conectarPasos/.test(html) && /function interiorAdelante/.test(html), "index.html no usa los pasos por dentro");
 assert.ok(sw.includes("js/generado/entradas.js"), "sw.js no guarda entradas.js para usarse sin conexión");
 
-console.log(`ok: ${puertas} puertas en ${Object.keys(ENTRADAS).length} edificios (${omitidas} omitida${omitidas === 1 ? "" : "s"} por quedar lejos de su edificio)`);
+console.log(`ok: ${puertas} puertas en ${Object.keys(ENTRADAS).length} edificios (${omitidas} omitida${omitidas === 1 ? "" : "s"} por quedar lejos de su edificio) y ${PASOS.length} paso${PASOS.length === 1 ? "" : "s"} por dentro`);
