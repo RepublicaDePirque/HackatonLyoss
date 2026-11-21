@@ -21,10 +21,13 @@ SEEDS = {
   "A": (815, 690), "B": (825, 485), "C": (765, 390),
   # D y E (y F y F2) están dibujados como un solo contorno: se separan cortando por fila (ymin, ymax).
   "D": (962, 660, None, 707), "E": (962, 660, 707, None),
-  "F2": (947, 777, None, 812), "F": (947, 777, 812, None), "M": (363, 488), "M2": (412, 523), "R": (435, 317),
-  "R2": (485, 360), "U": (737, 652), "P": (775, 250), "P2": (775, 170), "H": (602, 750),
+  "F": (947, 777),   # F2 es parte de F
+  "M": (363, 488), "M2": (412, 523), "R": (435, 317),
+  "R2": (485, 360), "U": (737, 652), "P": (775, 250), "federacion": (735, 245), "P2": (775, 170), "H": (602, 750),
   "I": (767, 855), "J": (949, 330), "K": (970, 435), "O": (995, 550), "T": (1227, 825),
 }
+# Gimnasio 1: el tramo de A entre el cuerpo principal y B. Se recorta de B y se suma a A.
+NECK = (793, 586, 846, 629)
 # Espacios abiertos (patios): semilla y, opcional, rectángulo (x1, y1, x2, y2) para no escapar por zonas abiertas.
 SPACE_SEEDS = {
   "patio_central": ((870, 660), (845, 586, 915, 735)),
@@ -57,14 +60,20 @@ def rdp(p, e):
     if ds[i - 1] > e: return rdp(p[:i + 1], e)[:-1] + rdp(p[i:], e)
     return [p[0], p[-1]]
 
-def contorno(lab, seed, h, w, clip=None):
+def contorno(lab, seed, h, w, clip=None, add=None, sub=None):
     m = lab == lab[seed[1], seed[0]]
+    if len(seed) > 4:                                            # corte por columnas (xmin, xmax)
+        cols = np.arange(w)[None, :]
+        if seed[4] is not None: m = m & (cols >= seed[4])
+        if seed[5] is not None: m = m & (cols < seed[5])
     if clip:
         cm = np.zeros_like(m); cm[clip[1]:clip[3], clip[0]:clip[2]] = True; m = m & cm
     if len(seed) > 2:                                            # corte por filas
         ymin, ymax = seed[2], seed[3]; rows = np.arange(h)[:, None]
         if ymin is not None: m = m & (rows >= ymin)
         if ymax is not None: m = m & (rows < ymax)
+    if add is not None: m = m | add
+    if sub is not None: m = m & ~sub
     area = int(m.sum())
     if area > 40000 or area < 30: return None, area            # fuga o semilla en una línea
     m = ndi.binary_fill_holes(ndi.binary_closing(m, iterations=2))
@@ -80,8 +89,12 @@ def main():
     bar = ndi.binary_dilation(gray <= 115, iterations=1)
     lab, _ = ndi.label(~bar)
     polys = {}
+    neck = np.zeros_like(lab, bool); neck[NECK[1]:NECK[3], NECK[0]:NECK[2]] = True
+    neck &= lab == lab[485, 825]
+    SEEDS["gimnasio1"] = (825, 485)
     for k, s in SEEDS.items():
-        poly, area = contorno(lab, s, h, w)
+        poly, area = contorno(lab, s, h, w, clip=NECK if k == "gimnasio1" else None,
+                              add=neck if k == "A" else None, sub=neck if k == "B" else None)
         print(f"{k:4s} área={area:6d} px  ", f"{len(poly)} vértices" if poly else "DESCARTADO (fuga o semilla mala)")
         if poly: polys[k] = poly
     spaces = {}
