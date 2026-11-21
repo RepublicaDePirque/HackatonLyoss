@@ -1,6 +1,6 @@
-// Pruebas de las frases del modo voz: node tools/probar-voz.js
+// Pruebas de las frases del modo voz: node tests/probar-voz.js
 const assert = require("assert");
-const { horaReloj, fraseHora, ladoDe, fraseDonde } = require("../voz.js");
+const { horaReloj, fraseHora, ladoDe, fraseDonde } = require("../js/voz.js");
 const horas = [[0, 12], [14, 12], [16, 1], [44, 1], [46, 2], [90, 3], [180, 6], [271, 9], [345, 12], [359, 12], [-90, 9], [720, 12]];
 for (const [rel, h] of horas) assert.strictEqual(horaReloj(rel), h, `horaReloj(${rel})`);
 assert.strictEqual(fraseHora(30), "a la 1");

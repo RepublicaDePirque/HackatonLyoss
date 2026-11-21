@@ -8,11 +8,12 @@ Todo vive en `index.html`, una pantalla a la vez (el botón «atrás» del telé
 
 | Pantalla | Qué hace | Plantilla de origen |
 |---|---|---|
+| Portada | El logo sobre fondo oscuro (el del propio logo, sin importar el tema del teléfono) y «Toca para empezar»; al tocar entra a Permiso. `?debug`, `?demo` y `#mapa` la saltan. El logo es una versión reducida (`assets/logo/logo-portada.jpg`, 25 KB) del original de 1,2 MB, con un borde difuminado para que no se vea su cuadrado. | — |
 | Permiso | Explica la señal y pide ubicación y brújula con un toque (requisito de iPhone). Alternativas: ver solo el mapa o un recorrido de ejemplo. Si el permiso falla, dice por qué y qué hacer. | `Permiso.tpl.html` |
 | Buscar | «Cerca de ti» y «Todos los destinos» (37), ordenados por distancia en línea recta. Busca por nombre, lugar o letra («C»). Marca «con fotos». Estado vacío. | `Buscar.tpl.html` |
-| Brújula | Resplandor en el borde (color OKLCH, frío→cálido según cercanía), flecha o mapa, con selector fijo. Cifra en metros al centro, mensaje de estado, pista siempre visible. | `Brujula.tpl.html` |
+| Brújula | Resplandor en el borde (color OKLCH: azul lejos, morado, rojo cerca), flecha o mapa, con selector fijo. Cifra en metros al centro, mensaje de estado, pista siempre visible. | `Brujula.tpl.html` |
 | Tarjetas | Dato curioso al pasar por una zona («Leer más» abre una hoja) y «Así se ve al llegar» a 60 m o menos, con foto. | `Brujula.tpl.html` |
-| Confirmar llegada | Cuando el GPS detecta que estás adentro de la zona (al menos 3 m bajo el borde, menos en zonas angostas), se abre «¿Es este el lugar?» con la foto del destino para compararla con lo que ves; sin foto muestra la letra y el detalle. «Sí, llegué» pasa a la llegada; «Aún no» lo pospone hasta que te alejes 25 m. «Ya llegué» también pregunta si el destino tiene foto. En el recorrido de ejemplo se confirma sola a los 3,5 s. |
+| Confirmar llegada | Cuando el GPS detecta que estás adentro de la zona (a una profundidad proporcional al tamaño de la zona: 60 % de lo más adentro que se puede estar, entre 1,5 y 4,5 m; las zonas chicas exigen 1,6 a 2,4 m y los edificios grandes 4,5 m), se abre «¿Es este el lugar?» con la foto del destino para compararla con lo que ves; sin foto muestra la letra y el detalle. «Sí, llegué» pasa a la llegada; «Aún no» lo pospone hasta que te alejes 25 m. «Ya llegué» también pregunta si el destino tiene foto. En el recorrido de ejemplo se confirma sola a los 3,5 s. |
 | Llegada | Tras confirmar: Foto, «Sabías que», tomar y publicar una foto. «Aún no llego» vuelve a la brújula. | `Llegada.tpl.html` |
 | Recorrido de ejemplo | De la Entrada Av. Los Placeres al Edificio A, de unos 35 s, con dato en el trayecto, foto y llegada. | `Demo.tpl.html` |
 
@@ -23,12 +24,14 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 | Archivo | Contenido | Se regenera con |
 |---|---|---|
 | `index.html` | Interfaz y lógica | A mano |
-| `grafo.js` | Caminos del campus y destinos, desde OpenStreetMap | `python3 tools/generar-grafo.py` (necesita internet) |
-| `contornos.js` | Contornos de edificios y patios (los 37 destinos tienen cuadro), y destinos extra | `python3 tools/contornos.py` (necesita numpy, scipy, matplotlib y pillow) |
-| `datos.js` | Nombre, letra, detalle, pista y foto de cada destino | `python3 tools/generar-datos.py` (lee `data/edificios.json`) |
-| `img/` | Mapas del diseño (claro y oscuro) y fotos con licencia libre de A, B y F | — |
-| `fuentes.css`, `fonts/` | Tipografías | — |
-| `escaleras.js` | «Evitar escaleras» en el modo mapa: con el botón activo, cada tramo de escalera suma 400 m de costo en vez de quedar prohibido, así que si no hay camino sin escaleras se entrega el de menos. Se prueba con `node tools/probar-escaleras.js` | A mano |
+| `js/generado/grafo.js` | Caminos del campus y destinos, desde OpenStreetMap | `python3 tools/generar-grafo.py` (necesita internet) |
+| `js/generado/contornos.js` | Contornos de edificios y patios (los 37 destinos tienen cuadro), y destinos extra | `python3 tools/contornos.py` (necesita numpy, scipy, matplotlib y pillow) |
+| `js/generado/datos.js` | Nombre, letra, detalle, pista y foto de cada destino | `python3 tools/generar-datos.py` (lee `data/edificios.json`) |
+| `assets/img/` | Mapas del diseño (claro y oscuro) y fotos con licencia libre de A, B y F | — |
+| `assets/fuentes.css`, `assets/fonts/` | Tipografías | — |
+| `js/fotos.js` | Comprimir, publicar, leer y reportar fotos compartidas (Firestore) | A mano |
+| `js/escaleras.js` | «Evitar escaleras»: compara caminos y cuenta escaleras. Con el botón activo, cada tramo de escalera suma 400 m de costo en vez de quedar prohibido, así que si no hay camino sin escaleras se entrega el de menos | A mano (prueba: `node tests/probar-escaleras.js`) |
+| `js/voz.js` | Modo voz para personas ciegas | A mano (prueba: `node tests/probar-voz.js`) |
 | `sw.js` | Caché para usarla sin conexión | Subir `CACHE` al cambiar archivos |
 
 ## Cómo probarla
@@ -37,7 +40,7 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 |---|---|
 | `/` | Flujo real (pide GPS y brújula; necesita HTTPS) |
 | `/?demo` | Arranca directo el recorrido de ejemplo |
-| `/?voz` | Activa el modo voz con la voz de la app (`voz.js`); se combina con `demo` o `debug` |
+| `/?voz` | Activa el modo voz con la voz de la app (`js/voz.js`); se combina con `demo` o `debug` |
 | `/?debug` | Panel para mover la posición y el rumbo sin GPS; el mapa dibuja los caminos y tocar el plano te mueve |
 | `/#mapa` | Abre directo en modo mapa |
 | `/?tema=claro` o `?tema=oscuro` | Fuerza el tema |
@@ -48,9 +51,19 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 - **El mapa puede girar con el rumbo** (botón ↻, apagado por defecto). El PRD decidió que no gira; por defecto se respeta (orientación del plano) y el giro es opcional. Una brújula con la N marca dónde queda el norte porque el plano no está orientado así.
 - **El resplandor se mueve en 0,7 s** (posición) y 1,4 s (tamaño y color), no 1,4 s en todo: con la brújula del teléfono emitiendo decenas de lecturas por segundo, 1,4 s en la posición se sentía arrastrado.
-- **Las fotos de la comunidad se guardan solo en el teléfono** (`localStorage`, JPEG de máximo 900 px). El PRD deja sin definir dónde se guardan y cómo se moderan; mientras tanto no hay publicación real. La pantalla lo avisa.
+- **Las fotos de la comunidad se publican en Firestore** (`js/fotos.js`, reglas en `firebase/firestore.rules`; JPEG de máximo 1024 px y ≤ 290 000 caracteres, que es lo que aceptan las reglas). Se piden al elegir el destino y `fotoDe()` las lee de una caché en memoria, porque se llama al dibujar. Sin conexión la foto queda en el teléfono (`localStorage`). Las reglas exigen el lado del edificio desde el que se tomó (`ladoFoto()`: N, E, S u O). Con 3 reportes una foto deja de mostrarse; borrarlas es manual, desde la consola de Firebase. La pantalla de publicar avisa que la foto pasa a dominio público (CC0).
 - **«Vas bien»** solo aparece si no te estás alejando (compara con lo más cerca que estuviste en los últimos 20 s), por la crítica de diseño que señala que el mensaje fijo refuerza rumbos equivocados.
+- **El color del resplandor va de azul a rojo pasando por morado** (el diseño iba de azul a naranja). Cada luz es un degradado que llega a transparente en el borde de su caja, sin `filter: blur`: el desenfoque dejaba ver la caja cuadrada en algunos móviles. Además las luces se difuminan con una máscara cerca del borde de arriba y de abajo y su centro entra 56 px en la pantalla: en Safari el borde de la página no es el de la pantalla (hay barras del navegador y del sistema) y cortar la luz en seco, justo donde es más fuerte, dibujaba un rectángulo. La barra fina queda fuera de la máscara, en el borde. El resplandor, la barra y la flecha giran con un suavizado por tiempo (`senal` en `index.html`) por el camino más corto, así que 359° → 1° no da una vuelta entera ni se arrastra con cada lectura del GPS.
 - **Calibración del plano**: la app usa 0,4601 m/px y 155,3°; `data/georef.json` da 0,4666 m/px y 154,8°. Las dos coinciden a 1 a 6 m (máximo en los bordes del plano), así que no hay desfase relevante. Si se unifican, hay que cambiar también `tools/generar-grafo.py`.
+
+## Herramienta temporal: marcar entradas
+
+`marcar-entradas.html` (en Pages: `/marcar-entradas.html`) sirve para levantar la puerta de cada edificio y exportar un `entradas.json`. No es parte de la app ni de su caché; se borra cuando las entradas estén integradas.
+
+- Elige el edificio arriba (o toca cerca de uno: lo detecta a 20 m y pega la puerta a su borde si está a 8 m o menos), toca la puerta en el plano y guarda con una descripción y si se puede entrar sin escaleras (sí, no, no sé).
+- «⌖» muestra tu ubicación y «Marcar donde estoy» marca con el GPS (avisa si la precisión es peor que ±15 m; tocar el plano es más preciso).
+- Se guarda solo en el teléfono mientras se trabaja. «Lista» muestra el avance, los edificios que faltan y el resultado para copiar, descargar o compartir.
+- Tocar una marca la edita o la borra. Admite varias puertas por edificio.
 
 ## Supuestos en los contornos
 

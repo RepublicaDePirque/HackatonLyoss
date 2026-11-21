@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Genera grafo.js (caminos peatonales del campus) desde OpenStreetMap.
+"""Genera js/generado/grafo.js (caminos peatonales del campus) desde OpenStreetMap.
 
 Uso:  python3 tools/generar-grafo.py        (necesita internet; la app luego funciona sin conexión)
 
-- Baja de OSM los senderos, escaleras y calles de la zona que cubre plano.jpeg.
+- Baja de OSM los senderos, escaleras y calles de la zona que cubre assets/plano.jpeg.
 - Simplifica la geometría, une los edificios con nombre al nodo de camino más cercano
   y deja solo la parte conectada del grafo.
 - Si algo falta en el mapa, se corrige en openstreetmap.org y se vuelve a correr este script.
@@ -285,7 +285,7 @@ def main():
     }
     esc = sum(1 for a in out_aristas if a[2] == 1)
     print(f"grafo: {len(usados)} nodos, {len(out_aristas)} aristas ({esc} de escaleras), {len(out_dest)} destinos")
-    ruta = pathlib.Path(__file__).resolve().parent.parent / "grafo.js"
+    ruta = pathlib.Path(__file__).resolve().parent.parent / "js" / "generado" / "grafo.js"
     ruta.write_text(
         "// GENERADO por tools/generar-grafo.py desde OpenStreetMap. No editar a mano.\n"
         "const GRAFO = " + json.dumps(datos, ensure_ascii=False, separators=(",", ":")) + ";\n",

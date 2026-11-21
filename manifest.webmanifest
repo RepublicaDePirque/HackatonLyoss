@@ -1,6 +1,6 @@
 {
-  "name": "Brújula USM",
-  "short_name": "Brújula USM",
+  "name": "Luz Guía",
+  "short_name": "Luz Guía",
   "description": "Orientación para mechones en el campus",
   "start_url": "./",
   "scope": "./",
@@ -9,7 +9,7 @@
   "background_color": "#15131F",
   "theme_color": "#15131F",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

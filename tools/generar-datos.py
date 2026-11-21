@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Genera datos.js (textos de la interfaz por destino) desde data/edificios.json.
+"""Genera js/generado/datos.js (textos de la interfaz por destino) desde data/edificios.json.
 
 Uso:  python3 tools/generar-datos.py
 
@@ -55,7 +55,7 @@ DESTINOS = {
     "cancha-tenis":                        ("Cancha de tenis", "", "Cancha", None),
 }
 
-# Fotos con licencia libre ya descargadas en img/ (autor y licencia vienen de data/edificios.json).
+# Fotos con licencia libre ya descargadas en assets/img/ (autor y licencia vienen de data/edificios.json).
 PIES = {"a": "Fachada hacia Av. España, con su torre.", "f": "Vista desde la ciclovía, al otro lado de Av. España.",
         "b": "Fachada hacia la piscina."}
 
@@ -65,9 +65,9 @@ for did, (nombre, letra, detalle, eid) in DESTINOS.items():
     d = {"nombre": nombre, "letra": letra, "detalle": detalle}
     if e and e.get("pista"):
         d["pista"] = e["pista"]
-    if e and e.get("foto") and (RAIZ / f"img/edificio-{eid}.jpg").exists():
+    if e and e.get("foto") and (RAIZ / f"assets/img/edificio-{eid}.jpg").exists():
         f = e["foto"]
-        d["foto"] = {"src": f"img/edificio-{eid}.jpg", "autor": f["autor"], "licencia": f["licencia"],
+        d["foto"] = {"src": f"assets/img/edificio-{eid}.jpg", "autor": f["autor"], "licencia": f["licencia"],
                      "pie": PIES.get(eid, ""), "pagina": f["pagina"]}
     info[did] = d
 
@@ -90,6 +90,6 @@ salida = ("// GENERADO por tools/generar-datos.py desde data/edificios.json. No 
           f"const INFO = {json.dumps(info, ensure_ascii=False, separators=(',', ':'))};\n"
           f"const ZONAS = {json.dumps(zonas, ensure_ascii=False, separators=(',', ':'))};\n"
           f"const SABIAS = {json.dumps(sabias, ensure_ascii=False, separators=(',', ':'))};\n")
-(RAIZ / "datos.js").write_text(salida, encoding="utf-8")
-print(f"datos.js: {len(info)} destinos, {sum(1 for d in info.values() if 'foto' in d)} con foto, "
+(RAIZ / "js/generado/datos.js").write_text(salida, encoding="utf-8")
+print(f"js/generado/datos.js: {len(info)} destinos, {sum(1 for d in info.values() if 'foto' in d)} con foto, "
       f"{sum(1 for d in info.values() if 'pista' in d)} con pista, {len(zonas)} zona(s) de datos")

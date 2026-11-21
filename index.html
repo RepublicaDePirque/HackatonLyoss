@@ -8,11 +8,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Brújula USM">
+<meta name="apple-mobile-web-app-title" content="Luz Guía">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="stylesheet" href="fuentes.css">
-<title>Brújula USM</title>
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<link rel="stylesheet" href="assets/fuentes.css">
+<title>Luz Guía</title>
 <script>
 // Tema claro/oscuro según el teléfono (?tema=claro u ?tema=oscuro lo fuerza). Va en el <head> para evitar el parpadeo.
 (function () {
@@ -66,6 +66,13 @@
   .pad { padding:calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 24px); }
 
   /* ---------- Permiso ---------- */
+  /* Portada: el logo primero; al tocar se entra a la app. Siempre oscura, porque el fondo del logo es de ese color. */
+  #vPortada { background:#0B0E15; color:#F5F1EA; }
+  #btnPortada { flex:1; width:100%; border:0; border-radius:0; background:transparent; color:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 24px); }
+  #btnPortada img { width:min(86vw, 420px); height:auto; aspect-ratio:1; -webkit-mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); animation:aparece 1400ms var(--ease) both; }
+  #btnPortada .nombre { margin-top:-28px; font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:30px; letter-spacing:.02em; animation:aparece 1400ms 250ms var(--ease) both; }
+  #btnPortada .toca { font-size:15px; color:#B3ADBF; animation:aparece 1400ms 500ms var(--ease) both, late 3.2s 1.9s ease-in-out infinite; }
+  #vPortada #btnPortada:focus-visible { outline-offset:-6px; }
   #vPermiso { gap:24px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #vPermiso .tel { align-self:center; position:relative; width:150px; height:250px; flex-shrink:0; border-radius:30px; border:2px solid var(--line); overflow:hidden; background:var(--surface); }
   #vPermiso .tel .mancha { position:absolute; left:64px; top:-90px; width:200px; height:200px; animation:recorre 9s cubic-bezier(.45,0,.55,1) infinite; }
@@ -111,9 +118,10 @@
   #map { position:absolute; inset:0; width:100%; height:100%; display:none; touch-action:none; background:var(--bg); }
   .modo-mapa #map { display:block; }
   #luz { position:absolute; inset:0; pointer-events:none; }
-  #luz .halo { position:absolute; transition:left 700ms var(--ease), top 700ms var(--ease), width 1400ms var(--ease), height 1400ms var(--ease), margin 1400ms var(--ease), opacity 1400ms var(--ease); }
+  #luz #halos { position:absolute; inset:0; -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%); mask-image:linear-gradient(to bottom, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%); }
+  #luz .halo { position:absolute; transition:width 1400ms var(--ease), height 1400ms var(--ease), margin 1400ms var(--ease), opacity 1400ms var(--ease); }
   #luz .halo > div { width:100%; height:100%; border-radius:50%; }
-  #luz .barra { position:absolute; border-radius:3px; transition:left 700ms var(--ease), top 700ms var(--ease), width 1400ms var(--ease), height 1400ms var(--ease), opacity 1400ms var(--ease); }
+  #luz .barra { position:absolute; border-radius:3px; transition:opacity 1400ms var(--ease); }
   .capa { position:absolute; inset:0; display:flex; flex-direction:column; gap:12px; padding:calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px); pointer-events:none; }
   .capa > * { pointer-events:auto; }
   .cab { display:flex; align-items:center; gap:10px; }
@@ -126,7 +134,7 @@
   .modo-mapa #centro > * { display:none !important; }
   .centro .velo { position:absolute; left:50%; top:46%; width:360px; height:330px; margin:-165px 0 0 -180px; background:var(--velo); pointer-events:none; }
   .senal { position:relative; height:104px; display:flex; align-items:center; justify-content:center; }
-  #flecha { width:104px; height:104px; display:flex; align-items:center; justify-content:center; transition:transform 900ms var(--ease); }
+  #flecha { width:104px; height:104px; display:flex; align-items:center; justify-content:center; }
   .impreciso { height:32px; padding:0 14px; border-radius:16px; display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; }
   #cifra { position:relative; display:flex; align-items:baseline; justify-content:center; gap:8px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:88px; line-height:1; font-variant-numeric:tabular-nums; }
   #cifra small { font-weight:500; font-size:26px; color:var(--muted); }
@@ -226,6 +234,8 @@
   #debug select, #debug button { font-size:12px; padding:4px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface-fuerte); }
   #debug input[type=range] { width:100%; }
 
+  @keyframes aparece { from { opacity:0; transform:scale(.96) } to { opacity:1; transform:none } }
+  @keyframes late { 0%,100% { opacity:1 } 50% { opacity:.4 } }
   @keyframes respira { 0%,100% { transform:scale(1) } 50% { transform:scale(1.08) } }
   @keyframes brota { from { opacity:0; transform:translateY(24px) scale(.97) } to { opacity:1; transform:none } }
   @keyframes hoja { from { opacity:0; transform:translateY(60px) } to { opacity:1; transform:none } }
@@ -254,6 +264,16 @@
 <div id="app">
 
 <!-- ===================== PERMISO (primera vez) ===================== -->
+<!-- ===================== PORTADA ===================== -->
+<main id="vPortada" class="vista" aria-label="Portada">
+  <h1 class="sr">Luz Guía</h1>
+  <button id="btnPortada" type="button" aria-label="Entrar a Luz Guía. Toca para empezar">
+    <img src="assets/logo/logo-portada.jpg" alt="" width="768" height="768" decoding="async">
+    <span class="nombre" aria-hidden="true">Luz Guía</span>
+    <span class="toca" aria-hidden="true">Toca para empezar</span>
+  </button>
+</main>
+
 <main id="vPermiso" class="vista pad" aria-label="Bienvenida">
   <div class="tel" role="img" aria-label="Un teléfono cuyo borde superior derecho brilla: así se ve la señal">
     <div class="mancha" aria-hidden="true"><div></div></div>
@@ -299,8 +319,10 @@
 <main id="vBrujula" class="vista" aria-label="Brújula">
   <canvas id="map" aria-label="Plano de Casa Central con tu posición y el destino"></canvas>
   <div id="luz" aria-hidden="true">
-    <div id="g2" class="halo"><div></div></div>
-    <div id="g1" class="halo"><div></div></div>
+    <div id="halos">
+      <div id="g2" class="halo"><div></div></div>
+      <div id="g1" class="halo"><div></div></div>
+    </div>
     <div id="barra" class="barra"></div>
   </div>
   <div class="capa">
@@ -394,7 +416,7 @@
       <h1 id="llTitulo">Llegaste</h1>
       <p>Encontraste el camino por tu cuenta.</p>
     </div>
-    <figure id="llFoto" hidden><img id="llFotoImg" alt=""><figcaption id="llFotoPie"></figcaption></figure>
+    <figure id="llFoto" hidden><img id="llFotoImg" alt=""><figcaption id="llFotoPie"></figcaption><button id="btnReportar" class="btn-texto" hidden>Reportar esta foto</button></figure>
     <div id="llSinFoto" class="sinfoto" hidden><b>Nadie ha dejado una foto de este lugar</b><span>Sé el primero: así quien venga después lo reconocerá al llegar.</span></div>
     <div id="llSabias" class="sabias" hidden><b>Sabías que</b><span id="llSabiasTxt"></span></div>
     <div class="pie">
@@ -407,7 +429,7 @@
   <div id="llVista" style="display:none;flex-direction:column;gap:18px;flex:1">
     <div class="bloque"><h1 style="font-size:30px">Tu foto de <span id="llNombre2"></span></h1><p style="font-size:16px">Revísala antes de publicarla.</p></div>
     <div class="prev" role="img" aria-label="Vista previa de tu foto"><img id="llPrev" alt=""></div>
-    <span style="position:relative;font-size:14px;line-height:1.4;font-weight:600">Se publica sin tu nombre. Evita fotografiar a personas.</span>
+    <span style="position:relative;font-size:14px;line-height:1.4;font-weight:600">Se publica sin tu nombre y pasa al dominio público (CC0): cualquiera podrá usarla. Evita fotografiar a personas.</span>
     <div id="llegadaError" role="alert"></div>
     <div style="position:relative;display:flex;flex-direction:column;gap:8px">
       <button id="btnPublicar" class="btn-os">Publicar foto</button>
@@ -419,7 +441,7 @@
       <span class="visto" style="width:64px;height:64px;border-radius:32px"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>
       <h1 style="font-size:34px">Gracias por ayudar al siguiente</h1>
       <p>Quien busque <span id="llNombre3"></span> verá tu foto al acercarse.</p>
-      <p style="font-size:14px;opacity:.85">Prototipo: por ahora tu foto queda guardada solo en este teléfono.</p>
+      <p id="llNota" style="font-size:14px;opacity:.85"></p>
     </div>
     <button id="btnOtro2" class="btn-os">Elegir otro destino</button>
   </div>
@@ -439,10 +461,11 @@
 
 </div>
 
-<script src="grafo.js"></script>
-<script src="contornos.js"></script>
-<script src="datos.js"></script>
-<script src="escaleras.js"></script>
+<script src="js/generado/grafo.js"></script>
+<script src="js/generado/contornos.js"></script>
+<script src="js/generado/datos.js"></script>
+<script src="js/escaleras.js"></script>
+<script src="js/fotos.js"></script>
 <script>
 // ---------- Geometría ----------
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
@@ -467,7 +490,7 @@ const cardinal = deg => DIRS[Math.round(deg / 45) % 8];
 // ---------- Plano y grafo ----------
 // CALIBRACIÓN: ajuste por mínimos cuadrados (semejanza) entre el centro de 12 edificios del plano
 // (A, C, D, E, F, K, L, M, M2, R, T, U; letra -> píxel) y el centro de su contorno en OpenStreetMap.
-// Error medio ~4 m, máximo ~11 m. Verificado superponiendo los contornos de OSM sobre plano.jpeg.
+// Error medio ~4 m, máximo ~11 m. Verificado superponiendo los contornos de OSM sobre assets/plano.jpeg.
 // Si cambia, actualizar también las constantes de tools/generar-grafo.py.
 const ORIGIN = { lat: -33.034358, lng: -71.595779 };      // = píxel (ax,ay), acceso Av. España
 const fromXY = (x, y) => ({
@@ -475,7 +498,7 @@ const fromXY = (x, y) => ({
   lng: ORIGIN.lng + x / (111320 * Math.cos(toRad(ORIGIN.lat)))
 });
 const PLANO = {
-  src: "plano.jpeg", w: 1311, h: 1006,
+  src: "assets/plano.jpeg", w: 1311, h: 1006,
   mpp: 0.4601,       // metros por píxel (calibrado)
   rot: 155.3,        // azimut del "arriba" del plano respecto al norte, horario (el plano está casi invertido)
   ax: 810, ay: 850,  // píxel del plano que corresponde a ORIGIN
@@ -492,7 +515,7 @@ const toPlan = (x, y) => {
 };
 const toXY = p => ({ x: (p.lng - ORIGIN.lng) * 111320 * Math.cos(toRad(ORIGIN.lat)), y: (p.lat - ORIGIN.lat) * 111320 });
 
-// Grafo de caminos: viene de OpenStreetMap (grafo.js, generado con tools/generar-grafo.py).
+// Grafo de caminos: viene de OpenStreetMap (js/generado/grafo.js, generado con tools/generar-grafo.py).
 // Cada tramo puede ser una escalera; los destinos son edificios unidos a su camino más cercano.
 const nodesList = GRAFO.nodos.map(([lat, lng], i) => ({ id: "n" + i, lat, lng, ...toXY({ lat, lng }), edges: [] }));
 const graph = Object.fromEntries(nodesList.map(n => [n.id, n]));
@@ -501,11 +524,14 @@ const stairs = new Set();                                   // "a|b" de los tram
 GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph["n" + b].edges.push("n" + a); if (t === 1) { stairs.add(`n${a}|n${b}`); stairs.add(`n${b}|n${a}`); } });
 const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
 
-// ---------- Contornos de edificios y patios (contornos.js, generado con tools/contornos.py) ----------
-// La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al ENTRAR al cuadro del edificio o patio
-// (contorno en contornos.js) y se llega al estar ADENTRO, al menos ARRIVE_ADENTRO metros bajo el borde (se limita en zonas
-// chicas, ver reqAdentro). El GPS tiene 5 a 15 m de error: si no avisa, bajarlo; si avisa antes de tiempo, subirlo.
-const ARRIVE_ADENTRO = 3;  // m adentro del contorno
+// ---------- Contornos de edificios y patios (js/generado/contornos.js, generado con tools/contornos.py) ----------
+// La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al estar ADENTRO del cuadro del edificio o patio
+// (contorno en js/generado/contornos.js), a una profundidad que depende del tamaño de cada zona (ver reqAdentro): la zona de llegada es el
+// «núcleo» del contorno, más chico cuanto más grande es el edificio. El GPS tiene 5 a 15 m de error: si no avisa, bajar
+// ADENTRO_FRACCION; si avisa antes de tiempo (o en el edificio vecino), subirla.
+const ADENTRO_FRACCION = 0.6;  // parte de la profundidad máxima de la zona que hay que haber entrado
+const ADENTRO_MIN = 1.5;       // m: lo mínimo que se exige, aunque la zona sea muy angosta
+const ADENTRO_MAX = 4.5;       // m: tope en edificios grandes (C, B, A…): basta con pasar el hall, sin tener que caminar hasta el centro
 const ARRIVE_NODO = 12;  // m: destinos sin contorno (accesos), se llega al estar a esta distancia del punto del camino
 const REARMAR = 25;      // m: tras «Aún no llego», el aviso vuelve a armarse al alejarte esto del borde
 const CONT = { ...CONTORNOS.edificios, ...CONTORNOS.espacios };          // clave -> polígono en píxeles del plano
@@ -556,7 +582,10 @@ function interior(key) {
   }
   return INTERIOR[key] = best;
 }
-const reqAdentro = key => Math.min(ARRIVE_ADENTRO, 0.6 * Math.max(0, interior(key).p));   // en zonas angostas se exige menos
+const reqAdentro = key => {                                 // proporcional a cada zona, no igual para todas
+  const p = Math.max(0, interior(key).p);                    // lo más adentro que se puede estar
+  return Math.min(p * 0.9, Math.max(ADENTRO_MIN, Math.min(ADENTRO_MAX, ADENTRO_FRACCION * p)));   // nunca más de lo posible
+};
 
 // Destinos que el grafo no trae (Casino, patios, canchas...): se unen al nodo del grafo más cercano a su borde.
 const AREA_DE = { ...CONTORNOS.areaDe };
@@ -696,11 +725,34 @@ const leerFotos = () => { if (!cacheFotos) { try { cacheFotos = JSON.parse(local
 function guardarFoto(id, data) {
   try { const f = { ...leerFotos(), [id]: data }; localStorage.setItem(FOTOS_KEY, JSON.stringify(f)); cacheFotos = f; return true; } catch (e) { return false; }
 }
-function fotoDe(id) {                                        // la oficial con licencia libre o, si no hay, la de la comunidad
+// Fotos compartidas (Firestore, vía fotos.js). Se piden al elegir el destino y se guardan en `nube`,
+// porque fotoDe() se llama al dibujar y no puede esperar a la red.
+const nube = {};                                             // id de destino -> { id, src } | null (sin fotos)
+const pidiendo = new Set();
+async function cargarNube(id) {
+  if (id in nube || pidiendo.has(id) || !window.Fotos || info(id).foto) return;
+  pidiendo.add(id);
+  try {
+    const f = (await window.Fotos.fotosDe(id))[0];
+    nube[id] = f ? { id: f.id, src: f.foto } : null;
+    if (state.destId === id) { if (state.vista === "llegada" && !fotoNueva) renderLlegada(); render(); }
+  } catch (e) { /* sin conexión: se usa la foto de este teléfono, si la hay */ }
+  pidiendo.delete(id);
+}
+function ladoFoto() {                                        // lado del edificio desde el que estás: N, E, S u O (lo piden las reglas)
+  const a = areaOf(state.destId), p = state.user;
+  let ref = null;
+  if (a) { const r = nearestOnArea(p, a); if (isFinite(r.d) && r.d >= 0.5) ref = r; }
+  const b = bearing(ref || graph[destNode()], p);
+  return b >= 315 || b < 45 ? "N" : b < 135 ? "E" : b < 225 ? "S" : "O";
+}
+function fotoDe(id) {                                        // la oficial con licencia libre; si no, la compartida; si no, la de este teléfono
   const f = info(id).foto;
   if (f) return { src: f.src, pie: f.pie, cred: `Foto: ${f.autor} · ${f.licencia}`, oficial: true };
-  const c = leerFotos()[id];
-  return c ? { src: c, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false } : null;
+  const c = nube[id];
+  if (c) return { id: c.id, src: c.src, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false };
+  const l = leerFotos()[id];
+  return l ? { src: l, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false } : null;
 }
 function reducirFoto(file) {                                 // máx. 900 px y JPEG: cabe en el almacenamiento del teléfono
   return new Promise((ok, mal) => {
@@ -722,7 +774,7 @@ function reducirFoto(file) {                                 // máx. 900 px y J
 }
 
 // ---------- Navegación entre pantallas ----------
-const VISTAS = ["permiso", "buscar", "brujula", "llegada"];
+const VISTAS = ["portada", "permiso", "buscar", "brujula", "llegada"];
 const idVista = v => "v" + v[0].toUpperCase() + v.slice(1);
 function ir(v, push = true) {
   state.confirmando = null;
@@ -737,7 +789,7 @@ function ir(v, push = true) {
   const h = $(idVista(v)).querySelector("h1"); if (h) { h.tabIndex = -1; try { h.focus({ preventScroll: true }); } catch (e) {} }
 }
 window.addEventListener("popstate", e => ir((e.state && e.state.v) || "buscar", false));
-try { history.replaceState({ v: "permiso" }, ""); } catch (e) {}
+try { history.replaceState({ v: "portada" }, ""); } catch (e) {}
 
 function elegir(id) {                                        // desde la lista o tocando un edificio
   setDest(id); ir("brujula");
@@ -745,6 +797,7 @@ function elegir(id) {                                        // desde la lista o
 function setDest(id) {
   state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false; state.confirmando = null;
   if (state.llego === id) state.llego = null;
+  cargarNube(id);
   mapV.fitted = false; render();
 }
 
@@ -873,26 +926,71 @@ function mezcla(a, b, k, Lfijo) {                            // frío -> cálido
   if (dh > Math.PI) dh -= 2 * Math.PI; if (dh < -Math.PI) dh += 2 * Math.PI;
   return deOk(Lfijo || p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k, p[2] + dh * k);
 }
+// Color según la distancia: azul si está lejos, morado a mitad de camino, rojo cuando está cerca.
+const PALETA_DIST = ["#5B8CFF", "#A66BFF", "#FF3D4F"];
+function colorDist(c, Lfijo) {                                // c: 0 lejos … 1 cerca
+  const k = Math.max(0, Math.min(1, c)) * 2;
+  return k <= 1 ? mezcla(PALETA_DIST[0], PALETA_DIST[1], k, Lfijo) : mezcla(PALETA_DIST[1], PALETA_DIST[2], k - 1, Lfijo);
+}
+// Luz sin bordes: un círculo cuyo degradado llega a transparente justo en el límite de su caja (closest-side),
+// con caída suave. Así no hay desenfoque (`filter: blur`), que en varios móviles deja ver la caja cuadrada.
+function luzSuave(rgb, curva) {
+  const con = a => rgb.replace("rgb(", "rgba(").replace(")", "," + a + ")");
+  return `radial-gradient(circle closest-side, ${curva.map(([r, a]) => `${con(a)} ${r * 100}%`).join(", ")})`;
+}
+const CURVA_G1 = [[0, 1], [0.25, 0.95], [0.45, 0.62], [0.65, 0.3], [0.82, 0.1], [0.95, 0.02], [1, 0]];
+const CURVA_G2 = [[0, 1], [0.2, 0.8], [0.45, 0.45], [0.7, 0.18], [0.9, 0.04], [1, 0]];
+
+// La señal (resplandor, barra y flecha) gira hacia el ángulo nuevo por el camino más corto y sin saltos:
+// 359° → 1° son 2°, no una vuelta entera. Es un suavizado por tiempo, así que se ve igual a cualquier tasa de GPS o brújula.
+const INTRO_LUZ = 56;                                        // px que entra el centro de la luz desde el borde
+const senal = { meta: 0, actual: null, t: 0, activo: false, p: null };
+function moverSenal() {
+  const a = senal.actual; if (a === null) return;
+  $("flecha").style.transform = `rotate(${a}deg)`;
+  const p = senal.p; if (!p) return;
+  const rad = toRad(a), dx = Math.sin(rad), dy = -Math.cos(rad);
+  const t = Math.min(p.cx / Math.max(Math.abs(dx), 1e-4), p.cy / Math.max(Math.abs(dy), 1e-4));
+  const x = p.cx + dx * t, y = p.cy + dy * t;
+  const vertical = x < 1 || x > p.W - 1;
+  const bw = vertical ? p.grosor : p.largo, bh = vertical ? p.largo : p.grosor;
+  const bx = Math.max(0, Math.min(p.W - bw, x - bw / 2)), by = Math.max(0, Math.min(p.H - bh, y - bh / 2));
+  const hx = x - dx * INTRO_LUZ, hy = y - dy * INTRO_LUZ;     // el centro de la luz entra un poco: así no se corta en su parte más fuerte
+  $("g1").style.left = hx + "px"; $("g1").style.top = hy + "px";
+  $("g2").style.left = hx - dy * 90 + "px"; $("g2").style.top = hy + dx * 90 + "px";
+  poner($("barra"), { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px" });
+}
+function pasoSenal(ahora) {
+  const dt = Math.min(100, ahora - senal.t); senal.t = ahora;
+  const d = (((senal.meta - senal.actual) % 360) + 540) % 360 - 180;
+  if (Math.abs(d) < 0.05 || sinMovimiento()) { senal.actual = senal.meta; senal.activo = false; moverSenal(); return; }
+  senal.actual += d * (1 - Math.exp(-dt / 140));
+  moverSenal(); requestAnimationFrame(pasoSenal);
+}
+function girarSenal(rel) {
+  senal.meta = rel;
+  if (senal.actual === null || sinMovimiento() || typeof requestAnimationFrame !== "function") { senal.actual = rel; moverSenal(); return; }
+  if (!senal.activo) { senal.activo = true; senal.t = performance.now(); requestAnimationFrame(pasoSenal); }
+}
+const sinMovimiento = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+const poner = (el, o) => { for (const k in o) el.style[k] = o[k]; };
+
 function pintarLuz(ev) {
   const W = $("app").clientWidth || 390, H = $("app").clientHeight || 844, cx = W / 2, cy = H / 2;
   const metros = ev.m, impreciso = ev.impreciso, esFlecha = state.modo === "flecha", cl = claro();
-  const c = Math.max(0, Math.min(1, 1 - metros / 220));     // 0 lejos (calma) … 1 cerca (calidez)
-  const c1 = mezcla("#8FA6FF", "#FF8A3D", c), c2 = mezcla("#B79CFF", "#FF5C7A", c);
-  const fuerte = cl ? mezcla("#8FA6FF", "#FF8A3D", c, 0.56) : c1;
-  const rad = toRad(ev.rel), dx = Math.sin(rad), dy = -Math.cos(rad);
-  const t = Math.min(cx / Math.max(Math.abs(dx), 1e-4), cy / Math.max(Math.abs(dy), 1e-4));
-  const x = cx + dx * t, y = cy + dy * t, ancho = impreciso ? 1.45 : 1;
+  const c = Math.max(0, Math.min(1, 1 - metros / 220));     // 0 lejos (azul) … 1 cerca (rojo)
+  const c1 = colorDist(c), c2 = colorDist(c + 0.2);         // la segunda luz va un paso más cálida
+  const fuerte = cl ? colorDist(c, 0.56) : c1;
+  const ancho = impreciso ? 1.45 : 1;
   const s1 = (260 + c * 400) * ancho, s2 = s1 * 0.8, largo = (70 + c * 190) * ancho, grosor = 5;
-  const vertical = Math.abs(x) < 1 || Math.abs(x - W) < 1;
-  const bw = vertical ? grosor : largo, bh = vertical ? largo : grosor;
-  const bx = Math.max(0, Math.min(W - bw, x - bw / 2)), by = Math.max(0, Math.min(H - bh, y - bh / 2));
   const gop = (cl ? 0.95 : 0.85) * (esFlecha ? 0.45 : 1) * (impreciso ? 0.8 : 1);
-  const poner = (el, o) => { for (const k in o) el.style[k] = o[k]; };
-  poner($("g1"), { left: x + "px", top: y + "px", width: s1 + "px", height: s1 + "px", marginLeft: -s1 / 2 + "px", marginTop: -s1 / 2 + "px", opacity: gop });
-  poner($("g1").firstElementChild, { background: `radial-gradient(circle, ${c1} 0%, ${c1} 18%, transparent 68%)`, filter: `blur(${impreciso ? 44 : 28}px)`, animation: "respira 5s ease-in-out infinite" });
-  poner($("g2"), { left: x - dy * 90 + "px", top: y + dx * 90 + "px", width: s2 + "px", height: s2 + "px", marginLeft: -s2 / 2 + "px", marginTop: -s2 / 2 + "px", opacity: gop });
-  poner($("g2").firstElementChild, { background: `radial-gradient(circle, ${c2} 0%, transparent 66%)`, filter: `blur(${impreciso ? 52 : 36}px)`, animation: "respira 7s ease-in-out infinite" });
-  poner($("barra"), { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px", background: fuerte, boxShadow: `0 0 14px ${fuerte}`, opacity: esFlecha ? 0.4 : impreciso ? 0.55 : 1 });
+  poner($("g1"), { width: s1 + "px", height: s1 + "px", marginLeft: -s1 / 2 + "px", marginTop: -s1 / 2 + "px", opacity: gop });
+  poner($("g1").firstElementChild, { background: luzSuave(c1, CURVA_G1), animation: "respira 5s ease-in-out infinite" });
+  poner($("g2"), { width: s2 + "px", height: s2 + "px", marginLeft: -s2 / 2 + "px", marginTop: -s2 / 2 + "px", opacity: gop });
+  poner($("g2").firstElementChild, { background: luzSuave(c2, CURVA_G2), animation: "respira 7s ease-in-out infinite" });
+  poner($("barra"), { background: fuerte, boxShadow: `0 0 14px ${fuerte}`, opacity: esFlecha ? 0.4 : impreciso ? 0.55 : 1 });
+  senal.p = { W, H, cx, cy, largo, grosor };
+  moverSenal();
   $("g1").setAttribute("role", "img");
   $("g1").setAttribute("aria-label", `El borde brilla hacia ${info(state.destId).nombre}, a ${metros} metros`);
   $("flechaPath").setAttribute("fill", fuerte); $("flechaPath").setAttribute("stroke", fuerte);
@@ -965,7 +1063,7 @@ function renderBrujula() {
   $("flecha").hidden = !(flecha && ubic);
   $("giro").hidden = !(detras && !flecha);
   $("impreciso").hidden = !(ev && ev.impreciso && !flecha && !detras);
-  if (ubic) $("flecha").style.transform = `rotate(${ev.rel}deg)`;
+  if (ubic) girarSenal(ev.rel);
   const conLuz = !mapa && ubic;
   $("luz").style.display = conLuz ? "" : "none"; $("velo").hidden = !conLuz;
   if (conLuz) pintarLuz(ev);
@@ -1025,6 +1123,7 @@ function renderBrujula() {
   if (mapa) dibujarMapa(ev, g);
 }
 
+$("btnPortada").onclick = () => ir("permiso");              // la portada muestra el logo; al tocar se entra
 $("btnAtras").onclick = () => ir("buscar");
 // «Ya llegué»: con foto se pregunta antes (ayuda a notar que es otro edificio); sin foto va directo.
 $("btnYaLlegue").onclick = () => { state.llego = state.destId; if (fotoDe(state.destId)) { state.confirmando = "manual"; render(); } else ir("llegada"); };
@@ -1065,7 +1164,7 @@ $("hojaCerrar").onclick = () => { state.hojaAbierta = false; state.zona = null; 
 $("accBtn").onclick = () => { state.accesible = !state.accesible; state.target = null; mapV.fitted = false; render(); };
 
 // ---------- Mapa: plano redibujado (design/assets) con tu posición y la ruta ----------
-const MAPA_VB = { x: 300, y: 60, w: 1000, h: 860 };          // zona del plano (píxeles) que cubre img/mapa-*.png
+const MAPA_VB = { x: 300, y: 60, w: 1000, h: 860 };          // zona del plano (píxeles) que cubre assets/img/mapa-*.png
 const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0, sx: 0, sy: 0, baseH: 270,
                theta: 0,        // giro en pantalla (rad): con «↻» activo, hacia donde miras queda arriba
                follow: false, rotar: false };
@@ -1074,7 +1173,7 @@ const MAPAS = {};
 function cargarMapaImg(t) {
   if (t in MAPAS) return;
   MAPAS[t] = null;
-  const img = new Image(); img.onload = () => { MAPAS[t] = img; render(); }; img.src = `img/mapa-${t}.png`;
+  const img = new Image(); img.onload = () => { MAPAS[t] = img; render(); }; img.src = `assets/img/mapa-${t}.png`;
 }
 const TEMA = { oscuro: { bg: "#15131F", fg: "#F5F1EA", ruta: "#FF8A3D", yo: "#8FA6FF" }, claro: { bg: "#F6F1EA", fg: "#1D1A26", ruta: "#D2531A", yo: "#5B6FD6" } };
 const mapPx = n => toPlan(n.x, n.y);
@@ -1265,9 +1364,11 @@ function mostrarLl(parte) {
 }
 function renderLlegada() {
   const i = info(state.destId), f = fotoDe(state.destId);
+  cargarNube(state.destId);
   mostrarLl("inicio"); $("llError").textContent = ""; fotoNueva = null;
   $("llTitulo").textContent = "Llegaste " + aDestino(i.nombre);
   $("llFoto").hidden = !f; $("llSinFoto").hidden = !!f;
+  $("btnReportar").hidden = !(f && f.id); $("btnReportar").disabled = false;
   if (f) { $("llFotoImg").src = f.src; $("llFotoImg").alt = "Foto de " + i.nombre; $("llFotoPie").textContent = `${f.cred} · ${f.pie}`; }
   const sab = SABIAS[state.destId]; $("llSabias").hidden = !sab; if (sab) $("llSabiasTxt").textContent = sab;
   $("llNombre2").textContent = i.nombre; $("llNombre3").textContent = i.nombre;
@@ -1277,13 +1378,34 @@ $("btnRepetir").onclick = () => $("btnTomar").onclick();
 $("inpFoto").onchange = async e => {
   const file = e.target.files && e.target.files[0]; if (!file) return;
   try {
-    fotoNueva = await reducirFoto(file); $("llPrev").src = fotoNueva; $("llegadaError").textContent = ""; mostrarLl("vista");
+    try { fotoNueva = await window.Fotos.comprimir(file); } catch (e) { fotoNueva = await reducirFoto(file); }
+    $("llPrev").src = fotoNueva; $("llegadaError").textContent = ""; mostrarLl("vista");
   } catch (err) { $("llError").textContent = "No pudimos leer la foto. Prueba de nuevo."; }
 };
-$("btnPublicar").onclick = () => {
+$("btnPublicar").onclick = async () => {
   if (!fotoNueva) return;
-  if (!guardarFoto(state.destId, fotoNueva)) { $("llegadaError").textContent = "No pudimos guardar la foto (poco espacio en el teléfono). Prueba de nuevo."; return; }
+  const btn = $("btnPublicar"), id = state.destId, lado = ladoFoto();
+  btn.disabled = true; $("llegadaError").textContent = "";
+  let compartida = false;
+  try {                                                      // primero se intenta compartirla con todos
+    const nid = await window.Fotos.publicarFoto(id, lado, fotoNueva);
+    nube[id] = { id: nid, src: fotoNueva }; compartida = true;
+  } catch (e) { /* sin conexión o foto demasiado grande: queda en este teléfono */ }
+  const guardada = compartida || guardarFoto(id, fotoNueva);
+  btn.disabled = false;
+  if (!guardada) { $("llegadaError").textContent = "No pudimos guardar la foto (poco espacio en el teléfono). Prueba de nuevo."; return; }
+  $("llNota").textContent = compartida ? "Tu foto quedó publicada: quien venga después la verá al acercarse."
+    : "No pudimos publicarla (¿sin conexión?): por ahora tu foto queda guardada solo en este teléfono.";
   mostrarLl("gracias");
+};
+$("btnReportar").onclick = async () => {
+  const f = fotoDe(state.destId); if (!f || !f.id) return;
+  $("btnReportar").disabled = true;
+  try {
+    await window.Fotos.reportar(f.id);
+    nube[state.destId] = null; renderLlegada();
+    $("llError").textContent = "Gracias por avisar. Dejamos de mostrar esta foto.";
+  } catch (e) { $("llError").textContent = "No pudimos enviar el reporte. Prueba de nuevo."; $("btnReportar").disabled = false; }
 };
 $("btnAunNo").onclick = () => { state.llego = state.destId; ir("brujula"); };
 $("btnOtro").onclick = () => ir("buscar");
@@ -1343,8 +1465,8 @@ window.addEventListener("resize", render);
 // ---------- Arranque ----------
 if (params.has("demo")) iniciarDemo();
 else if (DEBUG || location.hash === "#mapa") { if (location.hash === "#mapa") state.modo = "mapa"; ir(location.hash === "#mapa" ? "brujula" : "buscar", false); }
-else ir("permiso", false);
+else ir("portada", false);
 </script>
-<script src="voz.js"></script>
+<script src="js/voz.js"></script>
 </body>
 </html>
