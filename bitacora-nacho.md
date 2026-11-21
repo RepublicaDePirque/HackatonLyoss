@@ -44,8 +44,8 @@ Respondemos así a lo que el enunciado deja libre:
 
 Por un lado, apuesta por el factor aventura: indicaciones más vagas para que el estudiante descubra los edificios y el campus en general de una manera más interactiva y educativa. Su modo principal es una brújula: el usuario solo ve una señal visual que le indica hacia dónde queda su destino. En el camino va descubriendo la universidad (barreras de orientación), los datos curiosos generan *engagement* y él mismo puede colaborar subiendo fotos.
 
-Por otro lado, ofrece maneras más precisas para quien las necesite: la flecha, el mapa del campus y, en la etapa de accesibilidad, un camino trazado.
-
+Por otro lado, ofrece maneras más precisas para quien las necesite: la flecha, el mapa del campus y entrega tambien una funcionalidad para las personas con visibilidad reducida y para las personas con movilidad reducida
+.
 - **Resplandor direccional:** el borde de la pantalla brilla del lado del destino, como el indicador de sonido de Fortnite. Lejos, la luz es estrecha y fría; cerca, ancha y cálida. Al centro va la distancia en metros. No hay ruta: el camino lo elige la persona.
 - **Información para no perderse:** una pista escrita por destino (por ejemplo, «el edificio de la torre, arriba de la escalinata de Av. España») y mensajes según la situación: vas bien, te estás alejando, está detrás de ti, casi llegas.
 - **Datos curiosos por zona:** al pasar por un lugar aparece una tarjeta. Algunos que juntamos:
