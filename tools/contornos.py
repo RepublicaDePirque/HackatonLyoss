@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Calca los contornos de edificios y patios desde plano.jpeg y genera contornos.js.
+"""Calca los contornos de edificios y patios desde assets/plano.jpeg y genera js/generado/contornos.js.
 
 Cada edificio se aísla con una semilla (un píxel dentro del edificio, en píxeles del plano): se rellena
 lo que encierran las líneas negras gruesas y se extrae el contorno. Los patios sin línea que los cierre
 se trazan a mano (SPACE_POLYS). Todo queda en píxeles del plano; index.html lo pasa a metros con la
 calibración del mapa (fromPlan), así que no depende de la georreferenciación de este script.
 
-Uso:  python3 tools/contornos.py             (escribe contornos.js)
+Uso:  python3 tools/contornos.py             (escribe js/generado/contornos.js)
       python3 tools/contornos.py --preview   (solo tools/preview.png, para revisar)
 """
 import sys, os, json
@@ -16,7 +16,7 @@ from scipy import ndimage as ndi
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
-PLANO = os.path.join(ROOT, "plano.jpeg"); SALIDA = os.path.join(ROOT, "contornos.js")
+PLANO = os.path.join(ROOT, "assets", "plano.jpeg"); SALIDA = os.path.join(ROOT, "js", "generado", "contornos.js")
 
 # Semillas (x, y) en píxeles del plano: un punto dentro de cada edificio.
 # Con 4 valores más se corta por filas (ymin, ymax) porque dos edificios comparten contorno.

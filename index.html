@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Brújula USM">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="stylesheet" href="fuentes.css">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<link rel="stylesheet" href="assets/fuentes.css">
 <title>Brújula USM</title>
 <script>
 // Tema claro/oscuro según el teléfono (?tema=claro u ?tema=oscuro lo fuerza). Va en el <head> para evitar el parpadeo.
@@ -399,11 +399,11 @@
 
 </div>
 
-<script src="grafo.js"></script>
-<script src="contornos.js"></script>
-<script src="datos.js"></script>
-<script src="escaleras.js"></script>
-<script src="fotos.js"></script>
+<script src="js/generado/grafo.js"></script>
+<script src="js/generado/contornos.js"></script>
+<script src="js/generado/datos.js"></script>
+<script src="js/escaleras.js"></script>
+<script src="js/fotos.js"></script>
 <script>
 // ---------- Geometría ----------
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
@@ -428,7 +428,7 @@ const cardinal = deg => DIRS[Math.round(deg / 45) % 8];
 // ---------- Plano y grafo ----------
 // CALIBRACIÓN: ajuste por mínimos cuadrados (semejanza) entre el centro de 12 edificios del plano
 // (A, C, D, E, F, K, L, M, M2, R, T, U; letra -> píxel) y el centro de su contorno en OpenStreetMap.
-// Error medio ~4 m, máximo ~11 m. Verificado superponiendo los contornos de OSM sobre plano.jpeg.
+// Error medio ~4 m, máximo ~11 m. Verificado superponiendo los contornos de OSM sobre assets/plano.jpeg.
 // Si cambia, actualizar también las constantes de tools/generar-grafo.py.
 const ORIGIN = { lat: -33.034358, lng: -71.595779 };      // = píxel (ax,ay), acceso Av. España
 const fromXY = (x, y) => ({
@@ -436,7 +436,7 @@ const fromXY = (x, y) => ({
   lng: ORIGIN.lng + x / (111320 * Math.cos(toRad(ORIGIN.lat)))
 });
 const PLANO = {
-  src: "plano.jpeg", w: 1311, h: 1006,
+  src: "assets/plano.jpeg", w: 1311, h: 1006,
   mpp: 0.4601,       // metros por píxel (calibrado)
   rot: 155.3,        // azimut del "arriba" del plano respecto al norte, horario (el plano está casi invertido)
   ax: 810, ay: 850,  // píxel del plano que corresponde a ORIGIN
@@ -453,7 +453,7 @@ const toPlan = (x, y) => {
 };
 const toXY = p => ({ x: (p.lng - ORIGIN.lng) * 111320 * Math.cos(toRad(ORIGIN.lat)), y: (p.lat - ORIGIN.lat) * 111320 });
 
-// Grafo de caminos: viene de OpenStreetMap (grafo.js, generado con tools/generar-grafo.py).
+// Grafo de caminos: viene de OpenStreetMap (js/generado/grafo.js, generado con tools/generar-grafo.py).
 // Cada tramo puede ser una escalera; los destinos son edificios unidos a su camino más cercano.
 const nodesList = GRAFO.nodos.map(([lat, lng], i) => ({ id: "n" + i, lat, lng, ...toXY({ lat, lng }), edges: [] }));
 const graph = Object.fromEntries(nodesList.map(n => [n.id, n]));
@@ -462,7 +462,7 @@ const stairs = new Set();                                   // "a|b" de los tram
 GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph["n" + b].edges.push("n" + a); if (t === 1) { stairs.add(`n${a}|n${b}`); stairs.add(`n${b}|n${a}`); } });
 const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
 
-// ---------- Contornos de edificios y patios (contornos.js, generado con tools/contornos.py) ----------
+// ---------- Contornos de edificios y patios (js/generado/contornos.js, generado con tools/contornos.py) ----------
 // La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al ENTRAR al cuadro del edificio o patio
 // (contorno en contornos.js), con ARRIVE_BLD de margen por el error del GPS (5 a 15 m): subirlo si no avisa, bajarlo si avisa antes.
 const ARRIVE_BLD = 5;    // m del borde (0 = dentro del cuadro)
@@ -988,7 +988,7 @@ $("hojaCerrar").onclick = () => { state.hojaAbierta = false; state.zona = null; 
 $("accBtn").onclick = () => { state.accesible = !state.accesible; state.target = null; mapV.fitted = false; render(); };
 
 // ---------- Mapa: plano redibujado (design/assets) con tu posición y la ruta ----------
-const MAPA_VB = { x: 300, y: 60, w: 1000, h: 860 };          // zona del plano (píxeles) que cubre img/mapa-*.png
+const MAPA_VB = { x: 300, y: 60, w: 1000, h: 860 };          // zona del plano (píxeles) que cubre assets/img/mapa-*.png
 const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0, sx: 0, sy: 0, baseH: 270,
                theta: 0,        // giro en pantalla (rad): con «↻» activo, hacia donde miras queda arriba
                follow: false, rotar: false };
@@ -997,7 +997,7 @@ const MAPAS = {};
 function cargarMapaImg(t) {
   if (t in MAPAS) return;
   MAPAS[t] = null;
-  const img = new Image(); img.onload = () => { MAPAS[t] = img; render(); }; img.src = `img/mapa-${t}.png`;
+  const img = new Image(); img.onload = () => { MAPAS[t] = img; render(); }; img.src = `assets/img/mapa-${t}.png`;
 }
 const TEMA = { oscuro: { bg: "#15131F", fg: "#F5F1EA", ruta: "#FF8A3D", yo: "#8FA6FF" }, claro: { bg: "#F6F1EA", fg: "#1D1A26", ruta: "#D2531A", yo: "#5B6FD6" } };
 const mapPx = n => toPlan(n.x, n.y);
@@ -1290,6 +1290,6 @@ if (params.has("demo")) iniciarDemo();
 else if (DEBUG || location.hash === "#mapa") { if (location.hash === "#mapa") state.modo = "mapa"; ir(location.hash === "#mapa" ? "brujula" : "buscar", false); }
 else ir("permiso", false);
 </script>
-<script src="voz.js"></script>
+<script src="js/voz.js"></script>
 </body>
 </html>

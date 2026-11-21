@@ -22,12 +22,14 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 | Archivo | Contenido | Se regenera con |
 |---|---|---|
 | `index.html` | Interfaz y lógica | A mano |
-| `grafo.js` | Caminos del campus y destinos, desde OpenStreetMap | `python3 tools/generar-grafo.py` (necesita internet) |
-| `contornos.js` | Contornos de edificios y patios (los 37 destinos tienen cuadro), y destinos extra | `python3 tools/contornos.py` (necesita numpy, scipy, matplotlib y pillow) |
-| `datos.js` | Nombre, letra, detalle, pista y foto de cada destino | `python3 tools/generar-datos.py` (lee `data/edificios.json`) |
-| `img/` | Mapas del diseño (claro y oscuro) y fotos con licencia libre de A, B y F | — |
-| `fuentes.css`, `fonts/` | Tipografías | — |
-| `fotos.js` | Comprimir, publicar, leer y reportar fotos compartidas (Firestore) | A mano |
+| `js/generado/grafo.js` | Caminos del campus y destinos, desde OpenStreetMap | `python3 tools/generar-grafo.py` (necesita internet) |
+| `js/generado/contornos.js` | Contornos de edificios y patios (los 37 destinos tienen cuadro), y destinos extra | `python3 tools/contornos.py` (necesita numpy, scipy, matplotlib y pillow) |
+| `js/generado/datos.js` | Nombre, letra, detalle, pista y foto de cada destino | `python3 tools/generar-datos.py` (lee `data/edificios.json`) |
+| `assets/img/` | Mapas del diseño (claro y oscuro) y fotos con licencia libre de A, B y F | — |
+| `assets/fuentes.css`, `assets/fonts/` | Tipografías | — |
+| `js/fotos.js` | Comprimir, publicar, leer y reportar fotos compartidas (Firestore) | A mano |
+| `js/escaleras.js` | «Evitar escaleras»: compara caminos y cuenta escaleras | A mano (prueba: `node tests/probar-escaleras.js`) |
+| `js/voz.js` | Modo voz para personas ciegas | A mano (prueba: `node tests/probar-voz.js`) |
 | `sw.js` | Caché para usarla sin conexión | Subir `CACHE` al cambiar archivos |
 
 ## Cómo probarla
@@ -36,7 +38,7 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 |---|---|
 | `/` | Flujo real (pide GPS y brújula; necesita HTTPS) |
 | `/?demo` | Arranca directo el recorrido de ejemplo |
-| `/?voz` | Activa el modo voz con la voz de la app (`voz.js`); se combina con `demo` o `debug` |
+| `/?voz` | Activa el modo voz con la voz de la app (`js/voz.js`); se combina con `demo` o `debug` |
 | `/?debug` | Panel para mover la posición y el rumbo sin GPS; el mapa dibuja los caminos y tocar el plano te mueve |
 | `/#mapa` | Abre directo en modo mapa |
 | `/?tema=claro` o `?tema=oscuro` | Fuerza el tema |
@@ -45,10 +47,10 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 ## Dónde la implementación se aparta del PRD
 
-- **El mapa traza la ruta** (A* sobre los caminos de OpenStreetMap, con aviso de escaleras y opción «Evitar escaleras», que suma 400 m de costo por tramo de escalera en vez de prohibirlos: así entrega el camino con menos escaleras cuando no hay uno sin ninguna; la comparación está en `escaleras.js` y se prueba con `node tools/probar-escaleras.js`); el PRD dice que el modo mapa «te ubica; no traza ruta». Lo dejé porque ya estaba hecho y funciona; la brújula, que es el producto, sigue sin mostrar ruta. Si el equipo prefiere el mapa sin ruta, basta quitar el dibujo de `path` en `dibujarMapa`.
+- **El mapa traza la ruta** (A* sobre los caminos de OpenStreetMap, con aviso de escaleras y opción «Evitar escaleras», que suma 400 m de costo por tramo de escalera en vez de prohibirlos: así entrega el camino con menos escaleras cuando no hay uno sin ninguna; la comparación está en `js/escaleras.js` y se prueba con `node tools/probar-escaleras.js`); el PRD dice que el modo mapa «te ubica; no traza ruta». Lo dejé porque ya estaba hecho y funciona; la brújula, que es el producto, sigue sin mostrar ruta. Si el equipo prefiere el mapa sin ruta, basta quitar el dibujo de `path` en `dibujarMapa`.
 - **El mapa puede girar con el rumbo** (botón ↻, apagado por defecto). El PRD decidió que no gira; por defecto se respeta (orientación del plano) y el giro es opcional. Una brújula con la N marca dónde queda el norte porque el plano no está orientado así.
 - **El resplandor se mueve en 0,7 s** (posición) y 1,4 s (tamaño y color), no 1,4 s en todo: con la brújula del teléfono emitiendo decenas de lecturas por segundo, 1,4 s en la posición se sentía arrastrado.
-- **Las fotos de la comunidad se publican en Firestore** (`fotos.js`, reglas en `firebase/firestore.rules`; JPEG de máximo 1024 px y ≤ 290 000 caracteres, que es lo que aceptan las reglas). Se piden al elegir el destino y `fotoDe()` las lee de una caché en memoria, porque se llama al dibujar. Sin conexión la foto queda en el teléfono (`localStorage`). Las reglas exigen el lado del edificio desde el que se tomó (`ladoFoto()`: N, E, S u O). Con 3 reportes una foto deja de mostrarse; borrarlas es manual, desde la consola de Firebase. La pantalla de publicar avisa que la foto pasa a dominio público (CC0).
+- **Las fotos de la comunidad se publican en Firestore** (`js/fotos.js`, reglas en `firebase/firestore.rules`; JPEG de máximo 1024 px y ≤ 290 000 caracteres, que es lo que aceptan las reglas). Se piden al elegir el destino y `fotoDe()` las lee de una caché en memoria, porque se llama al dibujar. Sin conexión la foto queda en el teléfono (`localStorage`). Las reglas exigen el lado del edificio desde el que se tomó (`ladoFoto()`: N, E, S u O). Con 3 reportes una foto deja de mostrarse; borrarlas es manual, desde la consola de Firebase. La pantalla de publicar avisa que la foto pasa a dominio público (CC0).
 - **«Vas bien»** solo aparece si no te estás alejando (compara con lo más cerca que estuviste en los últimos 20 s), por la crítica de diseño que señala que el mensaje fijo refuerza rumbos equivocados.
 - **Calibración del plano**: la app usa 0,4601 m/px y 155,3°; `data/georef.json` da 0,4666 m/px y 154,8°. Las dos coinciden a 1 a 6 m (máximo en los bordes del plano), así que no hay desfase relevante. Si se unifican, hay que cambiar también `tools/generar-grafo.py`.
 
