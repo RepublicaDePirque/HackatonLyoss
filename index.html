@@ -44,14 +44,18 @@
   .tabMapa #vMapa { display:flex; }
   .tabMapa #vBrujula { display:none; }
   #map { flex:1 1 0; min-height:300px; aspect-ratio:auto; touch-action:none; cursor:grab; background:#0b0e13; }
-  #mapCtl { display:grid; grid-template-columns:1fr 1fr 2fr 2fr; gap:8px; }
-  #mapCtl button { min-height:44px; padding:8px; font-size:16px; }
+  #mapCtl { display:grid; grid-template-columns:1fr 1fr 2fr 2fr 2fr; gap:6px; }
+  #mapCtl button { min-height:44px; padding:8px 4px; font-size:15px; }
   #mapInfo { text-align:center; }
   #mapInfo b { color:var(--acc); }
+  #alerta { text-align:center; font-weight:700; color:#ffb347; min-height:0; }
+  #alerta:empty { display:none; }
+  #q { font:inherit; font-size:18px; padding:12px 16px; border-radius:14px; border:1px solid var(--line); background:#171c24; color:var(--fg); width:100%; min-height:48px; user-select:text; -webkit-user-select:text; }
 </style>
 </head>
 <body>
 <main>
+<input id="q" type="search" placeholder="🔎 Buscar edificio…" aria-label="Buscar destino" autocomplete="off" enterkeyhint="search">
 <select id="dest" aria-label="Destino"></select>
 <button id="accBtn" aria-pressed="false" style="min-height:44px;padding:8px;font-size:16px">♿ Ruta sin escaleras: NO</button>
 <div id="tabs" role="tablist">
@@ -65,6 +69,7 @@
     <div id="dir">—</div>
     <div id="dist">—</div>
     <div class="mut" id="sub"></div>
+    <div id="alerta" role="alert"></div>
   </div>
 </section>
 
@@ -73,7 +78,8 @@
   <div id="mapCtl">
     <button id="zOut" aria-label="Alejar">−</button>
     <button id="zIn" aria-label="Acercar">+</button>
-    <button id="mYo">📍 Yo</button>
+    <button id="mYo" aria-pressed="false">📍 Seguir</button>
+    <button id="mRot" aria-pressed="false" title="Gira el mapa según hacia dónde miras">↻ Rumbo</button>
     <button id="mRuta">🧭 Ruta</button>
   </div>
   <div id="mapInfo" class="mut">—</div>
@@ -277,9 +283,17 @@ const state = {
 
 // ---------- UI ----------
 const $ = id => document.getElementById(id);
-$("dest").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
-$("dest").value = state.destId;
-$("dest").onchange = e => { state.destId = e.target.value; state.target = null; mapV.fitted = false; render(); };
+const sinTildes = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function setDest(id) { state.destId = id; state.target = null; mapV.fitted = false; $("dest").value = id; render(); }
+function llenarDestinos(filtro = "") {                       // el buscador filtra la lista y salta al primer resultado
+  const f = sinTildes(filtro.trim()), lista = f ? DESTS.filter(d => sinTildes(d.name).includes(f)) : DESTS;
+  $("dest").innerHTML = (lista.length ? lista : DESTS).map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+  if (lista.length && f && !lista.some(d => d.id === state.destId)) setDest(lista[0].id); else $("dest").value = state.destId;
+}
+llenarDestinos();
+$("dest").onchange = e => setDest(e.target.value);
+$("q").oninput = e => llenarDestinos(e.target.value);
+$("q").onkeydown = e => { if (e.key === "Enter") e.target.blur(); };
 $("from").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
 $("from").onchange = e => { const n = graph[DEST[e.target.value].node]; state.user = { lat: n.lat, lng: n.lng }; render(); };
 $("accBtn").onclick = () => {
@@ -319,7 +333,7 @@ async function enableGps() {
   window.addEventListener("deviceorientationabsolute", onOri, true);
   window.addEventListener("deviceorientation", onOri, true);
   watchId = navigator.geolocation.watchPosition(
-    p => { state.fix = true; $("warn").textContent = ""; state.user = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }; render(); },
+    p => { if (!state.fix) setFollow(true); state.fix = true; $("warn").textContent = ""; state.user = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }; render(); },
     err => { $("warn").textContent = err.code === 1 ? "Ubicación denegada. Actívala en Ajustes > Privacidad > Localización > Safari." : "GPS: " + err.message; },
     { enableHighAccuracy: true, maximumAge: 1000 }
   );
@@ -393,7 +407,10 @@ function drawDial(bDest, arrived) {
 const label = id => NOMBRE_NODO[id] || "cruce";
 
 // ---------- Mapa (plano.jpeg de fondo, mismo estilo oscuro/amarillo que la brújula) ----------
-const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0 };
+const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0,
+               theta: 0,        // giro del mapa en pantalla (rad): con «Rumbo» activo, hacia donde miras queda arriba
+               follow: false,   // el mapa sigue tu posición
+               rotar: false };
 const Z_MIN = 0.35, Z_MAX = 4;
 let planoDark = null;
 { // el plano es claro: se invierte una sola vez en un canvas aparte para que combine con el tema oscuro
@@ -408,8 +425,14 @@ let planoDark = null;
 }
 const mapPx = n => toPlan(n.x, n.y);                     // nodo -> {px,py}
 const posPx = p => { const q = toXY(p); return toPlan(q.x, q.y); };   // lat/lng -> {px,py}
-const toScr = (px, py) => [mapV.w / 2 + (px - mapV.cx) * mapV.z, mapV.h / 2 + (py - mapV.cy) * mapV.z];
-const fromScr = (sx, sy) => ({ px: mapV.cx + (sx - mapV.w / 2) / mapV.z, py: mapV.cy + (sy - mapV.h / 2) / mapV.z });
+const toScr = (px, py) => {
+  const X = (px - mapV.cx) * mapV.z, Y = (py - mapV.cy) * mapV.z, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+  return [mapV.w / 2 + X * c - Y * s, mapV.h / 2 + X * s + Y * c];
+};
+const fromScr = (sx, sy) => {
+  const dx = sx - mapV.w / 2, dy = sy - mapV.h / 2, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+  return { px: mapV.cx + (dx * c + dy * s) / mapV.z, py: mapV.cy + (-dx * s + dy * c) / mapV.z };
+};
 const clampZ = z => Math.max(Z_MIN, Math.min(Z_MAX, z));
 
 function fitPoints(pts) {
@@ -434,11 +457,14 @@ function drawMap(g) {
   const { ctx, w, h } = fit($("map"));
   if (!w || !h) return;
   mapV.w = w; mapV.h = h;
+  mapV.theta = mapV.rotar ? -toRad(state.heading - PLANO.rot) : 0;
+  if (mapV.follow && (g || state.fix || DEBUG)) { const u = posPx(g ? g.pos : state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.fitted = true; }
   if (!mapV.fitted) { fitRoute(g); mapV.fitted = true; }
   ctx.fillStyle = "#0b0e13"; ctx.fillRect(0, 0, w, h);
   if (planoDark) {
-    const [x0, y0] = toScr(0, 0);
-    ctx.globalAlpha = .85; ctx.drawImage(planoDark, x0, y0, PLANO.w * mapV.z, PLANO.h * mapV.z); ctx.globalAlpha = 1;
+    ctx.save(); ctx.translate(w / 2, h / 2); ctx.rotate(mapV.theta); ctx.globalAlpha = .85;
+    ctx.drawImage(planoDark, -mapV.cx * mapV.z, -mapV.cy * mapV.z, PLANO.w * mapV.z, PLANO.h * mapV.z);
+    ctx.restore();
   }
   const P = n => toScr(...Object.values(mapPx(n)));
   ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -462,11 +488,15 @@ function drawMap(g) {
   }
   // ruta restante (amarilla, desde tu posición ajustada)
   const path = routePath(g);
-  if (path) {
-    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 6; ctx.beginPath();
-    ctx.moveTo(...toScr(...Object.values(posPx(g.pos))));
-    for (const id of path) ctx.lineTo(...P(graph[id]));
-    ctx.stroke();
+  if (path) {                                                // los tramos con escaleras van en naranjo punteado
+    let prev = toScr(...Object.values(posPx(g.pos))), prevId = null;
+    ctx.lineWidth = 6;
+    for (const id of path) {
+      const cur = P(graph[id]), esc = prevId !== null && stairs.has(prevId + "|" + id);
+      ctx.strokeStyle = esc ? "#ff9f43" : "#ffd23f"; ctx.setLineDash(esc ? [9, 6] : []);
+      ctx.beginPath(); ctx.moveTo(...prev); ctx.lineTo(...cur); ctx.stroke(); prev = cur; prevId = id;
+    }
+    ctx.setLineDash([]);
   }
   // nodos y etiquetas
   ctx.font = "600 13px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.lineJoin = "round";
@@ -492,13 +522,23 @@ function drawMap(g) {
       ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = "#6aa9ff"; ctx.beginPath(); ctx.arc(ux, uy, 5, 0, 7); ctx.fill();
     }
-    const th = toRad(state.heading - PLANO.rot);          // el "arriba" del plano puede no ser el norte
+    const th = toRad(state.heading - PLANO.rot) + mapV.theta;   // el "arriba" del plano no es el norte
     ctx.save(); ctx.translate(sx, sy); ctx.rotate(th);
     ctx.fillStyle = "#4cd96488"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 34, -Math.PI / 2 - .5, -Math.PI / 2 + .5); ctx.closePath(); ctx.fill();
     ctx.restore();
     ctx.fillStyle = "#4cd964"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(sx, sy, 8, 0, 7); ctx.fill(); ctx.stroke();
   }
+  // brújula: el plano no está orientado al norte, así que se marca dónde queda
+  const bx = 38, by = 38, psi = toRad(-PLANO.rot) + mapV.theta;
+  ctx.fillStyle = "#0b0e13d0"; ctx.beginPath(); ctx.arc(bx, by, 20, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#ffffff44"; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.save(); ctx.translate(bx, by); ctx.rotate(psi);
+  ctx.fillStyle = "#ff453a"; ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(5.5, 2); ctx.lineTo(-5.5, 2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#e8edf3"; ctx.beginPath(); ctx.moveTo(0, 16); ctx.lineTo(5.5, 2); ctx.lineTo(-5.5, 2); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.font = "700 11px system-ui"; ctx.textAlign = "center"; ctx.fillStyle = "#ff453a"; ctx.strokeStyle = "#000"; ctx.lineWidth = 3;
+  const nx = bx + 30 * Math.sin(psi), ny = by - 30 * Math.cos(psi) + 4; ctx.strokeText("N", nx, ny); ctx.fillText("N", nx, ny);
 }
 
 // gestos: arrastrar, pellizcar, rueda y toque (elige destino; con ?debug mueve tu posición)
@@ -506,7 +546,8 @@ const ptrs = new Map(); let gest = null;
 const mapEl = $("map");
 const zoomAt = (sx, sy, z2) => {
   const before = fromScr(sx, sy); mapV.z = clampZ(z2);
-  mapV.cx = before.px - (sx - mapV.w / 2) / mapV.z; mapV.cy = before.py - (sy - mapV.h / 2) / mapV.z;
+  const dx = sx - mapV.w / 2, dy = sy - mapV.h / 2, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+  mapV.cx = before.px - (dx * c + dy * s) / mapV.z; mapV.cy = before.py - (-dx * s + dy * c) / mapV.z;
 };
 const rel = e => { const r = mapEl.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
 mapEl.onpointerdown = e => {
@@ -521,7 +562,11 @@ mapEl.onpointermove = e => {
   if (ptrs.size === 2 && gest.d0) {
     const [a, b] = [...ptrs.values()];
     zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, gest.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gest.d0);
-  } else if (ptrs.size === 1) { mapV.cx -= (cur.x - prev.x) / mapV.z; mapV.cy -= (cur.y - prev.y) / mapV.z; }
+  } else if (ptrs.size === 1) {                       // arrastrar (con el giro del mapa) y soltar el seguimiento
+    const mx = cur.x - prev.x, my = cur.y - prev.y, c = Math.cos(mapV.theta), s = Math.sin(mapV.theta);
+    mapV.cx -= (mx * c + my * s) / mapV.z; mapV.cy -= (-mx * s + my * c) / mapV.z;
+    if (gest.moved > 8) setFollow(false);
+  }
   render();
 };
 const endPtr = e => {
@@ -535,7 +580,7 @@ mapEl.onwheel = e => { e.preventDefault(); const p = rel(e); zoomAt(p.x, p.y, ma
 function tapMap(sx, sy) {
   let best = null, bd = 28;                              // toque cerca de un lugar con nombre -> nuevo destino
   for (const n of DESTS) { const [x, y] = toScr(...Object.values(mapPx(graph[n.node]))), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = n; } }
-  if (best) { state.destId = best.id; state.target = null; mapV.fitted = false; $("dest").value = best.id; render(); return; }
+  if (best) { $("q").value = ""; llenarDestinos(); setDest(best.id); return; }
   if (DEBUG && state.mode === "sim") {
     const q = fromScr(sx, sy), m = fromPlan(q.px, q.py);
     state.user = fromXY(m.x, m.y); render();
@@ -543,9 +588,17 @@ function tapMap(sx, sy) {
 }
 $("zIn").onclick  = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z * 1.4); render(); };
 $("zOut").onclick = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z / 1.4); render(); };
-$("mYo").onclick  = () => {
+function setFollow(on) {
+  mapV.follow = on; $("mYo").classList.toggle("on", on); $("mYo").setAttribute("aria-pressed", on);
+}
+$("mYo").onclick = () => {
   if (!DEBUG && !state.fix) { $("mapInfo").textContent = "Aún no tengo tu ubicación: activa el GPS."; return; }
-  const u = posPx(state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.z = Math.max(mapV.z, 1.3); render();
+  setFollow(!mapV.follow); if (mapV.follow) mapV.z = Math.max(mapV.z, 1.3); render();
+};
+$("mRot").onclick = () => {
+  mapV.rotar = !mapV.rotar; $("mRot").classList.toggle("on", mapV.rotar); $("mRot").setAttribute("aria-pressed", mapV.rotar);
+  if (mapV.rotar && !mapV.follow && (DEBUG || state.fix)) { setFollow(true); mapV.z = Math.max(mapV.z, 1.3); }
+  render();
 };
 $("mRuta").onclick = () => { mapV.fitted = false; render(); };
 
@@ -560,13 +613,26 @@ function setTab(t) {
 $("tabBrujula").onclick = () => setTab("brujula");
 $("tabMapa").onclick = () => setTab("mapa");
 
+// metros hasta la primera escalera de la ruta (0 si ya estás en una), o null si no hay
+function escalerasAdelante(g) {
+  if (g.onGraph && stairs.has(g.snap.a + "|" + g.snap.b)) return 0;
+  const path = routePath(g); if (!path) return null;
+  let acc = distance(g.pos, graph[g.target]);
+  for (let i = 0; i < path.length - 1; i++) {
+    if (stairs.has(path[i] + "|" + path[i + 1])) return acc;
+    acc += distance(graph[path[i]], graph[path[i + 1]]);
+  }
+  return null;
+}
+const vibrarAviso = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };   // iOS no vibra desde la web
+
 function render() {
   const enMapa = document.body.classList.contains("tabMapa");
   const draw = g => { if (enMapa) drawMap(g); }
   const waiting = (!DEBUG && !state.active) ? "Toca «Activar» para empezar"
                 : (state.mode === "gps" && !state.fix) ? "Buscando señal GPS…" : null;
   if (waiting) {
-    $("dir").textContent = "—"; $("dist").textContent = waiting; $("sub").textContent = "";
+    $("dir").textContent = "—"; $("dist").textContent = waiting; $("sub").textContent = ""; $("alerta").textContent = "";
     $("mapInfo").innerHTML = `<b>${DEST[state.destId].name}</b> · ${waiting}`;
     if (!enMapa) drawDial(null, false); draw(null);
     return;
@@ -579,13 +645,16 @@ function render() {
   const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
   const arrived = area ? aim.d < ARRIVE_BLD : straight < 20;
   let b = bearing(state.user, aim), g = null, resumen;
+  let alerta = "";
   if (arrived) {
     state.target = null;
-    $("dir").textContent = "Estás llegando";
+    $("dir").textContent = "🏁 ¡Llegaste!";
     $("dist").textContent = dest.name;
-    $("sub").textContent = "";
-    resumen = `Estás llegando a <b>${dest.name}</b>`;
+    $("sub").textContent = "Elige otro destino arriba para seguir";
+    resumen = `🏁 ¡Llegaste a <b>${dest.name}</b>!`;
+    if (state.llegoA !== state.destId) { state.llegoA = state.destId; vibrarAviso([120, 70, 120, 70, 300]); }
   } else if ((g = guide())) {
+    if (aim.d > 45) state.llegoA = null;                  // al alejarte se vuelve a armar el aviso de llegada
     const min = Math.max(1, Math.round(g.remaining / 80));
     const m = aim.d < 30 ? Math.round(aim.d) : Math.round(aim.d / 5) * 5;
     $("dir").textContent = cardinal(b);
@@ -593,10 +662,18 @@ function render() {
     $("sub").textContent = `Ruta a pie: ~${Math.round(g.remaining / 10) * 10} m · ${min} min` +
       (g.onGraph ? "" : " · lejos del camino") + (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
     resumen = `<b>${dest.name}</b> · ~${Math.round(g.remaining / 10) * 10} m · ${min} min · ${cardinal(b)}` + (g.onGraph ? "" : " · lejos del camino");
+    const esc = escalerasAdelante(g);
+    if (esc !== null && esc <= 30) {
+      alerta = esc < 3 ? "⚠️ Estás en una escalera" : `⚠️ Escaleras en ~${Math.round(esc / 5) * 5} m`;
+      const clave = state.target + "|" + state.destId;
+      if (esc <= 15 && state.avisoEsc !== clave) { state.avisoEsc = clave; vibrarAviso([200, 100, 200]); }
+    } else if (esc === null) state.avisoEsc = null;
+    resumen += alerta ? `<br><span style="color:#ffb347">${alerta}</span>` : "";
   } else {
     $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = state.accesible ? "No hay camino sin escaleras" : "Destino no conectado al grafo";
     resumen = state.accesible ? "Sin ruta sin escaleras: prueba desactivando la opción" : "Sin ruta: destino no conectado";
   }
+  $("alerta").textContent = alerta;
   $("mapInfo").innerHTML = resumen;
   if (!enMapa) drawDial(b, arrived);
   draw(g);
