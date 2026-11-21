@@ -122,7 +122,7 @@ if (typeof document !== "undefined") (function () {
 
     // 1. estado: llegada, detrás, alejándose, casi
     const detras = ev.rel > 135 && ev.rel < 225;
-    const estado = ev.llego ? "llego" : ev.aleja ? "aleja" : detras ? "detras" : ev.aim.d <= 60 ? "casi" : "bien";
+    const estado = ev.llego ? "llego" : ev.aleja ? "aleja" : detras ? "detras" : ev.dArea <= 60 ? "casi" : "bien";
     if (estado !== V.estado) {
       const antes = V.estado; V.estado = estado;
       if (estado === "llego") { decir(`Llegaste ${aDestino(nombre)}. ${i.pista || ""}`, true); return; }
@@ -165,7 +165,7 @@ if (typeof document !== "undefined") (function () {
   // Android: un pulso cuando el teléfono queda apuntando al destino (en iPhone la web no vibra).
   function pulso() {
     if (!V.on || state.vista !== "brujula" || !tieneUbicacion()) return;
-    const area = areaOf(state.destId), aim = area ? nearestOnArea(state.user, area) : graph[destNode()];
+    const aim = miraDe();                                       // la puerta elegida (o el borde si no hay puertas marcadas)
     const rel = vozNorm(bearing(state.user, aim) - state.heading), apunta = rel <= APUNTA || rel >= 360 - APUNTA;
     if (apunta && !V.apunta) vibrar(60);
     V.apunta = apunta;
