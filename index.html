@@ -82,30 +82,83 @@ function distance(a, b) {
 const DIRS = ["Norte","Noreste","Este","Sureste","Sur","Suroeste","Oeste","Noroeste"];
 const cardinal = deg => DIRS[Math.round(deg / 45) % 8];
 
-// ---------- Grafo de ejemplo ----------
-// ⚠ COORDENADAS DE EJEMPLO: origen aproximado (Casa Central USM, Valparaíso) y
-// nodos en metros respecto a él. Reemplazar por los nodos reales del plano.
-const ORIGIN = { lat: -33.0346, lng: -71.5965 };
+// ---------- Grafo del campus (USM Casa Central) ----------
+// Origen = Entrada Av. España. x = este (m), y = norte (m). Georreferenciado con 3 puntos
+// (Placeres, Av. España, portería M) sobre plano.jpeg; el resto de los nodos está trazado a ojo
+// y hay que validarlo en terreno. Aristas con tercer valor 1 = tramo con escaleras.
+const ORIGIN = { lat: -33.034172, lng: -71.595702 };
 const fromXY = (x, y) => ({
   lat: ORIGIN.lat + y / 111320,
   lng: ORIGIN.lng + x / (111320 * Math.cos(toRad(ORIGIN.lat)))
 });
 const N = (id, name, x, y) => ({ id, name, x, y, ...fromXY(x, y), edges: [] });
 const nodesList = [
-  N("entrada","Entrada",        0,   0),
-  N("n2","",                    0,  80),
-  N("biblio","Biblioteca",      0, 160),
-  N("n4","",                  100, 160),
-  N("casino","Casino",        200, 160),
-  N("n6","",                  200,  80),
-  N("gym","Gimnasio",         200,   0),
-  N("n8","",                  100,   0),
-  N("labs","Laboratorios",    -80,  80),
+  N("ent_pl","Entrada Placeres",    52.1,  -277.5),
+  N("ent_esp","Entrada Av. España",     0.0,     0.0),
+  N("m_port","Portería M",   264.8,   -77.4),
+  N("calle_sur","",    -2.4,   -54.5),
+  N("camino_der","",   -47.9,   -51.8),
+  N("calle_este","",   -44.5,   -85.6),
+  N("patio_sur","",   -32.3,   -99.7),
+  N("patio","Patio central",    -1.8,  -113.0),
+  N("admision","Admisión (patio central)",    -7.3,  -105.0),
+  N("casino","Casino (D, piso 1)",   -13.0,  -126.4),
+  N("arqui","Arquitectura (D, pisos 2 y 3)",   -18.5,  -118.4),
+  N("f2","",   -54.0,   -85.4),
+  N("fisica","Física (E)",   -65.1,  -109.7),
+  N("inform","Informática, Matemática, Industrias y Comercial (F)",  -103.8,   -91.6),
+  N("u_sur","",    35.8,   -34.3),
+  N("biblio","Biblioteca (U)",    60.2,   -70.3),
+  N("u_norte","",   100.3,  -102.9),
+  N("cancha","Cancha 11x11 (8007)",   132.7,   -84.9),
+  N("ro_b","",   127.1,  -129.3),
+  N("c_oeste","",   151.4,  -143.2),
+  N("c_puerta","Clases (C)",    97.5,  -174.8),
+  N("c_este","",    21.1,  -217.3),
+  N("j1","",    26.5,  -242.9),
+  N("j2","",     0.8,  -210.5),
+  N("j3","",    -6.1,  -181.3),
+  N("j4","",    -2.9,  -160.3),
+  N("m_ruta","",   215.0,  -109.5),
+  N("m_clases","Clases (M)",   257.0,   -76.2),
+  N("r_in","",   245.6,  -134.8),
+  N("r_port","Portería Diego Portales (R)",   268.5,  -166.1),
+  N("p_clases","Clases (P)",   134.4,  -270.9),
 ];
-// Edificio en el centro (100,80): no hay arista que lo cruce, la ruta lo rodea.
 const edgePairs = [
-  ["entrada","n2"],["n2","biblio"],["biblio","n4"],["n4","casino"],
-  ["casino","n6"],["n6","gym"],["gym","n8"],["n8","entrada"],["labs","n2"],
+  ["ent_esp","calle_sur",1],
+  ["ent_esp","camino_der"],
+  ["camino_der","calle_este"],
+  ["calle_sur","calle_este"],
+  ["calle_este","patio_sur"],
+  ["patio_sur","patio"],
+  ["patio","admision"],
+  ["patio","casino"],
+  ["casino","arqui"],
+  ["calle_este","f2"],
+  ["calle_este","fisica"],
+  ["f2","inform"],
+  ["calle_sur","u_sur"],
+  ["u_sur","biblio"],
+  ["biblio","u_norte"],
+  ["u_norte","cancha"],
+  ["u_norte","ro_b"],
+  ["ro_b","c_oeste"],
+  ["c_oeste","c_puerta"],
+  ["c_puerta","c_este"],
+  ["c_este","j1"],
+  ["c_este","j2"],
+  ["ent_pl","j1"],
+  ["j1","j2"],
+  ["j2","j3"],
+  ["j3","j4"],
+  ["j4","patio"],
+  ["c_oeste","m_ruta"],
+  ["m_ruta","m_port"],
+  ["m_port","m_clases"],
+  ["m_ruta","r_in"],
+  ["r_in","r_port"],
+  ["ent_pl","p_clases"],
 ];
 const graph = Object.fromEntries(nodesList.map(n => [n.id, n]));
 edgePairs.forEach(([a, b]) => { graph[a].edges.push(b); graph[b].edges.push(a); });
@@ -304,7 +357,8 @@ const label = id => graph[id].name || "cruce";
 function drawMap(g) {
   const { ctx, w, h } = fit($("map"));
   ctx.clearRect(0, 0, w, h);
-  const pad = 36, minX = -80, maxX = 200, minY = 0, maxY = 160;
+  const pad = 36, xs = nodesList.map(n => n.x), ys = nodesList.map(n => n.y);
+  const minX = Math.min(...xs) - 10, maxX = Math.max(...xs) + 10, minY = Math.min(...ys) - 10, maxY = Math.max(...ys) + 10;
   const s = Math.min((w - 2 * pad) / (maxX - minX), (h - 2 * pad) / (maxY - minY));
   const ox = (w - s * (maxX - minX)) / 2, oy = (h + s * (maxY - minY)) / 2;
   mapT = { s, ox, oy, minX, minY };
