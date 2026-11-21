@@ -149,6 +149,8 @@
   .pista .t { display:flex; flex-direction:column; gap:3px; }
   .pista .t small { font-size:13px; font-weight:600; color:var(--muted); }
   .pista .t span { font-size:15px; line-height:1.4; }
+  #puertaTxt { font-size:13px !important; font-weight:600; color:var(--acento); }
+  #puertaTxt:empty { display:none; }
   .selector { display:flex; gap:4px; padding:4px; border-radius:26px; }
   .selector button { flex:1 1 0; height:44px; border:0; border-radius:22px; background:transparent; color:var(--fg); font-size:15px; font-weight:600; transition:background 600ms var(--ease), color 600ms ease; }
   .selector button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
@@ -356,7 +358,7 @@
     <div id="base" class="base">
       <div class="pista vidrio">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
-        <div class="t"><small>Pista para no perderte</small><span id="pistaTxt">—</span></div>
+        <div class="t"><small>Pista para no perderte</small><span id="pistaTxt">—</span><span id="puertaTxt"></span></div>
       </div>
       <div class="selector vidrio" role="group" aria-label="Tipo de señal">
         <button id="selRes" aria-pressed="true">Resplandor</button>
@@ -464,6 +466,7 @@
 <script src="js/generado/grafo.js"></script>
 <script src="js/generado/contornos.js"></script>
 <script src="js/generado/datos.js"></script>
+<script src="js/generado/entradas.js"></script>
 <script src="js/escaleras.js"></script>
 <script src="js/fotos.js"></script>
 <script>
@@ -598,9 +601,78 @@ for (const e of CONTORNOS.extra) {
 const DEST = Object.fromEntries(DESTS.map(d => [d.id, d]));
 const areaOf = id => AREA_DE[id] || null;
 const NOMBRE_NODO = {}; DESTS.forEach(d => { NOMBRE_NODO[d.node] ??= d.name; });
-const destNode = () => DEST[state.destId].node;             // nodo del grafo del destino elegido
 const PENAL_ESCALERA = 15;                                  // m extra por escalera cuando se permiten
 const PENAL_EVITAR = 400;                                   // m extra por tramo de escalera con «Evitar escaleras»: solo se usan si no hay otro camino
+
+// ---------- Entradas de los edificios (js/generado/entradas.js, de data/entradas.json) ----------
+// Cada puerta es un nodo del grafo unido al camino más cercano que no atraviese el edificio. La señal apunta a la puerta
+// elegida y la ruta termina ahí. Se elige la de menor costo desde donde estás; con «evitar escaleras» pesa mucho más una
+// puerta con escalera (se marca como un tramo de escalera). Edificios sin puertas marcadas siguen apuntando al borde.
+const PUERTAS = {};            // clave de edificio -> nodos de puerta
+// destinos que comparten edificio: se quedan con las puertas cuyo nombre menciona la palabra
+const PUERTA_PALABRA = { "gimnasio-1": ["A", "gimnasio 1"], "casino": ["D", "casino"], "edificio-comedores": ["D", "casino"], "arquitectura": ["D", "arquitectura"] };
+const HYST_PUERTA = 20;        // m: otra puerta tiene que ser mejor por esto para cambiar de puerta
+function cruzaEdificio(a, b, k) {                           // ¿el tramo puerta -> camino atraviesa el edificio (más de 1,2 m adentro)?
+  const L = Math.hypot(b.x - a.x, b.y - a.y);
+  for (let t = 1.5; t < L; t += 1) {
+    const q = { x: a.x + (b.x - a.x) * t / L, y: a.y + (b.y - a.y) * t / L };
+    if (grupo(k).some(g => AREAS[g] && profundidad(q, AREAS[g]) > 1.2)) return true;
+  }
+  return false;
+}
+(function conectarPuertas() {
+  for (const [k, lista] of Object.entries(ENTRADAS)) {
+    if (!AREAS[k]) continue;
+    PUERTAS[k] = lista.map((e, i) => {
+      const m = fromPlan(e.px, e.py), ll = fromXY(m.x, m.y), id = `p:${k}:${i}`;
+      const p = { id, lat: ll.lat, lng: ll.lng, x: m.x, y: m.y, edges: [], puerta: true, nombre: e.n, acc: e.a, area: k };
+      graph[id] = p;
+      const cand = nodesList.map(n => [Math.hypot(n.x - m.x, n.y - m.y), n]).sort((a, b) => a[0] - b[0]).slice(0, 12);
+      const [d, n] = cand.find(([, n]) => !cruzaEdificio(m, n, k)) || cand[0];
+      n.edges.push(id); p.edges.push(n.id); p.conexion = d;
+      if (e.a === false) { stairs.add(n.id + "|" + id); stairs.add(id + "|" + n.id); }   // puerta con escalera: pesa como un tramo de escalera
+      return p;
+    });
+  }
+})();
+function puertasDe(id) {                                    // puertas del destino (vacío si no hay marcadas)
+  const esp = PUERTA_PALABRA[id];
+  if (esp) { const f = (PUERTAS[esp[0]] || []).filter(p => sinTildes(p.nombre).includes(esp[1])); if (f.length) return f; }
+  const a = areaOf(id); return a ? grupo(a).flatMap(k => PUERTAS[k] || []) : [];
+}
+const puertaActual = () => { const P = state.puerta; return P && P.dest === state.destId && graph[P.id] ? graph[P.id] : null; };
+const destNode = () => { const p = puertaActual(); return p ? p.id : DEST[state.destId].node; };   // nodo del destino: su puerta elegida o, sin puertas, el camino más cercano
+const costoCamino = path => { let c = pathLen(path); for (let i = 0; i < path.length - 1; i++) if (stairs.has(path[i] + "|" + path[i + 1])) c += state.accesible ? PENAL_EVITAR : PENAL_ESCALERA; return c; };
+function elegirPuerta() {
+  const ds = puertasDe(state.destId);
+  if (!ds.length) { state.puerta = null; return; }
+  const ahora = Date.now(), P = state.puerta, clave = state.accesible ? "a" : "n", mismo = P && P.dest === state.destId && P.clave === clave;
+  if (!tieneUbicacion()) {                                  // sin posición: la puerta más cercana al camino del edificio
+    const base = graph[DEST[state.destId].node];
+    const d = ds.slice().sort((a, b) => Math.hypot(a.x - base.x, a.y - base.y) - Math.hypot(b.x - base.x, b.y - base.y))[0];
+    state.puerta = { dest: state.destId, id: d.id, t: 0, clave }; return;
+  }
+  if (mismo && ahora - P.t < 1500) return;                  // se recalcula a lo más cada 1,5 s
+  const snap = snapToGraph(state.user), enCamino = snap.d <= SNAP_MAX, pos = enCamino ? snap : state.user;
+  const inicios = enCamino ? [snap.a, snap.b] : [nearest(graph, state.user)];
+  const costos = {}; let mejor = null;
+  for (const d of ds) {
+    let c = Infinity;
+    for (const ini of inicios) { const p = astar(graph, ini, d.id); if (p) c = Math.min(c, distance(pos, graph[ini]) + costoCamino(p)); }
+    costos[d.id] = c; if (!mejor || c < mejor.c) mejor = { id: d.id, c };
+  }
+  if (!mejor || mejor.c === Infinity) mejor = { id: ds.slice().sort((a, b) => distance(state.user, a) - distance(state.user, b))[0].id, c: 0 };
+  let id = mejor.id; if (mismo && costos[P.id] <= mejor.c + HYST_PUERTA) id = P.id;   // histéresis: no saltar de puerta por poco
+  if (P && P.id !== id) state.target = null;                // cambió la puerta: que la guía recalcule el camino
+  state.puerta = { dest: state.destId, id, t: ahora, clave };
+}
+// Punto al que apunta la señal: la puerta elegida o, si el destino no tiene puertas marcadas, el borde más cercano de su zona.
+function miraDe() {
+  const p = puertaActual(), area = areaOf(state.destId);
+  if (p) return { lat: p.lat, lng: p.lng, d: distance(state.user, p) };
+  if (area) return nearestOnArea(state.user, area);
+  const n = graph[destNode()]; return { lat: n.lat, lng: n.lng, d: distance(state.user, n) };
+}
 
 // ---------- A* ----------
 function astar(graph, start, goal) {
@@ -627,7 +699,7 @@ function astar(graph, start, goal) {
 }
 function nearest(graph, p) {
   let best = null, bd = Infinity;
-  for (const id in graph) { const d = distance(p, graph[id]); if (d < bd) { bd = d; best = id; } }
+  for (const id in graph) { if (graph[id].puerta) continue; const d = distance(p, graph[id]); if (d < bd) { bd = d; best = id; } }
   return best;
 }
 const pathLen = path => { let s = 0; for (let i = 0; i < path.length - 1; i++) s += distance(graph[path[i]], graph[path[i + 1]]); return s; };
@@ -795,7 +867,7 @@ function elegir(id) {                                        // desde la lista o
   setDest(id); ir("brujula");
 }
 function setDest(id) {
-  state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false; state.confirmando = null;
+  state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false; state.confirmando = null; state.puerta = null;
   if (state.llego === id) state.llego = null;
   cargarNube(id);
   mapV.fitted = false; render();
@@ -998,9 +1070,12 @@ function pintarLuz(ev) {
 
 // ---------- Evaluación del estado de la brújula ----------
 function evaluar() {
+  elegirPuerta();
   const dest = graph[destNode()], area = areaOf(state.destId), straight = distance(state.user, dest);
-  // La señal indica hacia dónde está el destino (el borde más cercano de su edificio o patio); el camino lo muestra el mapa.
-  const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
+  // La señal indica hacia dónde está el destino: su puerta elegida o, si no tiene puertas marcadas, el borde más cercano de su
+  // edificio o patio. El camino lo muestra el mapa. La llegada, en cambio, se mide contra la zona (más abajo).
+  const aim = miraDe();
+  const dArea = area ? nearestOnArea(state.user, area).d : straight;     // metros al borde de la zona (para «casi» y volver a armar el aviso)
   const prof = area ? profArea(state.user, area) : null;     // >0 adentro, <0 afuera
   const llego = area ? prof >= reqAdentro(area) : straight < ARRIVE_NODO;
   const enZona = area ? prof >= 0 : false;                  // adentro del cuadro pero quizá aún no lo bastante
@@ -1013,7 +1088,7 @@ function evaluar() {
   const minD = Math.min(...h.map(x => x[1]));
   const aleja = !llego && h.length >= 3 && aim.d - minD >= 12;
   const acc = state.user.acc || 0;
-  return { dest, aim, llego, enZona, b, rel, g, aleja, m: Math.max(0, Math.round(aim.d / 5) * 5), impreciso: acc > 30, acc };
+  return { dest, aim, dArea, llego, enZona, b, rel, g, aleja, m: Math.max(0, Math.round(aim.d / 5) * 5), impreciso: acc > 30, acc };
 }
 
 // metros hasta la primera escalera de la ruta (0 si ya estás en una), o null si no hay
@@ -1038,7 +1113,7 @@ function renderBrujula() {
   if (ubic) ev = evaluar();
   if (ev) g = ev.g;
   const detras = !!ev && !ev.llego && ev.rel > 135 && ev.rel < 225;
-  const casi = !!ev && !ev.llego && ev.aim.d <= 60;
+  const casi = !!ev && !ev.llego && ev.dArea <= 60;
 
   // textos según el estado (PRD §4: vas bien · te alejas · detrás · casi llegas · sin ubicación)
   let titulo, bajada;
@@ -1058,6 +1133,8 @@ function renderBrujula() {
   // pista siempre visible (PRD): la del destino o, si no tiene, lo que sabemos de él
   const i = info(state.destId);
   $("pistaTxt").textContent = i.pista || (ev && !ev.llego ? `${i.detalle}. Queda hacia el ${cardinal(ev.b).toLowerCase()}.` : i.detalle || "—");
+  const pu = puertaActual();                                 // la entrada hacia la que apunta la señal
+  $("puertaTxt").textContent = pu ? (/^entrada/i.test(pu.nombre) ? pu.nombre : "Entrada: " + pu.nombre) + (pu.acc === true ? " · sin escaleras" : pu.acc === false ? " · con escalera" : "") : "";
 
   // señal: resplandor / flecha / giro / aviso de GPS impreciso
   $("flecha").hidden = !(flecha && ubic);
@@ -1114,7 +1191,7 @@ function renderBrujula() {
       state.llego = state.destId; state.confirmando = "auto"; vibrar([120, 70, 120]);
       if (state.demo) setTimeout(() => { if (state.confirmando === "auto" && state.demo) confirmarLlegada(); }, 3500);   // en la demo se confirma sola
     }
-    if (!ev.llego && ev.aim.d > REARMAR) {                   // te alejaste: se vuelve a armar el aviso y se cierra la pregunta automática
+    if (!ev.llego && ev.dArea > REARMAR) {                   // te alejaste: se vuelve a armar el aviso y se cierra la pregunta automática
       if (state.llego === state.destId) state.llego = null;
       if (state.confirmando === "auto") state.confirmando = null;   // la manual («Ya llegué») espera tu respuesta
     }
@@ -1254,6 +1331,14 @@ function dibujarMapa(ev, g) {
       ctx.beginPath(); ctx.moveTo(...prev); ctx.lineTo(...cur); ctx.stroke(); prev = cur; prevId = id;
     }
     ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+  // puertas del destino: verde = sin escaleras, rojo = con escalera, gris = sin confirmar; la elegida lleva un aro
+  const pe = puertaActual();
+  for (const p of puertasDe(state.destId)) {
+    const [qx, qy] = toScr(...Object.values(mapPx(p))), esa = pe && pe.id === p.id;
+    ctx.fillStyle = p.acc === true ? "#2FB44E" : p.acc === false ? "#E0405E" : "#9A94A6"; ctx.strokeStyle = T.bg; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(qx, qy, esa ? 8 : 6, 0, 7); ctx.fill(); ctx.stroke();
+    if (esa) { ctx.strokeStyle = T.ruta; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(qx, qy, 13, 0, 7); ctx.stroke(); }
   }
   // etiqueta del destino
   const [dx, dy] = toScr(...Object.values(mapPx(graph[destNode()])));
