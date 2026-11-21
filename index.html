@@ -271,6 +271,20 @@ const ARRIVE_BLD = 15;   // m: llegaste si estás a menos de esto del borde del 
 function distToBuilding(p, id) {
   return Math.min(...(GROUPS[id] || [id]).map(k => distToPoly(p, BUILDINGS[k] || SPACES[k])));
 }
+// Punto más cercano del borde del edificio (o de su grupo): { lat, lng, d } con d en metros.
+function nearestOnArea(p, id) {
+  const q = toXY(p); let best = { d: Infinity, x: 0, y: 0 };
+  for (const k of GROUPS[id] || [id]) {
+    const poly = BUILDINGS[k] || SPACES[k];
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [x1, y1] = poly[j], [x2, y2] = poly[i], dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
+      const t = L2 ? Math.max(0, Math.min(1, ((q.x - x1) * dx + (q.y - y1) * dy) / L2)) : 0;
+      const x = x1 + t * dx, y = y1 + t * dy, d = Math.hypot(q.x - x, q.y - y);
+      if (d < best.d) best = { d, x, y };
+    }
+  }
+  return { ...fromXY(best.x, best.y), d: best.d };
+}
 function distToPoly(p, poly) {
   const q = toXY(p); let inside = false, best = Infinity;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -476,18 +490,20 @@ function render() {
   const straight = distance(state.user, dest);
   const bld = DEST_BLD[state.destId];
   const arrived = bld ? distToBuilding(state.user, bld) < ARRIVE_BLD : straight < 20;
-  let b = bearing(state.user, dest), g = null;
+  // La brújula solo indica hacia dónde está el edificio (su borde más cercano); la ruta la muestra el mapa.
+  const aim = bld ? nearestOnArea(state.user, bld) : { ...dest, d: straight };
+  let b = bearing(state.user, aim), g = null;
   if (arrived) {
     state.target = null;
     $("dir").textContent = "Estás llegando";
     $("dist").textContent = dest.name;
     $("sub").textContent = "";
   } else if ((g = guide())) {
-    b = bearing(g.pos, graph[g.target]);
+    const m = aim.d < 30 ? Math.round(aim.d) : Math.round(aim.d / 5) * 5;
     $("dir").textContent = cardinal(b);
-    $("dist").textContent = `~${Math.round(g.remaining / 10) * 10} m · ${Math.max(1, Math.round(g.remaining / 80))} min`;
-    $("sub").textContent = `Siguiente: ${label(g.target)} (${Math.round(distance(g.pos, graph[g.target]))} m)` +
-      (g.onGraph ? "" : " · lejos del camino") + (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
+    $("dist").textContent = `${m} m en línea recta`;
+    $("sub").textContent = `Ruta a pie: ~${Math.round(g.remaining / 10) * 10} m · ${Math.max(1, Math.round(g.remaining / 80))} min` +
+      (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
   } else {
     $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = "Destino no conectado al grafo";
   }
