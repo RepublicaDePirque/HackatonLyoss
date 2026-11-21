@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Brújula de resplandor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+body{margin:0}
+a{text-decoration:none}a:hover{opacity:0.9}
+@keyframes brota{from{opacity:0;transform:translateY(28px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes respira{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; width: 390px; height: 844px; box-sizing: border-box; padding: 24px 20px 28px; background: {{bg}}; color: {{fg}}; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 16px; transition: background 900ms ease, color 900ms ease">
+<div aria-hidden="true" style="position: absolute; left: {{g2x}}; top: {{g2y}}; width: {{g2s}}; height: {{g2s}}; margin-left: {{g2m}}; margin-top: {{g2m}}; opacity: {{gop}}; transition: all 1400ms cubic-bezier(0.22, 1, 0.36, 1)">
+<div style="width: 100%; height: 100%; border-radius: 50%; background: {{g2bg}}; filter: blur(36px); animation: respira 7s ease-in-out infinite"></div>
+</div>
+<div role="img" aria-label="Resplandor en el borde que indica la dirección del destino" style="position: absolute; left: {{g1x}}; top: {{g1y}}; width: {{g1s}}; height: {{g1s}}; margin-left: {{g1m}}; margin-top: {{g1m}}; opacity: {{gop}}; transition: all 1400ms cubic-bezier(0.22, 1, 0.36, 1)">
+<div style="width: 100%; height: 100%; border-radius: 50%; background: {{g1bg}}; filter: blur(28px); animation: respira 5s ease-in-out infinite"></div>
+</div>
+<div style="position: relative; display: flex; align-items: center; gap: 10px">
+<a href="Buscar.dc.html" aria-label="Cambiar destino" style="width: 44px; height: 44px; border-radius: 22px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}; box-sizing: border-box; color: {{fg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+</a>
+<div style="height: 44px; padding: 0 16px; border-radius: 22px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}; box-sizing: border-box; display: flex; align-items: center; gap: 8px">
+<span style="font-size: 13px; color: {{muted}}">Vas hacia</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 17px">Edificio C</span>
+</div>
+</div>
+<div style="position: relative; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px">
+<sc-if value="{{esFlecha}}" hint-placeholder-val="{{false}}">
+<div role="img" aria-label="Flecha que apunta hacia el destino" style="width: 104px; height: 104px; display: flex; align-items: center; justify-content: center; transform: rotate({{rumboDeg}}); transition: transform 1400ms cubic-bezier(0.22, 1, 0.36, 1); animation: brota 700ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<svg aria-hidden="true" width="96" height="96" viewBox="0 0 120 120"><path d="M60 6 L104 110 L60 88 L16 110 Z" fill="{{flecha}}" stroke="{{flecha}}" stroke-width="8" stroke-linejoin="round"></path></svg>
+</div>
+</sc-if>
+<div style="display: flex; align-items: baseline; gap: 8px">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 88px; line-height: 1">{{metros}}</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 500; font-size: 26px; color: {{muted}}">m</span>
+</div>
+<span style="font-size: 16px; font-weight: 500">{{lema}}</span>
+<span style="font-size: 14px; color: {{muted}}">Vas bien. Vas a llegar.</span>
+<div role="group" aria-label="Tipo de señal" style="margin-top: 12px; display: flex; gap: 4px; padding: 4px; border-radius: 26px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}">
+<button type="button" onClick="{{ponerLuz}}" aria-pressed="{{luzOn}}" style="height: 44px; padding: 0 20px; border: 0; border-radius: 22px; background: {{luzBg}}; color: {{luzFg}}; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 500ms ease, color 500ms ease">Luz</button>
+<button type="button" onClick="{{ponerFlecha}}" aria-pressed="{{flechaOn}}" style="height: 44px; padding: 0 20px; border: 0; border-radius: 22px; background: {{flechaBg}}; color: {{flechaFg}}; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 500ms ease, color 500ms ease">Flecha</button>
+<a href="Mapa.dc.html" style="height: 44px; padding: 0 20px; border-radius: 22px; color: {{fg}}; display: flex; align-items: center; font-size: 15px; font-weight: 600">Mapa</a>
+</div>
+</div>
+<sc-if value="{{dato}}" hint-placeholder-val="{{false}}">
+<button type="button" style="position: relative; text-align: left; padding: 16px; border-radius: 22px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}; color: {{fg}}; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; gap: 14px; align-items: flex-start; cursor: pointer; box-shadow: 0 16px 40px rgba(12, 10, 24, 0.2); animation: brota 900ms cubic-bezier(0.22, 1, 0.36, 1) both">
+<span aria-hidden="true" style="width: 56px; height: 56px; border-radius: 16px; background: {{g1bg}}; flex-shrink: 0"></span>
+<span style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: {{muted}}">Descubriste un lugar</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px">[NOMBRE DEL LUGAR]</span>
+<span style="font-size: 14px; line-height: 1.4; color: {{muted}}">[DATO CURIOSO en una frase] · Toca para leer más</span>
+</span>
+</button>
+</sc-if>
+<div style="position: relative; display: flex; gap: 12px; padding: 14px 16px; border-radius: 18px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px; color: {{muted}}"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: {{muted}}">Pista para no perderte</span>
+<span style="font-size: 15px; line-height: 1.4">[PISTA: referencia visible camino al Edificio C]</span>
+</div>
+</div>
+<a href="Llegada.dc.html" style="position: relative; height: 56px; border-radius: 18px; background: {{fg}}; color: {{bg}}; display: flex; align-items: center; justify-content: center; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px">Llegué</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"rumbo":{"editor":"range","default":32,"min":0,"max":359,"step":1,"unit":"°","section":"Señal"},"cercania":{"editor":"range","default":25,"min":0,"max":100,"step":1,"unit":"%","section":"Señal"},"senal":{"editor":"enum","default":"luz","options":["luz","flecha"],"section":"Señal"},"tema":{"editor":"enum","default":"oscuro","options":["oscuro","claro"],"section":"Aspecto"},"dato":{"editor":"boolean","default":false,"section":"Aspecto"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+var self = this;
+var rumbo = this.props.rumbo ?? 32;
+var c = (this.props.cercania ?? 25) / 100;
+var claro = (this.props.tema ?? 'oscuro') === 'claro';
+var modo = (this.state || {}).modo || this.props.senal || 'luz';
+var esFlecha = modo === 'flecha';
+var W = 390, H = 844, cx = W / 2, cy = H / 2;
+var rad = rumbo * Math.PI / 180;
+var dx = Math.sin(rad), dy = -Math.cos(rad);
+var t = Math.min(cx / Math.max(Math.abs(dx), 0.0001), cy / Math.max(Math.abs(dy), 0.0001));
+var x = cx + dx * t, y = cy + dy * t;
+var mix = function (a, b, k) {
+var p = function (h) { return [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); };
+var u = p(a), v = p(b);
+return 'rgb(' + u.map(function (n, i) { return Math.round(n + (v[i] - n) * k); }).join(',') + ')';
+};
+var c1 = mix('#8FA6FF', '#FF8A3D', c);
+var c2 = mix('#B79CFF', '#FF5C7A', c);
+var s1 = 280 + c * 420, s2 = s1 * 0.8;
+var fg = claro ? '#1D1A26' : '#F5F1EA', bg = claro ? '#F6F1EA' : '#15131F';
+var base = claro ? 0.95 : 0.85;
+return {
+bg: bg, fg: fg,
+muted: claro ? '#5E5869' : '#B3ADBF',
+surface: claro ? 'rgba(255,255,255,0.68)' : 'rgba(40,36,56,0.62)',
+line: claro ? 'rgba(29,26,38,0.07)' : 'rgba(255,255,255,0.09)',
+gop: String(esFlecha ? base * 0.45 : base),
+g1x: x + 'px', g1y: y + 'px', g1s: s1 + 'px', g1m: (-s1 / 2) + 'px',
+g1bg: 'radial-gradient(circle, ' + c1 + ' 0%, ' + c1 + ' 18%, transparent 68%)',
+g2x: (x - dy * 90) + 'px', g2y: (y + dx * 90) + 'px', g2s: s2 + 'px', g2m: (-s2 / 2) + 'px',
+g2bg: 'radial-gradient(circle, ' + c2 + ' 0%, transparent 66%)',
+metros: Math.max(10, Math.round((1 - c) * 80) * 5),
+dato: this.props.dato ?? false,
+esFlecha: esFlecha,
+rumboDeg: rumbo + 'deg',
+flecha: claro ? mix('#5B45C9', '#C4561F', c) : c1,
+lema: esFlecha ? 'Sigue la flecha' : 'Camina hacia la luz',
+luzOn: esFlecha ? 'false' : 'true', flechaOn: esFlecha ? 'true' : 'false',
+luzBg: esFlecha ? 'transparent' : fg, luzFg: esFlecha ? fg : bg,
+flechaBg: esFlecha ? fg : 'transparent', flechaFg: esFlecha ? bg : fg,
+ponerLuz: function () { self.setState({ modo: 'luz' }); },
+ponerFlecha: function () { self.setState({ modo: 'flecha' }); }
+};
+}
+}
+</script>
+</body>
+</html>

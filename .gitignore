@@ -1,0 +1,5 @@
+# Clon anidado del mismo repo: no versionar dentro de sí mismo
+HackatonLyoss/
+# Cachés y configuración local de impeccable
+**/.impeccable/hook.cache.json
+**/.impeccable/config.local.json

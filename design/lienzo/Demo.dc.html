@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Flujo animado completo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+body{margin:0}
+@keyframes respira{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; width: 390px; height: 844px; background: {{bg}}; color: {{fg}}; font-family: 'Instrument Sans', system-ui, sans-serif">
+<div aria-hidden="true" style="position: absolute; left: {{g2x}}; top: {{g2y}}; width: {{g2s}}; height: {{g2s}}; margin-left: {{g2m}}; margin-top: {{g2m}}; opacity: {{gop}}">
+<div style="width: 100%; height: 100%; border-radius: 50%; background: {{g2bg}}; filter: blur(36px); animation: respira 7s ease-in-out infinite"></div>
+</div>
+<div aria-hidden="true" style="position: absolute; left: {{g1x}}; top: {{g1y}}; width: {{g1s}}; height: {{g1s}}; margin-left: {{g1m}}; margin-top: {{g1m}}; opacity: {{gop}}">
+<div style="width: 100%; height: 100%; border-radius: 50%; background: {{g1bg}}; filter: blur(28px); animation: respira 5s ease-in-out infinite"></div>
+</div>
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; box-sizing: border-box; padding: 88px 20px 28px; display: flex; flex-direction: column; gap: 20px; pointer-events: none; opacity: {{oB}}; transform: {{trB}}; filter: {{blB}}">
+<span style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: {{muted}}">Casa Central</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 38px; line-height: 1.1">¿A dónde vas?</span>
+<div style="display: flex; align-items: center; gap: 14px; height: 72px; padding: 0 14px; border-radius: 20px; background: {{selBg}}; color: {{selFg}}; border: 1px solid {{line}}; box-sizing: border-box; transform: {{selTr}}">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 22px; width: 36px; text-align: center">C</span>
+<span style="font-size: 16px; font-weight: 600; flex-grow: 1">Edificio C</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-size: 16px">335 m</span>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; height: 72px; padding: 0 14px; border-radius: 20px; background: {{surface}}; border: 1px solid {{line}}; box-sizing: border-box">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 22px; width: 36px; text-align: center">A</span>
+<span style="font-size: 16px; font-weight: 600; flex-grow: 1">Edificio A</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-size: 16px; color: {{muted}}">90 m</span>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; height: 72px; padding: 0 14px; border-radius: 20px; background: {{surface}}; border: 1px solid {{line}}; box-sizing: border-box">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 22px; width: 36px; text-align: center">F</span>
+<span style="font-size: 16px; font-weight: 600; flex-grow: 1">Edificio F</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-size: 16px; color: {{muted}}">140 m</span>
+</div>
+</div>
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; box-sizing: border-box; padding: 88px 20px 28px; display: flex; flex-direction: column; gap: 16px; pointer-events: none; opacity: {{oC}}; transform: {{trC}}; filter: {{blC}}">
+<div style="align-self: flex-start; height: 44px; padding: 0 16px; border-radius: 22px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}; box-sizing: border-box; display: flex; align-items: center; gap: 8px">
+<span style="font-size: 13px; color: {{muted}}">Vas hacia</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 17px">Edificio C</span>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px">
+<div style="display: flex; align-items: baseline; gap: 8px">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 88px; line-height: 1; font-variant-numeric: tabular-nums">{{metros}}</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 500; font-size: 26px; color: {{muted}}">m</span>
+</div>
+<span style="font-size: 16px; font-weight: 500">Camina hacia la luz</span>
+<span style="font-size: 14px; color: {{muted}}">Vas bien. Vas a llegar.</span>
+</div>
+<div style="padding: 16px; border-radius: 22px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 16px 40px rgba(12, 10, 24, 0.2); opacity: {{oD}}; transform: {{trD}}">
+<span aria-hidden="true" style="width: 56px; height: 56px; border-radius: 16px; background: {{g1bg}}; flex-shrink: 0"></span>
+<span style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: {{muted}}">Descubriste un lugar</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px">[NOMBRE DEL LUGAR]</span>
+<span style="font-size: 14px; line-height: 1.4; color: {{muted}}">[DATO CURIOSO en una frase]</span>
+</span>
+</div>
+</div>
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; box-sizing: border-box; padding: 150px 20px 28px; display: flex; flex-direction: column; gap: 14px; pointer-events: none; opacity: {{oL}}; transform: {{trL}}; filter: {{blL}}">
+<span style="width: 56px; height: 56px; border-radius: 28px; background: {{fg}}; color: {{bg}}; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</span>
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 38px; line-height: 1.1">Llegaste al Edificio C</span>
+<span style="font-size: 16px; line-height: 1.5">Encontraste el camino por tu cuenta.</span>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px; opacity: {{oF}}; transform: {{trF}}">
+<div style="padding: 20px; border-radius: 24px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 20px">Ayuda al siguiente</span>
+<span style="font-size: 15px; line-height: 1.5; color: {{muted}}">Toma una foto de lo que ves ahora. Quien venga después podrá reconocer el lugar.</span>
+</div>
+<div style="height: 56px; border-radius: 18px; background: #FF5C39; color: #1D1A26; display: flex; align-items: center; justify-content: center; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px">Tomar foto</div>
+</div>
+</div>
+<button type="button" onClick="{{reiniciar}}" style="position: absolute; left: 20px; top: 24px; height: 44px; padding: 0 16px; border-radius: 22px; background: {{surface}}; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid {{line}}; color: {{fg}}; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.6-5.900"></path><path d="M4 4v4.500h4.500"></path></svg>
+Reiniciar demo
+</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","default":"oscuro","options":["oscuro","claro"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+componentDidMount() {
+var self = this;
+this.t0 = Date.now();
+this.iv = setInterval(function () { self.setState({ t: (Date.now() - self.t0) / 1000 }); }, 50);
+}
+componentWillUnmount() { clearInterval(this.iv); }
+renderVals() {
+var self = this;
+var claro = (this.props.tema ?? 'oscuro') === 'claro';
+var T = (((this.state || {}).t || 0) % 20);
+var cl = function (v) { return Math.max(0, Math.min(1, v)); };
+var sm = function (a, b) { var v = cl((T - a) / (b - a)); return v * v * (3 - 2 * v); };
+var lerp = function (a, b, k) { return a + (b - a) * k; };
+var hex = function (h) { return [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); };
+var mixA = function (u, v, k) { return u.map(function (n, i) { return n + (v[i] - n) * k; }); };
+var css = function (u) { return 'rgb(' + u.map(Math.round).join(',') + ')'; };
+var fin = 1 - sm(19.2, 19.9);
+var oB = 1 - sm(1.9, 2.6);
+var oC = sm(2.3, 3.1) * (1 - sm(10.8, 11.6));
+var oL = sm(11.2, 12.3) * fin;
+var p = cl((T - 2.4) / 8.4);
+var pe = p * p * (3 - 2 * p);
+var c = 0.12 + 0.83 * pe;
+var rumbo = 40 * (1 - p) - 35 * Math.sin(p * Math.PI);
+var W = 390, H = 844, cx = W / 2, cy = H / 2;
+var rad = rumbo * Math.PI / 180;
+var dx = Math.sin(rad), dy = -Math.cos(rad);
+var k = Math.min(cx / Math.max(Math.abs(dx), 0.0001), cy / Math.max(Math.abs(dy), 0.0001));
+var ex = cx + dx * k, ey = cy + dy * k;
+var L = sm(10.8, 12.6);
+var x = lerp(ex, cx, L), y = lerp(ey, 300, L);
+var c1 = css(mixA(mixA(hex('#8FA6FF'), hex('#FF8A3D'), c), hex('#FF5C39'), L));
+var c2 = css(mixA(mixA(hex('#B79CFF'), hex('#FF5C7A'), c), hex('#FFB800'), L));
+var s1 = lerp(280 + c * 420, 1000, L), s2 = s1 * 0.8;
+var base = claro ? 0.95 : 0.85;
+var d = sm(5.2, 6.1) * (1 - sm(8.4, 9.3));
+var f = sm(14, 15.2);
+var sel = sm(1.1, 1.5);
+var fg = claro ? '#1D1A26' : '#F5F1EA', bg = claro ? '#F6F1EA' : '#15131F';
+var surface = claro ? 'rgba(255,255,255,0.68)' : 'rgba(40,36,56,0.62)';
+var capa = function (o, dir) { return 'scale(' + (1 + dir * 0.07 * (1 - o)) + ')'; };
+return {
+bg: bg, fg: fg,
+muted: claro ? '#5E5869' : '#B3ADBF',
+surface: surface,
+line: claro ? 'rgba(29,26,38,0.07)' : 'rgba(255,255,255,0.09)',
+gop: String(lerp(base, 1, L) * Math.max(sm(1.6, 3.2), 0.35) * fin),
+g1x: x + 'px', g1y: y + 'px', g1s: s1 + 'px', g1m: (-s1 / 2) + 'px',
+g1bg: 'radial-gradient(circle, ' + c1 + ' 0%, ' + c1 + ' 18%, transparent 68%)',
+g2x: (x - dy * 90 * (1 - L)) + 'px', g2y: (y + dx * 90 * (1 - L)) + 'px', g2s: s2 + 'px', g2m: (-s2 / 2) + 'px',
+g2bg: 'radial-gradient(circle, ' + c2 + ' 0%, transparent 66%)',
+oB: String(oB), trB: capa(oB, 1), blB: 'blur(' + (1 - oB) * 12 + 'px)',
+oC: String(oC), trC: capa(oC, -1), blC: 'blur(' + (1 - oC) * 12 + 'px)',
+oL: String(oL), trL: capa(oL, -1), blL: 'blur(' + (1 - oL) * 12 + 'px)',
+oD: String(d), trD: 'translateY(' + (1 - d) * 44 + 'px) scale(' + (0.94 + 0.06 * d) + ')',
+oF: String(f), trF: 'translateY(' + (1 - f) * 44 + 'px) scale(' + (0.94 + 0.06 * f) + ')',
+selBg: sel > 0.5 ? fg : surface, selFg: sel > 0.5 ? bg : fg,
+selTr: 'scale(' + (1 - 0.04 * Math.sin(sel * Math.PI)) + ')',
+metros: Math.max(0, Math.round((1 - c) * 76) * 5),
+reiniciar: function () { self.t0 = Date.now(); self.setState({ t: 0 }); }
+};
+}
+}
+</script>
+</body>
+</html>
