@@ -11,7 +11,8 @@ Orientarse en Casa Central (Valparaíso) es difícil para quien no conoce el cam
 
 - Principal: mechones y estudiantes en general que no conocen bien el campus.
 - Personas ciegas o con baja visión: modo voz (ver alcance).
-- Fuera del core (trabajo futuro): personas en silla de ruedas.
+- Personas con movilidad reducida (muletas, una lesión, cansancio): «Evitar escaleras» (ver alcance).
+- Fuera de alcance: personas en silla de ruedas; el campus hoy no es recorrible en silla.
 
 ## 3. Propuesta
 
