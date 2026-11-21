@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#15131F">
 <title>Marcar entradas · Brújula USM</title>
-<link rel="stylesheet" href="fuentes.css">
+<link rel="stylesheet" href="assets/fuentes.css">
 <script>
 // Tema claro/oscuro según el teléfono (?tema=claro u ?tema=oscuro lo fuerza)
 (function () {
@@ -113,8 +113,8 @@
   </div>
 </div>
 
-<script src="contornos.js"></script>
-<script src="datos.js"></script>
+<script src="js/generado/contornos.js"></script>
+<script src="js/generado/datos.js"></script>
 <script>
 "use strict";
 // ============================================================================
@@ -182,7 +182,7 @@ function interpretar(px, py) {                               // elige edificio y
 // ---------- Mapa ----------
 const MAPA_VB = { x: 300, y: 60, w: 1000, h: 860 };
 const img = {}; const tema = () => document.documentElement.dataset.tema === "claro" ? "claro" : "oscuro";
-function cargar(t) { if (t in img) return; img[t] = null; const i = new Image(); i.onload = () => { img[t] = i; dibujar(); }; i.src = `img/mapa-${t}.png`; }
+function cargar(t) { if (t in img) return; img[t] = null; const i = new Image(); i.onload = () => { img[t] = i; dibujar(); }; i.src = `assets/img/mapa-${t}.png`; }
 const toScr = (px, py) => [V.w / 2 + (px - V.cx) * V.z, V.h / 2 + (py - V.cy) * V.z];
 const fromScr = (sx, sy) => ({ px: V.cx + (sx - V.w / 2) / V.z, py: V.cy + (sy - V.h / 2) / V.z });
 const colorAcc = a => a === true ? "var(--si)" : a === false ? "var(--no)" : "#9A94A6";
