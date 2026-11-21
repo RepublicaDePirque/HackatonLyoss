@@ -8,11 +8,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Brújula USM">
+<meta name="apple-mobile-web-app-title" content="Luz Guía">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <link rel="stylesheet" href="assets/fuentes.css">
-<title>Brújula USM</title>
+<title>Luz Guía</title>
 <script>
 // Tema claro/oscuro según el teléfono (?tema=claro u ?tema=oscuro lo fuerza). Va en el <head> para evitar el parpadeo.
 (function () {
@@ -66,6 +66,13 @@
   .pad { padding:calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 24px); }
 
   /* ---------- Permiso ---------- */
+  /* Portada: el logo primero; al tocar se entra a la app. Siempre oscura, porque el fondo del logo es de ese color. */
+  #vPortada { background:#0B0E15; color:#F5F1EA; }
+  #btnPortada { flex:1; width:100%; border:0; border-radius:0; background:transparent; color:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 24px); }
+  #btnPortada img { width:min(86vw, 420px); height:auto; aspect-ratio:1; -webkit-mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); animation:aparece 1400ms var(--ease) both; }
+  #btnPortada .nombre { margin-top:-28px; font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:30px; letter-spacing:.02em; animation:aparece 1400ms 250ms var(--ease) both; }
+  #btnPortada .toca { font-size:15px; color:#B3ADBF; animation:aparece 1400ms 500ms var(--ease) both, late 3.2s 1.9s ease-in-out infinite; }
+  #vPortada #btnPortada:focus-visible { outline-offset:-6px; }
   #vPermiso { gap:24px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #vPermiso .tel { align-self:center; position:relative; width:150px; height:250px; flex-shrink:0; border-radius:30px; border:2px solid var(--line); overflow:hidden; background:var(--surface); }
   #vPermiso .tel .mancha { position:absolute; left:64px; top:-90px; width:200px; height:200px; animation:recorre 9s cubic-bezier(.45,0,.55,1) infinite; }
@@ -111,6 +118,7 @@
   #map { position:absolute; inset:0; width:100%; height:100%; display:none; touch-action:none; background:var(--bg); }
   .modo-mapa #map { display:block; }
   #luz { position:absolute; inset:0; pointer-events:none; }
+  #luz #halos { position:absolute; inset:0; -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%); mask-image:linear-gradient(to bottom, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%); }
   #luz .halo { position:absolute; transition:width 1400ms var(--ease), height 1400ms var(--ease), margin 1400ms var(--ease), opacity 1400ms var(--ease); }
   #luz .halo > div { width:100%; height:100%; border-radius:50%; }
   #luz .barra { position:absolute; border-radius:3px; transition:opacity 1400ms var(--ease); }
@@ -226,6 +234,8 @@
   #debug select, #debug button { font-size:12px; padding:4px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface-fuerte); }
   #debug input[type=range] { width:100%; }
 
+  @keyframes aparece { from { opacity:0; transform:scale(.96) } to { opacity:1; transform:none } }
+  @keyframes late { 0%,100% { opacity:1 } 50% { opacity:.4 } }
   @keyframes respira { 0%,100% { transform:scale(1) } 50% { transform:scale(1.08) } }
   @keyframes brota { from { opacity:0; transform:translateY(24px) scale(.97) } to { opacity:1; transform:none } }
   @keyframes hoja { from { opacity:0; transform:translateY(60px) } to { opacity:1; transform:none } }
@@ -254,6 +264,16 @@
 <div id="app">
 
 <!-- ===================== PERMISO (primera vez) ===================== -->
+<!-- ===================== PORTADA ===================== -->
+<main id="vPortada" class="vista" aria-label="Portada">
+  <h1 class="sr">Luz Guía</h1>
+  <button id="btnPortada" type="button" aria-label="Entrar a Luz Guía. Toca para empezar">
+    <img src="assets/logo/logo-portada.jpg" alt="" width="768" height="768" decoding="async">
+    <span class="nombre" aria-hidden="true">Luz Guía</span>
+    <span class="toca" aria-hidden="true">Toca para empezar</span>
+  </button>
+</main>
+
 <main id="vPermiso" class="vista pad" aria-label="Bienvenida">
   <div class="tel" role="img" aria-label="Un teléfono cuyo borde superior derecho brilla: así se ve la señal">
     <div class="mancha" aria-hidden="true"><div></div></div>
@@ -299,8 +319,10 @@
 <main id="vBrujula" class="vista" aria-label="Brújula">
   <canvas id="map" aria-label="Plano de Casa Central con tu posición y el destino"></canvas>
   <div id="luz" aria-hidden="true">
-    <div id="g2" class="halo"><div></div></div>
-    <div id="g1" class="halo"><div></div></div>
+    <div id="halos">
+      <div id="g2" class="halo"><div></div></div>
+      <div id="g1" class="halo"><div></div></div>
+    </div>
     <div id="barra" class="barra"></div>
   </div>
   <div class="capa">
@@ -752,7 +774,7 @@ function reducirFoto(file) {                                 // máx. 900 px y J
 }
 
 // ---------- Navegación entre pantallas ----------
-const VISTAS = ["permiso", "buscar", "brujula", "llegada"];
+const VISTAS = ["portada", "permiso", "buscar", "brujula", "llegada"];
 const idVista = v => "v" + v[0].toUpperCase() + v.slice(1);
 function ir(v, push = true) {
   state.confirmando = null;
@@ -767,7 +789,7 @@ function ir(v, push = true) {
   const h = $(idVista(v)).querySelector("h1"); if (h) { h.tabIndex = -1; try { h.focus({ preventScroll: true }); } catch (e) {} }
 }
 window.addEventListener("popstate", e => ir((e.state && e.state.v) || "buscar", false));
-try { history.replaceState({ v: "permiso" }, ""); } catch (e) {}
+try { history.replaceState({ v: "portada" }, ""); } catch (e) {}
 
 function elegir(id) {                                        // desde la lista o tocando un edificio
   setDest(id); ir("brujula");
@@ -921,6 +943,7 @@ const CURVA_G2 = [[0, 1], [0.2, 0.8], [0.45, 0.45], [0.7, 0.18], [0.9, 0.04], [1
 
 // La señal (resplandor, barra y flecha) gira hacia el ángulo nuevo por el camino más corto y sin saltos:
 // 359° → 1° son 2°, no una vuelta entera. Es un suavizado por tiempo, así que se ve igual a cualquier tasa de GPS o brújula.
+const INTRO_LUZ = 56;                                        // px que entra el centro de la luz desde el borde
 const senal = { meta: 0, actual: null, t: 0, activo: false, p: null };
 function moverSenal() {
   const a = senal.actual; if (a === null) return;
@@ -932,8 +955,9 @@ function moverSenal() {
   const vertical = x < 1 || x > p.W - 1;
   const bw = vertical ? p.grosor : p.largo, bh = vertical ? p.largo : p.grosor;
   const bx = Math.max(0, Math.min(p.W - bw, x - bw / 2)), by = Math.max(0, Math.min(p.H - bh, y - bh / 2));
-  $("g1").style.left = x + "px"; $("g1").style.top = y + "px";
-  $("g2").style.left = x - dy * 90 + "px"; $("g2").style.top = y + dx * 90 + "px";
+  const hx = x - dx * INTRO_LUZ, hy = y - dy * INTRO_LUZ;     // el centro de la luz entra un poco: así no se corta en su parte más fuerte
+  $("g1").style.left = hx + "px"; $("g1").style.top = hy + "px";
+  $("g2").style.left = hx - dy * 90 + "px"; $("g2").style.top = hy + dx * 90 + "px";
   poner($("barra"), { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px" });
 }
 function pasoSenal(ahora) {
@@ -1099,6 +1123,7 @@ function renderBrujula() {
   if (mapa) dibujarMapa(ev, g);
 }
 
+$("btnPortada").onclick = () => ir("permiso");              // la portada muestra el logo; al tocar se entra
 $("btnAtras").onclick = () => ir("buscar");
 // «Ya llegué»: con foto se pregunta antes (ayuda a notar que es otro edificio); sin foto va directo.
 $("btnYaLlegue").onclick = () => { state.llego = state.destId; if (fotoDe(state.destId)) { state.confirmando = "manual"; render(); } else ir("llegada"); };
@@ -1440,7 +1465,7 @@ window.addEventListener("resize", render);
 // ---------- Arranque ----------
 if (params.has("demo")) iniciarDemo();
 else if (DEBUG || location.hash === "#mapa") { if (location.hash === "#mapa") state.modo = "mapa"; ir(location.hash === "#mapa" ? "brujula" : "buscar", false); }
-else ir("permiso", false);
+else ir("portada", false);
 </script>
 <script src="js/voz.js"></script>
 </body>
