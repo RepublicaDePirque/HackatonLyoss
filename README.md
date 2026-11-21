@@ -21,7 +21,7 @@ Más detalle: [docs/PRD.md](docs/PRD.md) (producto y decisiones de diseño), [do
 - **37 destinos con buscador.** Lista «Cerca de ti» y «Todos los destinos», ordenados por distancia; busca por nombre, lugar o letra («C»). Marca los que tienen fotos.
 - **Datos curiosos por zona.** Al pasar por ciertos lugares aparece una tarjeta con un dato del campus.
 - **Llegada.** Automática al entrar al cuadro del edificio o patio (con un margen de 5 m por el error del GPS), con botón «Ya llegué» por si el GPS falla.
-- **Fotos de cómo se ve el destino.** En los últimos 60 m aparece «Así se ve al llegar», y al llegar el usuario puede tomar y dejar su propia foto.
+- **Fotos de cómo se ve el destino.** En los últimos 60 m aparece «Así se ve al llegar», y al llegar el usuario puede tomar y dejar su propia foto, que verán los demás estudiantes. Quien vea una foto inadecuada puede reportarla: con 3 reportes deja de mostrarse.
 - **Mapa del campus.** Plano de Casa Central con tu posición, el destino y la ruta sobre los caminos de OpenStreetMap, con aviso de escaleras y la opción «sin escaleras».
 - **Recorrido de ejemplo.** Un recorrido simulado de unos 35 s para mostrar la app sin depender del GPS.
 - **Tema claro y oscuro** según el teléfono, y animaciones reducidas si el usuario lo pide.
@@ -29,7 +29,7 @@ Más detalle: [docs/PRD.md](docs/PRD.md) (producto y decisiones de diseño), [do
 
 ### Estado actual
 
-- Las fotos de la comunidad hoy **se guardan solo en el teléfono** (`localStorage`); todavía no se comparten entre personas. El código para subirlas a Firestore existe ([fotos.js](fotos.js) y [firebase/firestore.rules](firebase/firestore.rules)), pero **aún no está conectado** a la interfaz.
+- Las fotos de la comunidad se publican en Firestore ([fotos.js](fotos.js) y [firebase/firestore.rules](firebase/firestore.rules)) y las ve cualquiera que elija ese destino. Si no hay conexión, la foto queda guardada solo en el teléfono (`localStorage`). Todavía no hay moderación activa más allá de los reportes: las fotos se borran a mano desde la consola de Firebase.
 - Los datos curiosos y varias pistas son contenido de ejemplo sin verificar. Faltan fotos propias de varios edificios y validar las coordenadas en terreno. La lista completa está en [docs/pendientes-datos.md](docs/pendientes-datos.md).
 - La interfaz se probó con un DOM simulado, no en un teléfono real.
 - Fuera del alcance del prototipo: accesibilidad para personas ciegas y en silla de ruedas (hay trabajo previo en la rama `accesibilidad/modo-voz`) y asignación de salas.
@@ -66,9 +66,9 @@ Solo hace falta si cambias el mapa o los destinos. Necesitas Python 3; `contorno
 | `python3 tools/contornos.py` | `contornos.js` (contornos de edificios y patios) | Con `--preview` solo deja una imagen de revisión |
 | `python3 tools/generar-datos.py` | `datos.js` (nombre, pista y foto de cada destino) | Lee `data/edificios.json` |
 
-### Fotos compartidas con Firebase (opcional, aún no conectado a la interfaz)
+### Fotos compartidas con Firebase (opcional)
 
-El `firebaseConfig` de [fotos.js](fotos.js) apunta al proyecto del equipo original. **Si haces un fork, crea el tuyo**, para no escribir en su base de datos:
+Sin esto la app funciona igual: las fotos se guardan solo en el teléfono. El `firebaseConfig` de [fotos.js](fotos.js) apunta al proyecto del equipo original. **Si haces un fork, crea el tuyo**, para no escribir en su base de datos:
 
 1. En la [consola de Firebase](https://console.firebase.google.com/) crea un proyecto y registra una app web.
 2. Activa *Authentication → Anonymous* y crea una base *Firestore*.

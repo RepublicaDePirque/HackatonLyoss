@@ -354,7 +354,7 @@
       <h1 id="llTitulo">Llegaste</h1>
       <p>Encontraste el camino por tu cuenta.</p>
     </div>
-    <figure id="llFoto" hidden><img id="llFotoImg" alt=""><figcaption id="llFotoPie"></figcaption></figure>
+    <figure id="llFoto" hidden><img id="llFotoImg" alt=""><figcaption id="llFotoPie"></figcaption><button id="btnReportar" class="btn-texto" hidden>Reportar esta foto</button></figure>
     <div id="llSinFoto" class="sinfoto" hidden><b>Nadie ha dejado una foto de este lugar</b><span>Sé el primero: así quien venga después lo reconocerá al llegar.</span></div>
     <div id="llSabias" class="sabias" hidden><b>Sabías que</b><span id="llSabiasTxt"></span></div>
     <div class="pie">
@@ -367,7 +367,7 @@
   <div id="llVista" style="display:none;flex-direction:column;gap:18px;flex:1">
     <div class="bloque"><h1 style="font-size:30px">Tu foto de <span id="llNombre2"></span></h1><p style="font-size:16px">Revísala antes de publicarla.</p></div>
     <div class="prev" role="img" aria-label="Vista previa de tu foto"><img id="llPrev" alt=""></div>
-    <span style="position:relative;font-size:14px;line-height:1.4;font-weight:600">Se publica sin tu nombre. Evita fotografiar a personas.</span>
+    <span style="position:relative;font-size:14px;line-height:1.4;font-weight:600">Se publica sin tu nombre y pasa al dominio público (CC0): cualquiera podrá usarla. Evita fotografiar a personas.</span>
     <div id="llegadaError" role="alert"></div>
     <div style="position:relative;display:flex;flex-direction:column;gap:8px">
       <button id="btnPublicar" class="btn-os">Publicar foto</button>
@@ -379,7 +379,7 @@
       <span class="visto" style="width:64px;height:64px;border-radius:32px"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>
       <h1 style="font-size:34px">Gracias por ayudar al siguiente</h1>
       <p>Quien busque <span id="llNombre3"></span> verá tu foto al acercarse.</p>
-      <p style="font-size:14px;opacity:.85">Prototipo: por ahora tu foto queda guardada solo en este teléfono.</p>
+      <p id="llNota" style="font-size:14px;opacity:.85"></p>
     </div>
     <button id="btnOtro2" class="btn-os">Elegir otro destino</button>
   </div>
@@ -402,6 +402,7 @@
 <script src="grafo.js"></script>
 <script src="contornos.js"></script>
 <script src="datos.js"></script>
+<script src="fotos.js"></script>
 <script>
 // ---------- Geometría ----------
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
@@ -626,11 +627,34 @@ const leerFotos = () => { if (!cacheFotos) { try { cacheFotos = JSON.parse(local
 function guardarFoto(id, data) {
   try { const f = { ...leerFotos(), [id]: data }; localStorage.setItem(FOTOS_KEY, JSON.stringify(f)); cacheFotos = f; return true; } catch (e) { return false; }
 }
-function fotoDe(id) {                                        // la oficial con licencia libre o, si no hay, la de la comunidad
+// Fotos compartidas (Firestore, vía fotos.js). Se piden al elegir el destino y se guardan en `nube`,
+// porque fotoDe() se llama al dibujar y no puede esperar a la red.
+const nube = {};                                             // id de destino -> { id, src } | null (sin fotos)
+const pidiendo = new Set();
+async function cargarNube(id) {
+  if (id in nube || pidiendo.has(id) || !window.Fotos || info(id).foto) return;
+  pidiendo.add(id);
+  try {
+    const f = (await window.Fotos.fotosDe(id))[0];
+    nube[id] = f ? { id: f.id, src: f.foto } : null;
+    if (state.destId === id) { if (state.vista === "llegada" && !fotoNueva) renderLlegada(); render(); }
+  } catch (e) { /* sin conexión: se usa la foto de este teléfono, si la hay */ }
+  pidiendo.delete(id);
+}
+function ladoFoto() {                                        // lado del edificio desde el que estás: N, E, S u O (lo piden las reglas)
+  const a = areaOf(state.destId), p = state.user;
+  let ref = null;
+  if (a) { const r = nearestOnArea(p, a); if (isFinite(r.d) && r.d >= 0.5) ref = r; }
+  const b = bearing(ref || graph[destNode()], p);
+  return b >= 315 || b < 45 ? "N" : b < 135 ? "E" : b < 225 ? "S" : "O";
+}
+function fotoDe(id) {                                        // la oficial con licencia libre; si no, la compartida; si no, la de este teléfono
   const f = info(id).foto;
   if (f) return { src: f.src, pie: f.pie, cred: `Foto: ${f.autor} · ${f.licencia}`, oficial: true };
-  const c = leerFotos()[id];
-  return c ? { src: c, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false } : null;
+  const c = nube[id];
+  if (c) return { id: c.id, src: c.src, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false };
+  const l = leerFotos()[id];
+  return l ? { src: l, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false } : null;
 }
 function reducirFoto(file) {                                 // máx. 900 px y JPEG: cabe en el almacenamiento del teléfono
   return new Promise((ok, mal) => {
@@ -674,6 +698,7 @@ function elegir(id) {                                        // desde la lista o
 function setDest(id) {
   state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false;
   if (state.llego === id) state.llego = null;
+  cargarNube(id);
   mapV.fitted = false; render();
 }
 
@@ -1161,9 +1186,11 @@ function mostrarLl(parte) {
 }
 function renderLlegada() {
   const i = info(state.destId), f = fotoDe(state.destId);
+  cargarNube(state.destId);
   mostrarLl("inicio"); $("llError").textContent = ""; fotoNueva = null;
   $("llTitulo").textContent = "Llegaste " + aDestino(i.nombre);
   $("llFoto").hidden = !f; $("llSinFoto").hidden = !!f;
+  $("btnReportar").hidden = !(f && f.id); $("btnReportar").disabled = false;
   if (f) { $("llFotoImg").src = f.src; $("llFotoImg").alt = "Foto de " + i.nombre; $("llFotoPie").textContent = `${f.cred} · ${f.pie}`; }
   const sab = SABIAS[state.destId]; $("llSabias").hidden = !sab; if (sab) $("llSabiasTxt").textContent = sab;
   $("llNombre2").textContent = i.nombre; $("llNombre3").textContent = i.nombre;
@@ -1173,13 +1200,34 @@ $("btnRepetir").onclick = () => $("btnTomar").onclick();
 $("inpFoto").onchange = async e => {
   const file = e.target.files && e.target.files[0]; if (!file) return;
   try {
-    fotoNueva = await reducirFoto(file); $("llPrev").src = fotoNueva; $("llegadaError").textContent = ""; mostrarLl("vista");
+    try { fotoNueva = await window.Fotos.comprimir(file); } catch (e) { fotoNueva = await reducirFoto(file); }
+    $("llPrev").src = fotoNueva; $("llegadaError").textContent = ""; mostrarLl("vista");
   } catch (err) { $("llError").textContent = "No pudimos leer la foto. Prueba de nuevo."; }
 };
-$("btnPublicar").onclick = () => {
+$("btnPublicar").onclick = async () => {
   if (!fotoNueva) return;
-  if (!guardarFoto(state.destId, fotoNueva)) { $("llegadaError").textContent = "No pudimos guardar la foto (poco espacio en el teléfono). Prueba de nuevo."; return; }
+  const btn = $("btnPublicar"), id = state.destId, lado = ladoFoto();
+  btn.disabled = true; $("llegadaError").textContent = "";
+  let compartida = false;
+  try {                                                      // primero se intenta compartirla con todos
+    const nid = await window.Fotos.publicarFoto(id, lado, fotoNueva);
+    nube[id] = { id: nid, src: fotoNueva }; compartida = true;
+  } catch (e) { /* sin conexión o foto demasiado grande: queda en este teléfono */ }
+  const guardada = compartida || guardarFoto(id, fotoNueva);
+  btn.disabled = false;
+  if (!guardada) { $("llegadaError").textContent = "No pudimos guardar la foto (poco espacio en el teléfono). Prueba de nuevo."; return; }
+  $("llNota").textContent = compartida ? "Tu foto quedó publicada: quien venga después la verá al acercarse."
+    : "No pudimos publicarla (¿sin conexión?): por ahora tu foto queda guardada solo en este teléfono.";
   mostrarLl("gracias");
+};
+$("btnReportar").onclick = async () => {
+  const f = fotoDe(state.destId); if (!f || !f.id) return;
+  $("btnReportar").disabled = true;
+  try {
+    await window.Fotos.reportar(f.id);
+    nube[state.destId] = null; renderLlegada();
+    $("llError").textContent = "Gracias por avisar. Dejamos de mostrar esta foto.";
+  } catch (e) { $("llError").textContent = "No pudimos enviar el reporte. Prueba de nuevo."; $("btnReportar").disabled = false; }
 };
 $("btnAunNo").onclick = () => { state.llego = state.destId; ir("brujula"); };
 $("btnOtro").onclick = () => ir("buscar");
