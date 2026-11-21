@@ -6,6 +6,7 @@
 //   Fotos.publicarFoto(edificio, lado, dataUrl) -> id
 //   Fotos.fotoPara(edificio, lado)          -> { id, foto, lado, reportes, creada } | null
 //   Fotos.reportar(id)
+//   Fotos.AVISO_LICENCIA                    -> texto CC0 que la UI muestra antes de publicar
 // Usa los globales de index.html: AREAS, grupo, toXY, nearestOnPoly, graph, astar, nearest, areaOf, state, destNode.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -100,4 +101,8 @@ async function reportar(id) {
   await updateDoc(doc(await db(), "fotos", id), { reportes: increment(1) });
 }
 
-window.Fotos = { capturarFoto, ladoDesde, ladoAproximacion, publicarFoto, fotoPara, reportar };
+// Texto que la UI debe mostrar junto al botón de publicar (las fotos se ofrecen como dominio público).
+const AVISO_LICENCIA = "Al publicar, entregas esta foto al dominio público (CC0): cualquiera podrá usarla. " +
+  "Evita que salgan personas reconocibles.";
+
+window.Fotos = { capturarFoto, ladoDesde, ladoAproximacion, publicarFoto, fotoPara, reportar, AVISO_LICENCIA };

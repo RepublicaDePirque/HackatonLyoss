@@ -96,6 +96,7 @@
     <select id="fdLadoSel"><option value="">lado automático</option><option>N</option><option>S</option><option>E</option><option>O</option></select>
     <button id="fdTomar">📷 Tomar foto</button>
     <img id="fdPrev" alt="" style="display:none;max-width:100%;margin:6px 0">
+    <div class="mut" id="fdAviso"></div>
     <button id="fdPub" disabled>Publicar</button>
     <button id="fdVer">Ver foto del destino</button>
     <button id="fdRep" disabled>Reportar</button>
@@ -623,6 +624,7 @@ if (DEBUG) {
     $("fdDest").textContent = DEST[state.destId].name;
     $("fdLado").textContent = fdLado() || "—";
     $("fdAprox").textContent = window.Fotos.ladoAproximacion(state.destId) || "—";
+    $("fdAviso").textContent = window.Fotos.AVISO_LICENCIA;
   };
   const renderOrig = render; render = function () { renderOrig(); fdRefresh(); };
   $("fdTomar").onclick = async () => {
