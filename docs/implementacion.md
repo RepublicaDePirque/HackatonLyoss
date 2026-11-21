@@ -35,6 +35,7 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 |---|---|
 | `/` | Flujo real (pide GPS y brújula; necesita HTTPS) |
 | `/?demo` | Arranca directo el recorrido de ejemplo |
+| `/?voz` | Activa el modo voz con la voz de la app (`voz.js`); se combina con `demo` o `debug` |
 | `/?debug` | Panel para mover la posición y el rumbo sin GPS; el mapa dibuja los caminos y tocar el plano te mueve |
 | `/#mapa` | Abre directo en modo mapa |
 | `/?tema=claro` o `?tema=oscuro` | Fuerza el tema |

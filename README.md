@@ -14,6 +14,6 @@ No tiene dependencias ni paso de compilación.
 python3 -m http.server 8000
 ```
 
-Abre `http://localhost:8000/?debug` (mover la posición sin GPS) o `http://localhost:8000/?demo` (recorrido de ejemplo). El GPS y la brújula reales solo funcionan por HTTPS, por ejemplo publicada en GitHub Pages.
+Abre `http://localhost:8000/?debug` (mover la posición sin GPS) o `http://localhost:8000/?demo` (recorrido de ejemplo). Agrega `&voz` para el modo voz, que dice en voz alta la dirección y la distancia (`node tools/probar-voz.js` prueba sus frases). El GPS y la brújula reales solo funcionan por HTTPS, por ejemplo publicada en GitHub Pages.
 
 Datos de mapa y caminos © colaboradores de OpenStreetMap (ODbL).
