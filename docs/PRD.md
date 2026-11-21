@@ -1,4 +1,4 @@
-# PRD — Brújula de campus
+# PRD — Solem, brújula de campus
 
 Documento vivo. Se actualiza a medida que el equipo va especificando el producto.
 Hackathon LYOSS USM 2026, desafío «Campus sin barreras». Última actualización: 21 de noviembre de 2026.
@@ -39,7 +39,7 @@ Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app
 
 ## 5. Flujo principal
 
-0. Primera vez: una pantalla explica la señal y pide ubicación y brújula con un toque (requisito de iPhone). Quien no acepta puede ver solo el mapa. Decidido: el mapa se abre sin destino, con su posición y los edificios, y al tocar un edificio queda elegido. **Falta implementarlo**: hoy abre con el Edificio A como destino, sin que la persona lo elija.
+0. Primera vez: una portada con el logo de Solem («Toca para empezar») y, al tocar, una pantalla que explica la señal y pide ubicación y brújula con un toque (requisito de iPhone). Quien no acepta puede ver solo el mapa. Decidido: el mapa se abre sin destino, con su posición y los edificios, y al tocar un edificio queda elegido. **Falta implementarlo**: hoy abre con el Edificio A como destino, sin que la persona lo elija.
 1. Elegir destino: búsqueda (por nombre, lugar o letra; decidido que no lee códigos de sala como «C-210» ni incluye servicios, porque los mechones buscan por letra o nombre del edificio) y lista con «Cerca de ti» y «Todos los destinos», distancia en línea recta y marca «con fotos».
 2. Seguir la brújula: señal, distancia, pista.
 3. En el trayecto: tarjetas de datos curiosos al entrar en una zona.
@@ -115,7 +115,7 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 
 ## 9. Supuestos y pendientes
 
-- Datos del campus: las coordenadas salen de OpenStreetMap contrastado con el plano oficial; no se midieron en terreno y marcan el centro del edificio, no su puerta.
+- Datos del campus: las coordenadas salen de OpenStreetMap contrastado con el plano oficial; no se midieron en terreno y marcan el centro del edificio, no su puerta. En curso: el equipo marca en terreno las puertas de cada edificio (`marcar-entradas.html`) para que la ruta y la llegada apunten a la entrada más cercana a la persona, en vez del centro del edificio.
 - Federación: en pasaje Valdés, frente a la portería del M (confirmado por el equipo).
 - Estimado o sin verificar: las pistas (borradores redactados desde el plano) y el contenido de cada edificio (aportado por el equipo).
 - Fotos con licencia libre solo para A, F y B (Wikimedia Commons; las de A y B con la letra inferida). C, M, P, Biblioteca, Comedores y Federación: pendientes de sacar en terreno.
@@ -123,5 +123,6 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 - La cafetería Vivendum es el Edificio Q, confirmado por el equipo y coincidente con OpenStreetMap; el plano oficial la rotula «O». El punto del edificio P es el centro de P y P2 juntos. Los datos de Google Maps no se extrajeron: API de pago y términos que no permiten copiarlos en bloque.
 - Datos curiosos por zona: sin recolectar.
 - Punto de entrada: sin definir por ahora, por decisión del equipo (QR en las entradas del campus o enlace previo). Hoy la app siempre parte en la bienvenida, aunque la persona ya haya pasado por ella.
-- Sin definir: nombre del producto, moderación de fotos, dónde se guardan las fotos, stack concreto.
+- Nombre del producto: Solem (decidido).
+- Sin definir: moderación de fotos, dónde se guardan las fotos, stack concreto.
 - Sin confirmar: entregables y ponderaciones de las bases oficiales, hora de entrega, tamaño del equipo.
