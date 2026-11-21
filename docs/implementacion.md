@@ -30,7 +30,7 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 | `assets/img/` | Mapas del diseño (claro y oscuro) y fotos con licencia libre de A, B y F | — |
 | `assets/fuentes.css`, `assets/fonts/` | Tipografías | — |
 | `js/fotos.js` | Comprimir, publicar, leer y reportar fotos compartidas (Firestore) | A mano |
-| `js/escaleras.js` | «Evitar escaleras»: compara caminos y cuenta escaleras | A mano (prueba: `node tests/probar-escaleras.js`) |
+| `js/escaleras.js` | «Evitar escaleras»: compara caminos y cuenta escaleras. Con el botón activo, cada tramo de escalera suma 400 m de costo en vez de quedar prohibido, así que si no hay camino sin escaleras se entrega el de menos | A mano (prueba: `node tests/probar-escaleras.js`) |
 | `js/voz.js` | Modo voz para personas ciegas | A mano (prueba: `node tests/probar-voz.js`) |
 | `sw.js` | Caché para usarla sin conexión | Subir `CACHE` al cambiar archivos |
 
@@ -49,7 +49,6 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 ## Dónde la implementación se aparta del PRD
 
-- **El mapa traza la ruta** (A* sobre los caminos de OpenStreetMap, con aviso de escaleras y opción «Evitar escaleras», que suma 400 m de costo por tramo de escalera en vez de prohibirlos: así entrega el camino con menos escaleras cuando no hay uno sin ninguna; la comparación está en `js/escaleras.js` y se prueba con `node tools/probar-escaleras.js`); el PRD dice que el modo mapa «te ubica; no traza ruta». Lo dejé porque ya estaba hecho y funciona; la brújula, que es el producto, sigue sin mostrar ruta. Si el equipo prefiere el mapa sin ruta, basta quitar el dibujo de `path` en `dibujarMapa`.
 - **El mapa puede girar con el rumbo** (botón ↻, apagado por defecto). El PRD decidió que no gira; por defecto se respeta (orientación del plano) y el giro es opcional. Una brújula con la N marca dónde queda el norte porque el plano no está orientado así.
 - **El resplandor se mueve en 0,7 s** (posición) y 1,4 s (tamaño y color), no 1,4 s en todo: con la brújula del teléfono emitiendo decenas de lecturas por segundo, 1,4 s en la posición se sentía arrastrado.
 - **Las fotos de la comunidad se publican en Firestore** (`js/fotos.js`, reglas en `firebase/firestore.rules`; JPEG de máximo 1024 px y ≤ 290 000 caracteres, que es lo que aceptan las reglas). Se piden al elegir el destino y `fotoDe()` las lee de una caché en memoria, porque se llama al dibujar. Sin conexión la foto queda en el teléfono (`localStorage`). Las reglas exigen el lado del edificio desde el que se tomó (`ladoFoto()`: N, E, S u O). Con 3 reportes una foto deja de mostrarse; borrarlas es manual, desde la consola de Firebase. La pantalla de publicar avisa que la foto pasa a dominio público (CC0).
@@ -99,7 +98,7 @@ Atajos que cruzan un edificio de puerta a puerta (un pasillo del A, por ejemplo)
 
 - **Comedores** es la parte norte del bloque D (OpenStreetMap lo dibuja separado; el plano lo trae dentro del cuadro de D). Su contorno sale de OSM recortado al cuadro de D. Elegir «Edificio D» también se cumple al entrar a Comedores, porque está dentro de D.
 - **Innovación Tecnológica** se asignó al edificio rotulado «Edificio Bari» en el plano (borde izquierdo): tiene la misma forma que el polígono de OSM y queda en el mismo lugar, pero es una inferencia, **por confirmar**.
-- **Cafetería Vivendum** usa la «O» del plano (OSM la llama «Q»; ver `docs/pendientes-datos.md`).
+- **Cafetería Vivendum** es el Edificio Q (confirmado por el equipo, igual que en OpenStreetMap). Su contorno es el edificio que el plano oficial rotula «O».
 
 ## Contenido de ejemplo que hay que reemplazar
 

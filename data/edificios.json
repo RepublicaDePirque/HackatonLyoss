@@ -392,7 +392,7 @@
 		},
 		{
 			"id": "vivendum",
-			"letra": null,
+			"letra": "Q",
 			"nombre": "Cafetería Vivendum",
 			"lat": -33.035818,
 			"lng": -71.595989,
@@ -401,7 +401,7 @@
 				551
 			],
 			"coordenada": "verificada",
-			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343091). Sin letra a propósito: OpenStreetMap lo llama «Q» y el plano oficial «O»; confirmar en terreno.",
+			"fuente_coordenada": "Centro de la huella en OpenStreetMap (way/1278343091). Letra «Q», confirmada por el equipo, igual que en OpenStreetMap; el plano oficial la rotula «O».",
 			"destino_demo": false,
 			"pista": "Al poniente del B, junto a la subida San Luis.",
 			"pista_estado": "borrador: redactada desde el plano, validar en terreno",
