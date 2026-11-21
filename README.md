@@ -1,6 +1,6 @@
-# Brújula USM
+# Luz Guía
 
-<img src="assets/logo/logo.png" alt="Logo de Brújula USM: un faro con un haz dorado" width="120">
+<img src="assets/logo/logo.png" alt="Logo de Luz Guía: un faro con un haz dorado" width="120">
 
 Hackathon LYOSS USM 2026, desafío «Campus sin barreras».
 
@@ -8,7 +8,7 @@ Hackathon LYOSS USM 2026, desafío «Campus sin barreras».
 
 Orientarse en Casa Central (USM, Valparaíso) es difícil para quien no conoce el campus: hay cerro, desniveles y edificios nombrados con letras. Las apps habituales llevan al destino con una ruta giro a giro, pero no ayudan a conocer el lugar.
 
-Brújula USM propone otra cosa: eliges un destino y el borde de la pantalla brilla hacia él, con la distancia. No te damos una ruta; tú decides por dónde caminar y, en el trayecto, descubres el campus. La idea de fondo es que la barrera se reduce cuando la persona conoce su universidad, y que la comunidad ayuda al siguiente que llega, por ejemplo con fotos de cómo se ve cada edificio.
+Luz Guía propone otra cosa: eliges un destino y el borde de la pantalla brilla hacia él, con la distancia. No te damos una ruta; tú decides por dónde caminar y, en el trayecto, descubres el campus. La idea de fondo es que la barrera se reduce cuando la persona conoce su universidad, y que la comunidad ayuda al siguiente que llega, por ejemplo con fotos de cómo se ve cada edificio.
 
 Pensada primero para mechones y estudiantes que no conocen bien el campus. Es una web/PWA: se abre con un enlace, sin instalar nada.
 
@@ -16,6 +16,7 @@ Más detalle: [docs/PRD.md](docs/PRD.md) (producto y decisiones de diseño), [do
 
 ## Funcionalidades
 
+- **Portada con el logo.** Al abrir la app aparece el logo y «Toca para empezar»; al tocar se entra a la bienvenida.
 - **Brújula con resplandor.** El borde de la pantalla brilla del lado del destino: frío y estrecho si está lejos, cálido y ancho si está cerca. La cifra en metros queda al centro. Se puede cambiar a una flecha o al mapa.
 - **Ayuda para no perderse.** Una pista de texto por destino siempre visible y un mensaje según el estado: vas bien, te estás alejando, está detrás de ti o casi llegas. Si el GPS es impreciso, lo avisa.
 - **37 destinos con buscador.** Lista «Cerca de ti» y «Todos los destinos», ordenados por distancia; busca por nombre, lugar o letra («C»). Marca los que tienen fotos.
@@ -59,11 +60,11 @@ Lo que necesita el navegador está en la raíz y en `js/` y `assets/`; el resto 
 │   ├── img/                 Mapas claro y oscuro y fotos de fachada con licencia libre
 │   ├── fonts/, fuentes.css  Tipografías (Chakra Petch e Instrument Sans)
 │   ├── icons/               Íconos de la app (180, 192 y 512 px)
-│   ├── logo/                Logo del proyecto
+│   ├── logo/                Logo del proyecto y su versión liviana para la portada
 │   └── plano.jpeg           Plano oficial de Casa Central
 ├── data/                    Datos fuente: edificios, puntos de interés, georreferencia y datos curiosos
 ├── tools/                   Scripts de Python que generan js/generado/
-├── tests/                   Pruebas del modo voz, de «Evitar escaleras» y de la señal de la brújula
+├── tests/                   Pruebas del modo voz, de «Evitar escaleras», de la señal de la brújula y de la portada
 ├── firebase/                Reglas de seguridad de Firestore
 ├── design/                  Prototipo de interfaz (lienzo, plantillas y scripts del diseño)
 ├── docs/                    PRD, implementación, fuentes, pendientes de datos y enunciado del hackatón
@@ -102,9 +103,10 @@ Necesitan solo Node.js, sin instalar nada:
 node tests/probar-escaleras.js
 node tests/probar-voz.js
 node tests/probar-senal.js
+node tests/probar-portada.js
 ```
 
-La primera revisa, sobre el grafo real y los 420 pares de destinos, que «Evitar escaleras» nunca deje sin ruta y use cero escaleras cuando se puede. La segunda revisa las frases del modo voz. La tercera revisa los colores de la señal (azul lejos, morado, rojo cerca) y que la flecha y la luz giren por el camino corto.
+La primera revisa, sobre el grafo real y los 420 pares de destinos, que «Evitar escaleras» nunca deje sin ruta y use cero escaleras cuando se puede. La segunda revisa las frases del modo voz. La tercera revisa los colores de la señal (azul lejos, morado, rojo cerca) y que la flecha y la luz giren por el camino corto. La cuarta revisa que la portada esté bien cableada y que su logo sea liviano.
 
 ### Regenerar los datos del campus (opcional)
 
@@ -155,7 +157,7 @@ Todo el equipo usó **Claude** (Anthropic) durante el desarrollo: **Claude Code*
 
 ## Licencia
 
-- **Código:** [MIT](LICENSE) © 2026 Equipo Brújula USM.
+- **Código:** [MIT](LICENSE) © 2026 Equipo Luz Guía.
 - **Fotos subidas por usuarios:** quien publique una foto la entrega al dominio público bajo [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.es). Las fotos compartidas viven en la base de datos del servicio, no en este repo.
 - **Datos y material de terceros:** conservan su propia licencia (ver abajo); la MIT no los cubre.
 
