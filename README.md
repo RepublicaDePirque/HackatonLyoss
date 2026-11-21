@@ -63,7 +63,7 @@ Lo que necesita el navegador está en la raíz y en `js/` y `assets/`; el resto 
 │   └── plano.jpeg           Plano oficial de Casa Central
 ├── data/                    Datos fuente: edificios, puntos de interés, georreferencia y datos curiosos
 ├── tools/                   Scripts de Python que generan js/generado/
-├── tests/                   Pruebas del modo voz y de «Evitar escaleras»
+├── tests/                   Pruebas del modo voz, de «Evitar escaleras» y de la señal de la brújula
 ├── firebase/                Reglas de seguridad de Firestore
 ├── design/                  Prototipo de interfaz (lienzo, plantillas y scripts del diseño)
 ├── docs/                    PRD, implementación, fuentes, pendientes de datos y enunciado del hackatón
@@ -101,9 +101,10 @@ Necesitan solo Node.js, sin instalar nada:
 ```bash
 node tests/probar-escaleras.js
 node tests/probar-voz.js
+node tests/probar-senal.js
 ```
 
-La primera revisa, sobre el grafo real y los 420 pares de destinos, que «Evitar escaleras» nunca deje sin ruta y use cero escaleras cuando se puede. La segunda revisa las frases del modo voz.
+La primera revisa, sobre el grafo real y los 420 pares de destinos, que «Evitar escaleras» nunca deje sin ruta y use cero escaleras cuando se puede. La segunda revisa las frases del modo voz. La tercera revisa los colores de la señal (azul lejos, morado, rojo cerca) y que la flecha y la luz giren por el camino corto.
 
 ### Regenerar los datos del campus (opcional)
 

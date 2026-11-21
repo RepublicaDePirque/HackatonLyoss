@@ -111,9 +111,9 @@
   #map { position:absolute; inset:0; width:100%; height:100%; display:none; touch-action:none; background:var(--bg); }
   .modo-mapa #map { display:block; }
   #luz { position:absolute; inset:0; pointer-events:none; }
-  #luz .halo { position:absolute; transition:left 700ms var(--ease), top 700ms var(--ease), width 1400ms var(--ease), height 1400ms var(--ease), margin 1400ms var(--ease), opacity 1400ms var(--ease); }
+  #luz .halo { position:absolute; transition:width 1400ms var(--ease), height 1400ms var(--ease), margin 1400ms var(--ease), opacity 1400ms var(--ease); }
   #luz .halo > div { width:100%; height:100%; border-radius:50%; }
-  #luz .barra { position:absolute; border-radius:3px; transition:left 700ms var(--ease), top 700ms var(--ease), width 1400ms var(--ease), height 1400ms var(--ease), opacity 1400ms var(--ease); }
+  #luz .barra { position:absolute; border-radius:3px; transition:opacity 1400ms var(--ease); }
   .capa { position:absolute; inset:0; display:flex; flex-direction:column; gap:12px; padding:calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px); pointer-events:none; }
   .capa > * { pointer-events:auto; }
   .cab { display:flex; align-items:center; gap:10px; }
@@ -126,7 +126,7 @@
   .modo-mapa #centro > * { display:none !important; }
   .centro .velo { position:absolute; left:50%; top:46%; width:360px; height:330px; margin:-165px 0 0 -180px; background:var(--velo); pointer-events:none; }
   .senal { position:relative; height:104px; display:flex; align-items:center; justify-content:center; }
-  #flecha { width:104px; height:104px; display:flex; align-items:center; justify-content:center; transition:transform 900ms var(--ease); }
+  #flecha { width:104px; height:104px; display:flex; align-items:center; justify-content:center; }
   .impreciso { height:32px; padding:0 14px; border-radius:16px; display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; }
   #cifra { position:relative; display:flex; align-items:baseline; justify-content:center; gap:8px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:88px; line-height:1; font-variant-numeric:tabular-nums; }
   #cifra small { font-weight:500; font-size:26px; color:var(--muted); }
@@ -898,26 +898,69 @@ function mezcla(a, b, k, Lfijo) {                            // frío -> cálido
   if (dh > Math.PI) dh -= 2 * Math.PI; if (dh < -Math.PI) dh += 2 * Math.PI;
   return deOk(Lfijo || p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k, p[2] + dh * k);
 }
+// Color según la distancia: azul si está lejos, morado a mitad de camino, rojo cuando está cerca.
+const PALETA_DIST = ["#5B8CFF", "#A66BFF", "#FF3D4F"];
+function colorDist(c, Lfijo) {                                // c: 0 lejos … 1 cerca
+  const k = Math.max(0, Math.min(1, c)) * 2;
+  return k <= 1 ? mezcla(PALETA_DIST[0], PALETA_DIST[1], k, Lfijo) : mezcla(PALETA_DIST[1], PALETA_DIST[2], k - 1, Lfijo);
+}
+// Luz sin bordes: un círculo cuyo degradado llega a transparente justo en el límite de su caja (closest-side),
+// con caída suave. Así no hay desenfoque (`filter: blur`), que en varios móviles deja ver la caja cuadrada.
+function luzSuave(rgb, curva) {
+  const con = a => rgb.replace("rgb(", "rgba(").replace(")", "," + a + ")");
+  return `radial-gradient(circle closest-side, ${curva.map(([r, a]) => `${con(a)} ${r * 100}%`).join(", ")})`;
+}
+const CURVA_G1 = [[0, 1], [0.25, 0.95], [0.45, 0.62], [0.65, 0.3], [0.82, 0.1], [0.95, 0.02], [1, 0]];
+const CURVA_G2 = [[0, 1], [0.2, 0.8], [0.45, 0.45], [0.7, 0.18], [0.9, 0.04], [1, 0]];
+
+// La señal (resplandor, barra y flecha) gira hacia el ángulo nuevo por el camino más corto y sin saltos:
+// 359° → 1° son 2°, no una vuelta entera. Es un suavizado por tiempo, así que se ve igual a cualquier tasa de GPS o brújula.
+const senal = { meta: 0, actual: null, t: 0, activo: false, p: null };
+function moverSenal() {
+  const a = senal.actual; if (a === null) return;
+  $("flecha").style.transform = `rotate(${a}deg)`;
+  const p = senal.p; if (!p) return;
+  const rad = toRad(a), dx = Math.sin(rad), dy = -Math.cos(rad);
+  const t = Math.min(p.cx / Math.max(Math.abs(dx), 1e-4), p.cy / Math.max(Math.abs(dy), 1e-4));
+  const x = p.cx + dx * t, y = p.cy + dy * t;
+  const vertical = x < 1 || x > p.W - 1;
+  const bw = vertical ? p.grosor : p.largo, bh = vertical ? p.largo : p.grosor;
+  const bx = Math.max(0, Math.min(p.W - bw, x - bw / 2)), by = Math.max(0, Math.min(p.H - bh, y - bh / 2));
+  $("g1").style.left = x + "px"; $("g1").style.top = y + "px";
+  $("g2").style.left = x - dy * 90 + "px"; $("g2").style.top = y + dx * 90 + "px";
+  poner($("barra"), { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px" });
+}
+function pasoSenal(ahora) {
+  const dt = Math.min(100, ahora - senal.t); senal.t = ahora;
+  const d = (((senal.meta - senal.actual) % 360) + 540) % 360 - 180;
+  if (Math.abs(d) < 0.05 || sinMovimiento()) { senal.actual = senal.meta; senal.activo = false; moverSenal(); return; }
+  senal.actual += d * (1 - Math.exp(-dt / 140));
+  moverSenal(); requestAnimationFrame(pasoSenal);
+}
+function girarSenal(rel) {
+  senal.meta = rel;
+  if (senal.actual === null || sinMovimiento() || typeof requestAnimationFrame !== "function") { senal.actual = rel; moverSenal(); return; }
+  if (!senal.activo) { senal.activo = true; senal.t = performance.now(); requestAnimationFrame(pasoSenal); }
+}
+const sinMovimiento = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+const poner = (el, o) => { for (const k in o) el.style[k] = o[k]; };
+
 function pintarLuz(ev) {
   const W = $("app").clientWidth || 390, H = $("app").clientHeight || 844, cx = W / 2, cy = H / 2;
   const metros = ev.m, impreciso = ev.impreciso, esFlecha = state.modo === "flecha", cl = claro();
-  const c = Math.max(0, Math.min(1, 1 - metros / 220));     // 0 lejos (calma) … 1 cerca (calidez)
-  const c1 = mezcla("#8FA6FF", "#FF8A3D", c), c2 = mezcla("#B79CFF", "#FF5C7A", c);
-  const fuerte = cl ? mezcla("#8FA6FF", "#FF8A3D", c, 0.56) : c1;
-  const rad = toRad(ev.rel), dx = Math.sin(rad), dy = -Math.cos(rad);
-  const t = Math.min(cx / Math.max(Math.abs(dx), 1e-4), cy / Math.max(Math.abs(dy), 1e-4));
-  const x = cx + dx * t, y = cy + dy * t, ancho = impreciso ? 1.45 : 1;
+  const c = Math.max(0, Math.min(1, 1 - metros / 220));     // 0 lejos (azul) … 1 cerca (rojo)
+  const c1 = colorDist(c), c2 = colorDist(c + 0.2);         // la segunda luz va un paso más cálida
+  const fuerte = cl ? colorDist(c, 0.56) : c1;
+  const ancho = impreciso ? 1.45 : 1;
   const s1 = (260 + c * 400) * ancho, s2 = s1 * 0.8, largo = (70 + c * 190) * ancho, grosor = 5;
-  const vertical = Math.abs(x) < 1 || Math.abs(x - W) < 1;
-  const bw = vertical ? grosor : largo, bh = vertical ? largo : grosor;
-  const bx = Math.max(0, Math.min(W - bw, x - bw / 2)), by = Math.max(0, Math.min(H - bh, y - bh / 2));
   const gop = (cl ? 0.95 : 0.85) * (esFlecha ? 0.45 : 1) * (impreciso ? 0.8 : 1);
-  const poner = (el, o) => { for (const k in o) el.style[k] = o[k]; };
-  poner($("g1"), { left: x + "px", top: y + "px", width: s1 + "px", height: s1 + "px", marginLeft: -s1 / 2 + "px", marginTop: -s1 / 2 + "px", opacity: gop });
-  poner($("g1").firstElementChild, { background: `radial-gradient(circle, ${c1} 0%, ${c1} 18%, transparent 68%)`, filter: `blur(${impreciso ? 44 : 28}px)`, animation: "respira 5s ease-in-out infinite" });
-  poner($("g2"), { left: x - dy * 90 + "px", top: y + dx * 90 + "px", width: s2 + "px", height: s2 + "px", marginLeft: -s2 / 2 + "px", marginTop: -s2 / 2 + "px", opacity: gop });
-  poner($("g2").firstElementChild, { background: `radial-gradient(circle, ${c2} 0%, transparent 66%)`, filter: `blur(${impreciso ? 52 : 36}px)`, animation: "respira 7s ease-in-out infinite" });
-  poner($("barra"), { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px", background: fuerte, boxShadow: `0 0 14px ${fuerte}`, opacity: esFlecha ? 0.4 : impreciso ? 0.55 : 1 });
+  poner($("g1"), { width: s1 + "px", height: s1 + "px", marginLeft: -s1 / 2 + "px", marginTop: -s1 / 2 + "px", opacity: gop });
+  poner($("g1").firstElementChild, { background: luzSuave(c1, CURVA_G1), animation: "respira 5s ease-in-out infinite" });
+  poner($("g2"), { width: s2 + "px", height: s2 + "px", marginLeft: -s2 / 2 + "px", marginTop: -s2 / 2 + "px", opacity: gop });
+  poner($("g2").firstElementChild, { background: luzSuave(c2, CURVA_G2), animation: "respira 7s ease-in-out infinite" });
+  poner($("barra"), { background: fuerte, boxShadow: `0 0 14px ${fuerte}`, opacity: esFlecha ? 0.4 : impreciso ? 0.55 : 1 });
+  senal.p = { W, H, cx, cy, largo, grosor };
+  moverSenal();
   $("g1").setAttribute("role", "img");
   $("g1").setAttribute("aria-label", `El borde brilla hacia ${info(state.destId).nombre}, a ${metros} metros`);
   $("flechaPath").setAttribute("fill", fuerte); $("flechaPath").setAttribute("stroke", fuerte);
@@ -990,7 +1033,7 @@ function renderBrujula() {
   $("flecha").hidden = !(flecha && ubic);
   $("giro").hidden = !(detras && !flecha);
   $("impreciso").hidden = !(ev && ev.impreciso && !flecha && !detras);
-  if (ubic) $("flecha").style.transform = `rotate(${ev.rel}deg)`;
+  if (ubic) girarSenal(ev.rel);
   const conLuz = !mapa && ubic;
   $("luz").style.display = conLuz ? "" : "none"; $("velo").hidden = !conLuz;
   if (conLuz) pintarLuz(ev);
