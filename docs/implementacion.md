@@ -56,6 +56,21 @@ Se pueden combinar: `/?debug&tema=claro`.
 - **El color del resplandor va de azul a rojo pasando por morado** (el diseño iba de azul a naranja). Cada luz es un degradado que llega a transparente en el borde de su caja, sin `filter: blur`: el desenfoque dejaba ver la caja cuadrada en algunos móviles. Además las luces se difuminan con una máscara cerca del borde de arriba y de abajo y su centro entra 56 px en la pantalla: en Safari el borde de la página no es el de la pantalla (hay barras del navegador y del sistema) y cortar la luz en seco, justo donde es más fuerte, dibujaba un rectángulo. La barra fina queda fuera de la máscara, en el borde. El resplandor, la barra y la flecha giran con un suavizado por tiempo (`senal` en `index.html`) por el camino más corto, así que 359° → 1° no da una vuelta entera ni se arrastra con cada lectura del GPS.
 - **Calibración del plano**: la app usa 0,4601 m/px y 155,3°; `data/georef.json` da 0,4666 m/px y 154,8°. Las dos coinciden a 1 a 6 m (máximo en los bordes del plano), así que no hay desfase relevante. Si se unifican, hay que cambiar también `tools/generar-grafo.py`.
 
+## Pantallas pequeñas (iPhone SE)
+
+El diseño original es de 390×844. En un iPhone SE, Safari deja 375×548 útiles (320×454 en el de primera generación), y ahí la brújula se amontonaba: el número tapaba la cabecera y el panel de abajo ocupaba dos tercios de la pantalla. La última sección del CSS («Escalado por tamaño de pantalla») lo resuelve:
+
+- **Tamaños que crecen con el alto** (`--vh`, que es `dvh` donde existe): la cifra va de 54 a 88 px, y los espacios, el mensaje de estado y la flecha escalan entre un mínimo y el tamaño de diseño. La señal ya no reserva alto cuando no hay flecha.
+- **Panel de abajo compacto** (alto de 700 px o menos): «Modo voz» y «Ya llegué» comparten fila, el selector y los botones son más bajos, y con 600 px o menos se oculta la etiqueta «Pista para no perderte» (el ícono ya la dice). En modo mapa, de 700 px o menos, la pista se esconde para que el plano ocupe la pantalla.
+- **Alto de 520 px o menos:** se oculta el texto secundario, la cifra baja y la tarjeta del dato curioso se achica para que no tape el mensaje de estado.
+- **Ancho de 345 px o menos:** botones del mapa más chicos y se quita «Vas hacia» de la cabecera.
+- **Modo voz** (`js/voz.js`): el botón «¿Dónde está?» y el texto largo se achican (el texto va truncado en pantalla, pero es `aria-hidden` y la voz lo dice completo).
+- **Llegada, confirmación, búsqueda y bienvenida** también se compactan en alturas bajas.
+
+En pantallas de 700 px de alto o más no cambia nada: todos los tamaños tienen su tope en el diseño original (se comprobó en 390×844 y 430×932).
+
+**Cómo se revisó:** con capturas de la app a 320×454, 375×548, 390×664 y 430×760 en nueve pantallas (bienvenida, búsqueda, brújula, la peor combinación de textos, flecha, mapa, dato curioso, confirmación y llegada), más el modo voz. Falta verlo en un iPhone SE real, con la barra de Safari y el teclado.
+
 ## Entradas de los edificios
 
 La señal apunta a la **puerta** del edificio (no a su borde) y la ruta termina ahí.

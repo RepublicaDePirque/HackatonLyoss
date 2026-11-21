@@ -278,6 +278,90 @@
     #vPermiso { gap:12px; }
     #vPermiso .tel { display:none; }
   }
+  /* ---------- Escalado por tamaño de pantalla ----------
+     Los tamaños de la brújula crecen con el alto de la pantalla (--vh) entre un mínimo y el tamaño de diseño (390×844), y en
+     alturas bajas el panel de abajo se compacta. Así el iPhone SE (375×548 útiles en Safari; 320×454 el de primera generación)
+     no se amontona ni se pisa. Se revisó con capturas a 320×454, 375×548, 390×664 y 430×760. Va al final para ganar a las reglas de arriba. */
+  :root { --vh: 1vh; }
+  @supports (height: 1dvh) { :root { --vh: 1dvh; } }
+  .capa { padding-top:calc(env(safe-area-inset-top) + clamp(10px, calc(var(--vh) * 2.4), 20px)); padding-bottom:calc(env(safe-area-inset-bottom) + clamp(10px, calc(var(--vh) * 2.4), 20px)); gap:clamp(6px, calc(var(--vh) * 1.4), 12px); }
+  .senal { height:auto; min-height:0; }                       /* sin flecha ni giro no reserva alto */
+  #flecha { width:clamp(72px, calc(var(--vh) * 12.5), 104px); height:clamp(72px, calc(var(--vh) * 12.5), 104px); }
+  #flecha svg { width:88%; height:88%; }
+  #cifra { font-size:clamp(54px, calc(var(--vh) * 13), 88px); }
+  #cifra small { font-size:clamp(18px, calc(var(--vh) * 3.2), 26px); }
+  #titulo { margin-top:clamp(4px, calc(var(--vh) * 1.5), 14px); font-size:clamp(17px, calc(var(--vh) * 2.5), 19px); }
+  #bajada { margin-top:clamp(2px, calc(var(--vh) * .7), 6px); font-size:clamp(14px, calc(var(--vh) * 2), 15px); }
+  #alerta { margin-top:clamp(4px, calc(var(--vh) * 1.1), 10px); font-size:clamp(13px, calc(var(--vh) * 1.9), 15px); }
+
+  @media (max-height: 700px) {
+    /* panel de abajo compacto: «Modo voz» y «Ya llegué» comparten fila */
+    .base { display:grid; grid-template-columns:1fr auto; gap:6px; }
+    .base > .pista, .base > .selector, .base > #vozDicho, .base > #vozDonde { grid-column:1 / -1; }
+    .base > .voz-fila { grid-column:1; }
+    .base > #btnYaLlegue { grid-column:2; min-width:104px; padding:0 14px; }
+    .modo-voz .base > .voz-fila, .modo-voz .base > #btnYaLlegue { grid-column:1 / -1; }
+    .pista { padding:10px 12px; gap:10px; }
+    .pista svg { width:18px; height:18px; }
+    .pista .t { gap:1px; }
+    .pista .t span { font-size:14px; line-height:1.35; }
+    .selector { padding:3px; border-radius:22px; }
+    .selector button { height:36px; font-size:14px; }
+    .base .voz-fila button, .base #btnYaLlegue { min-height:40px; height:40px; font-size:14px; }
+    .cab .icono-btn { width:40px; height:40px; }
+    .pill { height:40px; }
+    .pill .a { font-size:16px; }
+    .modo-mapa .pista { display:none; }                       /* en el mapa manda el plano; la pastilla ya dice el destino */
+    #mapaCtl button { width:40px; height:40px; }
+    /* otras pantallas */
+    #vBuscar { gap:12px; }
+    #vBuscar h1 { font-size:30px; }
+    .campo { height:50px; }
+    #vLlegada { gap:12px; }
+    #vLlegada .visto { width:40px; height:40px; }
+    #vLlegada h1 { font-size:clamp(26px, calc(var(--vh) * 4.6), 34px); }
+    #vLlegada p { font-size:15px; }
+    #vLlegada figure img { max-height:clamp(110px, calc(var(--vh) * 21), 210px); }
+    #vLlegada .sinfoto { min-height:100px; padding:14px; }
+    #vLlegada .sabias { padding:10px 14px; }
+    #vLlegada .btn-os { height:50px; font-size:17px; }
+    #confirma { gap:8px; }
+    #confirma h2 { font-size:24px; }
+    #confImg { height:clamp(110px, calc(var(--vh) * 22), 230px); }
+    #confirma .btn-principal { height:50px; font-size:17px; }
+    /* modo voz (js/voz.js): su texto y su botón grande no deben comerse la pantalla */
+    .modo-voz .base #vozDonde { min-height:64px; font-size:22px; }
+    .modo-voz .base #vozDicho { font-size:15px; line-height:1.35; min-height:0; }
+  }
+  @media (max-height: 600px) {
+    .pista .t small { display:none; }                         /* el ícono ya dice «pista» */
+    .pad { padding-top:calc(env(safe-area-inset-top) + 14px); padding-bottom:calc(env(safe-area-inset-bottom) + 14px); }
+    #vPermiso { gap:12px; }
+    #vPermiso .tel { transform:scale(.46); margin:-67px 0; }   /* 250 → 115 px de alto */
+    #vPermiso h1 { font-size:25px; }
+    #vPermiso p { margin-top:6px; font-size:15px; line-height:1.4; }
+    #vPermiso .nota { padding:8px 12px; font-size:14px; }
+    #vPermiso .btn-principal { height:50px; font-size:17px; }
+    #btnPortada .nombre { font-size:26px; }
+  }
+  @media (max-height: 520px) {
+    #bajada { display:none; }
+    #cifra { font-size:clamp(44px, calc(var(--vh) * 10.5), 88px); }
+    #titulo { margin-top:2px; font-size:16px; }
+    #dato { padding:8px 12px; }                               /* con el dato curioso encima, que el mensaje siga a la vista */
+    #dato .gancho { font-size:16px; line-height:1.15; }
+    .modo-voz .base #vozDonde { min-height:52px; font-size:20px; }
+    .modo-voz .base #vozDicho { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; font-size:14px; }   /* es aria-hidden: la voz lo dice completo */
+    .pista .t span { font-size:13.5px; }
+    #vLlegada figcaption { display:none; }
+  }
+  @media (max-width: 345px) {
+    .selector button { font-size:13px; padding:0; }
+    .campo input { font-size:14px; }                          /* que el texto de ejemplo no se corte */
+    .pill .de { display:none; }
+    #mapaCtl { right:8px; gap:4px; }
+    #mapaCtl button { width:38px; height:38px; }
+  }
 </style>
 </head>
 <body>
