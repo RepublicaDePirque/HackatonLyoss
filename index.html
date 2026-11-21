@@ -35,24 +35,56 @@
   #hint { text-align:center; margin-top:auto; }
   #simBox, #hint.dbg { display:none; }
   .debug #simBox { display:block; }
+
+  /* pestañas Brújula / Mapa */
+  #tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  #tabs button { min-height:46px; padding:10px; font-size:16px; font-weight:600; }
+  section { display:flex; flex-direction:column; gap:10px; flex:1; min-height:0; }
+  #vMapa { display:none; }
+  .tabMapa #vMapa { display:flex; }
+  .tabMapa #vBrujula { display:none; }
+  #map { flex:1 1 0; min-height:300px; aspect-ratio:auto; touch-action:none; cursor:grab; background:#0b0e13; }
+  #mapCtl { display:grid; grid-template-columns:1fr 1fr 2fr 2fr; gap:8px; }
+  #mapCtl button { min-height:44px; padding:8px; font-size:16px; }
+  #mapInfo { text-align:center; }
+  #mapInfo b { color:var(--acc); }
 </style>
 </head>
 <body>
 <main>
 <select id="dest" aria-label="Destino"></select>
-
-<canvas id="dial"></canvas>
-<div id="info">
-  <div id="dir">—</div>
-  <div id="dist">—</div>
-  <div class="mut" id="sub"></div>
+<button id="accBtn" aria-pressed="false" style="min-height:44px;padding:8px;font-size:16px">♿ Ruta sin escaleras: NO</button>
+<div id="tabs" role="tablist">
+  <button id="tabBrujula" class="on" role="tab" aria-selected="true">🧭 Brújula</button>
+  <button id="tabMapa" role="tab" aria-selected="false">🗺️ Mapa</button>
 </div>
+
+<section id="vBrujula" aria-label="Brújula">
+  <canvas id="dial"></canvas>
+  <div id="info">
+    <div id="dir">—</div>
+    <div id="dist">—</div>
+    <div class="mut" id="sub"></div>
+  </div>
+</section>
+
+<section id="vMapa" aria-label="Mapa del campus">
+  <canvas id="map" aria-label="Plano del campus con tu ruta"></canvas>
+  <div id="mapCtl">
+    <button id="zOut" aria-label="Alejar">−</button>
+    <button id="zIn" aria-label="Acercar">+</button>
+    <button id="mYo">📍 Yo</button>
+    <button id="mRuta">🧭 Ruta</button>
+  </div>
+  <div id="mapInfo" class="mut">—</div>
+  <div class="mut" style="text-align:center;font-size:12px">Plano del campus · caminos © OpenStreetMap · posición aproximada (±10 m)</div>
+</section>
+
 <div id="warn"></div>
 <button id="modeBtn" class="big">Activar ubicación y brújula</button>
 
 <div id="simBox">
-  <div class="mut">Debug (sin GPS): toca el mapa para mover tu posición (azul = GPS crudo, verde = ajustada al camino, aro amarillo = siguiente nodo) y gira el celular con el deslizador.</div>
-  <canvas id="map" style="aspect-ratio:7/4;margin-top:8px;cursor:crosshair"></canvas>
+  <div class="mut">Debug (sin GPS): en la pestaña Mapa, toca el plano para mover tu posición (azul = GPS crudo, verde = ajustada al camino, aro amarillo = siguiente nodo) y gira el celular con el deslizador.</div>
   <label>Posición simulada</label>
   <select id="from" style="width:100%"></select>
   <label>Rumbo del celular: <b id="hv">0</b>°</label>
@@ -61,6 +93,8 @@
 <div id="hint" class="mut">Mantén la pantalla encendida. Si la flecha se ve rara, mueve el teléfono en forma de 8 para calibrar la brújula.</div>
 </main>
 
+<script src="grafo.js"></script>
+<script src="contornos.js"></script>
 <script>
 // ---------- Geometría ----------
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
@@ -82,160 +116,103 @@ function distance(a, b) {
 const DIRS = ["Norte","Noreste","Este","Sureste","Sur","Suroeste","Oeste","Noroeste"];
 const cardinal = deg => DIRS[Math.round(deg / 45) % 8];
 
-// ---------- Grafo del campus (USM Casa Central) ----------
-// Origen = Entrada Av. España. x = este (m), y = norte (m). Georreferenciado con 3 puntos
-// (Placeres, Av. España, portería M) sobre plano.jpeg; el resto de los nodos está trazado a ojo
-// y hay que validarlo en terreno. Aristas con tercer valor 1 = tramo con escaleras.
-const ORIGIN = { lat: -33.034172, lng: -71.595702 };
+// ---------- Plano y grafo ----------
+// CALIBRACIÓN: ajuste por mínimos cuadrados (semejanza) entre el centro de 12 edificios del plano
+// (A, C, D, E, F, K, L, M, M2, R, T, U; letra -> píxel) y el centro de su contorno en OpenStreetMap.
+// Error medio ~4 m, máximo ~11 m. Verificado superponiendo los contornos de OSM sobre plano.jpeg.
+// Si cambia, actualizar también las constantes de tools/generar-grafo.py.
+const ORIGIN = { lat: -33.034358, lng: -71.595779 };      // = píxel (ax,ay), acceso Av. España
 const fromXY = (x, y) => ({
   lat: ORIGIN.lat + y / 111320,
   lng: ORIGIN.lng + x / (111320 * Math.cos(toRad(ORIGIN.lat)))
 });
-const N = (id, name, x, y) => ({ id, name, x, y, ...fromXY(x, y), edges: [] });
-// Los destinos con nombre están en la puerta, sobre el límite del edificio.
-const nodesList = [
-  N("ent_pl","Entrada Placeres",    52.1,  -277.5),
-  N("ent_esp","Entrada Av. España",     0.0,     0.0),
-  N("m_port","Portería M",   264.8,   -77.4),
-  N("calle_sur","",    -2.4,   -54.5),
-  N("camino_der","",   -47.9,   -51.8),
-  N("calle_este","",   -44.5,   -85.6),
-  N("patio_sur","",   -32.3,   -99.7),
-  N("patio","Patio central",    -1.8,  -113.0),
-  N("admision","Admisión (patio central)",    -7.3,  -105.0),
-  N("casino","Casino (D, piso 1)",   -14.9,  -127.4),
-  N("arqui","Arquitectura (D, pisos 2 y 3)",   -19.0,  -118.8),
-  N("f2","",   -54.0,   -85.4),
-  N("fisica","Física (E)",   -64.1,  -111.6),
-  N("inform","Informática, Matemática, Industrias y Comercial (F)",  -105.7,   -88.4),
-  N("biblio","Biblioteca (U)",    51.6,   -88.8),
-  N("u_norte","",   100.3,  -102.9),
-  N("cancha","Cancha 11x11 (8007)",   133.9,   -84.2),
-  N("ro_b","",   127.1,  -129.3),
-  N("c_oeste","",   151.4,  -143.2),
-  N("c_puerta","Clases (C)",    98.5,  -176.7),
-  N("c_este","",    21.1,  -217.3),
-  N("j1","",    26.5,  -242.9),
-  N("j2","",     0.8,  -210.5),
-  N("j3","",    -6.1,  -181.3),
-  N("j4","",    -2.9,  -160.3),
-  N("m_ruta","",   215.0,  -109.5),
-  N("m_clases","Clases (M)",   253.6,   -81.8),
-  N("r_in","",   245.6,  -134.8),
-  N("r_port","Portería Diego Portales (R)",   265.4,  -160.6),
-  N("p_clases","Clases (P)",   128.0,  -259.6),
-  N("g1","Gimnasio 1 (A)",    25.4,  -129.7),
-  N("b_puerta","Edificio B (oficinas y salas de clases)",     9.2,  -205.8),
-  N("fed","Federación",   151.5,  -247.3),
-  N("a_puerta","Edificio A",     1.8,   -56.0),
-  N("f_este","",  -155.0,  -106.4),
-  N("t_ruta","",  -169.0,  -101.0),
-  N("t_puerta","Humanísticos (T)",  -175.5,  -110.4),
-  N("tenis","Cancha de tenis",   -82.6,  -147.5),
-  N("patio_bib","Patio de la biblioteca",    48.6,   -98.7),
-  N("g1_oeste","",    47.0,  -117.7),
-];
-const edgePairs = [
-  ["ent_esp","calle_sur",1],
-  ["ent_esp","camino_der"],
-  ["camino_der","calle_este"],
-  ["calle_sur","calle_este"],
-  ["calle_este","patio_sur"],
-  ["patio_sur","patio"],
-  ["patio","admision"],
-  ["patio","casino"],
-  ["casino","arqui"],
-  ["calle_este","f2"],
-  ["calle_este","fisica"],
-  ["f2","inform"],
-  ["u_norte","cancha"],
-  ["u_norte","ro_b"],
-  ["ro_b","c_oeste"],
-  ["c_oeste","c_puerta"],
-  ["c_puerta","c_este"],
-  ["c_este","j1"],
-  ["c_este","j2"],
-  ["ent_pl","j1"],
-  ["j1","j2"],
-  ["j2","j3"],
-  ["j3","j4"],
-  ["j4","patio"],
-  ["c_oeste","m_ruta"],
-  ["m_ruta","m_port"],
-  ["m_port","m_clases"],
-  ["m_ruta","r_in"],
-  ["r_in","r_port"],
-  ["ent_pl","p_clases"],
-  ["g1","patio"],
-  ["b_puerta","j2"],
-  ["fed","p_clases"],
-  ["a_puerta","calle_sur"],
-  ["inform","f_este"],
-  ["f_este","t_ruta"],
-  ["t_ruta","t_puerta"],
-  ["fisica","tenis"],
-  ["biblio","patio_bib",1],
-  ["patio_bib","g1_oeste"],
-  ["g1_oeste","g1"],
-];
-// Huellas de los edificios (polígonos x,y en metros). Llegar = estar a menos de ARRIVE_BLD m del borde.
-const BUILDINGS = {
-  A: [[51.7,-128.0],[31.9,-139.0],[30.3,-138.6],[28.7,-136.7],[28.9,-136.0],[21.0,-121.8],[21.3,-120.5],[19.8,-119.7],[18.6,-117.6],[18.8,-116.9],[17.9,-116.3],[18.1,-115.6],[9.0,-99.3],[9.2,-98.6],[-2.5,-76.6],[-20.3,-85.6],[-14.5,-97.5],[-15.0,-99.1],[-19.4,-101.1],[-21.0,-100.6],[-32.1,-79.8],[-31.9,-79.1],[-32.8,-78.5],[-33.5,-76.2],[-33.0,-74.6],[-32.4,-74.8],[-31.8,-73.9],[-31.1,-74.1],[-28.2,-72.4],[-26.5,-72.9],[-26.7,-74.6],[-25.1,-75.1],[-11.2,-67.4],[-11.6,-65.1],[-12.3,-64.9],[-11.6,-62.7],[-11.0,-62.8],[14.5,-49.3],[16.1,-49.7],[18.0,-52.8],[32.6,-45.2],[32.8,-44.3],[31.9,-42.6],[32.4,-40.9],[37.0,-38.4],[38.6,-38.8],[38.7,-39.9],[39.6,-40.5],[39.4,-41.2],[45.7,-52.5],[45.2,-54.1],[40.6,-56.7],[39.0,-56.2],[37.9,-54.9],[27.8,-60.5],[27.2,-60.3],[22.6,-62.9],[21.9,-62.7],[20.6,-64.8],[28.6,-80.1],[30.2,-79.5],[31.8,-80.0],[32.3,-81.9],[33.0,-82.1],[34.2,-84.2],[34.0,-84.8],[34.9,-85.5],[35.8,-88.2],[36.5,-88.4],[36.3,-89.0],[38.9,-93.7],[38.7,-94.3],[39.3,-94.5],[40.5,-96.6],[40.3,-97.3],[41.0,-97.4],[42.1,-99.5],[41.7,-101.2],[39.9,-102.4],[42.2,-106.6],[41.9,-109.0],[43.5,-109.8],[47.7,-117.4],[47.5,-118.0],[52.1,-126.4]],
-  B: [[108.0,-162.1],[106.1,-162.6],[94.8,-168.9],[94.1,-168.8],[93.9,-169.4],[93.3,-169.2],[70.8,-181.2],[70.1,-181.0],[59.2,-187.1],[58.6,-186.9],[49.7,-191.8],[49.1,-191.6],[12.9,-210.6],[11.3,-210.1],[6.6,-200.7],[7.1,-199.0],[18.7,-192.8],[3.7,-164.9],[4.2,-163.2],[16.2,-157.1],[12.1,-149.2],[12.5,-147.6],[22.6,-142.0],[23.3,-142.2],[50.7,-126.4],[52.7,-126.9],[63.2,-121.1],[63.8,-121.3],[76.3,-114.9],[77.9,-115.4],[81.7,-123.2],[82.7,-123.5],[86.8,-121.1],[89.1,-121.8],[88.9,-122.4],[93.6,-130.8],[93.4,-131.5],[108.5,-160.5]],
-  C: [[191.8,-190.3],[154.8,-209.7],[154.2,-209.6],[139.5,-217.7],[138.8,-217.5],[125.0,-225.3],[124.3,-225.1],[110.9,-232.5],[110.2,-232.3],[56.0,-260.3],[54.3,-259.9],[52.7,-256.9],[52.9,-256.3],[30.3,-212.7],[30.8,-211.1],[35.4,-208.5],[36.1,-208.7],[90.7,-180.5],[91.4,-180.7],[101.5,-175.1],[102.1,-175.3],[112.2,-169.7],[112.9,-169.9],[146.3,-151.8],[146.9,-152.0],[171.7,-139.3],[173.4,-139.8],[173.2,-140.5],[177.6,-148.4],[177.4,-149.1],[184.0,-160.8],[183.5,-162.5],[180.0,-164.7],[192.0,-187.2]],
-  D: [[-15.1,-150.3],[-47.9,-167.5],[-49.5,-167.0],[-53.5,-159.9],[-52.8,-157.6],[-52.2,-157.8],[-51.2,-157.0],[-65.3,-129.6],[-64.9,-128.0],[-64.2,-128.2],[-50.8,-120.7],[-50.1,-120.9],[-51.4,-118.1],[-51.0,-116.4],[-28.3,-103.8],[-26.7,-104.3],[-15.2,-125.9],[-15.4,-126.6],[-10.0,-136.2],[-9.5,-138.2],[-10.0,-139.8],[-11.7,-141.0],[-9.4,-145.2],[-9.9,-146.9],[-14.1,-149.2],[-14.7,-149.0]],
-  E: [[-33.3,-108.8],[-35.0,-108.6],[-35.4,-109.9],[-38.7,-111.8],[-39.4,-111.6],[-39.6,-112.3],[-49.6,-117.9],[-50.9,-117.5],[-70.9,-128.1],[-71.6,-127.9],[-82.0,-133.7],[-82.4,-136.1],[-86.6,-138.4],[-88.2,-138.0],[-89.6,-135.4],[-89.2,-134.1],[-90.5,-133.8],[-90.4,-133.1],[-93.9,-126.8],[-93.4,-125.2],[-89.6,-123.1],[-87.7,-123.6],[-67.3,-112.8],[-66.6,-113.0],[-56.5,-107.4],[-56.2,-106.1],[-49.9,-102.6],[-49.2,-102.8],[-48.2,-101.7],[-46.9,-102.1],[-46.5,-100.7],[-44.2,-101.4],[-42.8,-103.9],[-43.0,-104.6],[-41.0,-105.1],[-40.3,-106.4],[-40.9,-108.3],[-40.2,-109.6],[-36.5,-107.8],[-35.2,-108.2],[-34.4,-106.7],[-32.8,-107.1]],
-  F: [[-48.6,-101.9],[-50.3,-102.8],[-51.9,-102.4],[-59.7,-87.5],[-59.5,-86.8],[-60.8,-86.4],[-62.0,-84.3],[-61.6,-83.0],[-69.2,-68.8],[-87.1,-78.2],[-87.7,-78.0],[-99.5,-84.6],[-99.8,-85.9],[-104.9,-88.7],[-106.8,-88.1],[-108.9,-89.3],[-109.3,-91.7],[-110.5,-92.4],[-112.2,-91.9],[-113.0,-91.0],[-117.2,-93.3],[-117.8,-93.1],[-137.1,-103.9],[-136.7,-105.0],[-137.2,-106.7],[-140.6,-108.5],[-142.2,-108.1],[-143.0,-107.1],[-144.4,-108.5],[-147.6,-108.3],[-148.5,-107.7],[-148.5,-105.5],[-151.4,-103.3],[-150.8,-101.0],[-146.6,-98.7],[-145.9,-98.9],[-145.8,-98.2],[-144.7,-98.2],[-145.8,-95.7],[-145.3,-94.1],[-144.0,-93.4],[-142.7,-93.8],[-118.1,-80.7],[-120.8,-75.3],[-120.5,-74.0],[-121.8,-73.6],[-122.9,-71.5],[-122.2,-67.5],[-119.6,-66.1],[-116.7,-66.9],[-111.4,-76.9],[-108.7,-76.0],[-108.1,-74.0],[-107.3,-73.5],[-105.3,-74.1],[-82.4,-61.9],[-81.8,-62.1],[-75.0,-58.3],[-74.4,-58.5],[-73.8,-56.6],[-73.0,-56.1],[-71.0,-56.7],[-68.9,-55.5],[-67.3,-56.0],[-66.5,-56.9],[-62.3,-54.6],[-58.7,-55.6],[-58.0,-56.8],[-59.0,-60.4],[-63.3,-63.1],[-60.5,-68.1],[-60.7,-68.8],[-57.9,-73.8],[-58.1,-74.5],[-52.9,-76.0],[-52.3,-77.9],[-51.0,-78.3],[-49.6,-80.8],[-50.1,-82.4],[-51.5,-83.4],[-47.9,-90.8],[-48.4,-92.4],[-51.4,-94.4],[-48.1,-100.3]],
-  M: [[269.9,-92.4],[260.7,-94.8],[259.1,-95.7],[257.2,-94.8],[256.9,-92.3],[254.4,-85.9],[254.1,-83.4],[245.9,-57.7],[245.1,-56.8],[243.8,-57.5],[242.2,-57.0],[240.3,-52.6],[240.7,-49.9],[243.3,-49.5],[243.5,-48.6],[242.2,-47.1],[241.4,-43.7],[241.9,-42.1],[243.1,-41.4],[252.5,-38.4],[254.1,-38.8],[254.6,-39.7],[262.0,-63.0],[262.4,-65.6],[270.0,-88.2],[270.5,-90.2]],
-  M2: [[239.4,-69.3],[236.9,-70.7],[235.6,-70.3],[232.6,-71.9],[232.4,-72.6],[231.0,-72.9],[230.6,-74.2],[229.9,-74.0],[223.2,-77.7],[221.6,-77.3],[212.7,-61.3],[213.2,-59.7],[229.1,-50.8],[230.8,-51.3],[239.9,-67.6]],
-  R: [[280.2,-156.5],[269.9,-161.7],[268.3,-161.2],[267.0,-159.5],[256.9,-165.1],[255.3,-164.6],[248.3,-152.0],[248.3,-150.9],[247.1,-151.3],[245.5,-150.8],[242.8,-145.1],[243.3,-143.5],[251.5,-139.5],[253.1,-140.0],[259.6,-152.0],[271.2,-146.2],[272.8,-146.6],[275.4,-152.3],[277.4,-151.5],[279.0,-151.9],[280.7,-154.9]],
-  R2: [[241.2,-149.6],[231.3,-154.6],[229.7,-154.1],[226.2,-147.8],[226.1,-146.7],[226.6,-145.1],[227.4,-144.6],[229.1,-145.1],[229.9,-146.0],[234.5,-143.5],[235.6,-143.4],[235.9,-142.1],[237.2,-141.4],[239.1,-142.3],[238.9,-142.9],[241.7,-148.0]],
-  U: [[76.3,-114.9],[68.5,-118.7],[66.8,-118.2],[59.4,-104.8],[59.5,-104.2],[45.0,-76.0],[45.4,-74.3],[46.1,-74.5],[47.5,-73.5],[39.7,-58.6],[40.2,-56.9],[45.6,-53.9],[46.9,-54.3],[47.3,-53.0],[52.3,-50.2],[54.0,-50.6],[55.8,-54.0],[55.7,-54.7],[56.3,-54.8],[56.1,-55.5],[64.3,-70.2],[64.1,-70.8],[69.5,-80.5],[69.3,-81.1],[76.5,-94.2],[76.3,-94.8],[77.2,-95.4],[77.0,-98.5],[71.5,-101.9],[76.7,-113.3]],
-  P: [[155.1,-279.4],[147.3,-283.2],[146.6,-283.0],[141.2,-286.0],[138.9,-285.4],[137.6,-283.6],[132.2,-286.6],[130.5,-286.2],[128.2,-282.0],[127.2,-281.7],[126.2,-282.8],[124.6,-282.4],[122.9,-279.4],[122.6,-276.9],[122.0,-276.7],[120.3,-273.7],[116.2,-275.7],[114.6,-275.3],[112.7,-271.9],[112.9,-271.3],[111.8,-270.2],[112.4,-267.9],[143.3,-251.3],[147.8,-253.0],[147.4,-254.3],[149.1,-257.2],[148.9,-257.9],[153.8,-266.7],[153.3,-268.3],[148.6,-271.2],[150.7,-276.1],[153.0,-275.6],[154.6,-276.1],[155.5,-277.8]],
-  federacion: [[160.2,-268.9],[157.3,-270.5],[155.6,-270.0],[147.9,-255.1],[146.3,-254.3],[146.7,-253.0],[146.0,-251.7],[146.5,-250.1],[156.1,-244.7],[157.8,-245.2],[164.6,-258.5],[164.1,-260.1],[158.7,-263.1],[160.7,-267.2]],
-  P2: [[178.3,-319.2],[177.3,-319.3],[165.3,-325.4],[162.1,-324.2],[162.3,-323.5],[154.8,-309.0],[142.0,-314.2],[140.4,-313.7],[136.1,-305.1],[137.2,-302.6],[143.7,-297.0],[139.9,-288.1],[140.3,-286.5],[154.7,-279.6],[156.3,-280.1],[164.9,-300.6],[168.6,-298.8],[170.3,-299.3],[175.3,-310.2],[175.1,-310.9],[178.8,-317.6]],
-  H: [[91.2,-24.2],[90.5,-24.0],[89.5,-25.1],[87.2,-24.5],[87.2,-23.4],[86.0,-23.8],[84.4,-23.3],[83.0,-20.8],[83.4,-19.1],[84.6,-18.8],[83.4,-16.7],[84.1,-9.4],[89.1,-6.6],[89.9,-4.0],[91.6,-3.1],[94.5,-3.9],[96.7,-7.4],[102.6,-4.1],[104.9,-4.8],[108.4,-7.2],[108.9,-8.0],[108.4,-9.7],[104.8,-11.1],[104.4,-12.4],[102.8,-13.3],[101.0,-13.2],[101.4,-14.4],[100.9,-16.0],[100.1,-16.5],[98.5,-16.0],[98.3,-15.3],[96.7,-16.2],[96.3,-18.6],[91.1,-21.0],[91.7,-22.5]],
-  I: [[4.0,-11.7],[-1.6,-12.5],[-3.2,-12.1],[-3.3,-9.9],[-4.3,-9.7],[-4.9,-10.5],[-6.5,-10.1],[-7.8,-5.8],[-7.3,-4.2],[4.0,-1.8],[6.7,-2.2],[7.0,-3.7],[6.3,-6.0],[4.2,-7.1]],
-  J: [[50.8,-274.7],[47.9,-276.4],[46.2,-275.9],[40.4,-265.4],[40.9,-263.8],[44.2,-261.9],[45.8,-262.4],[50.8,-271.2],[50.6,-271.8],[51.2,-272.0]],
-  K: [[21.1,-240.1],[19.8,-239.8],[19.0,-241.3],[16.7,-240.6],[6.6,-234.2],[5.9,-233.0],[4.3,-232.2],[3.8,-231.3],[4.3,-229.7],[6.8,-225.8],[3.5,-225.2],[0.9,-229.4],[-1.4,-228.8],[-5.0,-226.3],[-4.1,-223.4],[-1.7,-219.8],[0.6,-220.5],[2.0,-221.6],[4.0,-218.3],[6.1,-218.5],[12.5,-223.2],[13.8,-223.6],[14.3,-224.4],[25.1,-231.0],[24.7,-232.7],[23.0,-234.7],[22.5,-237.7]],
-  O: [[-18.8,-194.1],[-21.7,-195.8],[-24.8,-195.6],[-31.4,-183.8],[-30.9,-182.2],[-29.2,-182.3],[-28.8,-181.0],[-25.9,-179.4],[-24.2,-179.9],[-20.7,-187.2],[-21.2,-189.2],[-19.7,-190.0],[-18.3,-192.5]],
-  T: [[-185.5,-143.4],[-188.8,-142.8],[-192.5,-140.7],[-193.3,-142.2],[-195.6,-141.6],[-195.9,-139.0],[-198.3,-137.6],[-196.7,-133.1],[-195.4,-133.5],[-186.1,-115.7],[-186.4,-114.5],[-185.2,-111.3],[-182.5,-111.8],[-179.7,-113.3],[-178.4,-109.8],[-177.3,-109.7],[-174.1,-111.0],[-174.6,-114.0],[-173.3,-114.4],[-173.5,-116.1],[-172.3,-117.1],[-173.0,-119.4],[-174.0,-120.5]],
-  gimnasio1: [[51.7,-128.0],[31.9,-139.0],[30.3,-138.6],[28.7,-136.7],[28.9,-136.0],[21.0,-121.8],[21.4,-120.1],[23.5,-119.0],[24.2,-119.1],[40.1,-110.3],[40.8,-110.5],[41.8,-109.3],[43.5,-109.8],[47.7,-117.4],[47.5,-118.0],[52.1,-126.4]],
-  cancha: [[222.3,-92.8],[158.4,-128.3],[105.9,-33.8],[169.7,1.6]],
+const PLANO = {
+  src: "plano.jpeg", w: 1311, h: 1006,
+  mpp: 0.4601,       // metros por píxel (calibrado)
+  rot: 155.3,        // azimut del "arriba" del plano respecto al norte, horario (el plano está casi invertido)
+  ax: 810, ay: 850,  // píxel del plano que corresponde a ORIGIN
 };
-const SPACES = {
-  patio_central: [[11.4,-150.5],[2.1,-155.6],[0.5,-155.1],[-1.1,-152.2],[-0.8,-150.9],[-2.1,-150.5],[-15.6,-126.2],[-15.4,-125.5],[-21.5,-114.6],[-21.3,-113.9],[-26.9,-103.9],[-26.7,-103.2],[-28.7,-102.7],[-29.9,-100.6],[-29.5,-99.2],[-31.3,-95.9],[-34.1,-93.0],[-33.6,-91.4],[-28.5,-88.6],[-26.9,-89.0],[-26.9,-90.1],[-26.0,-90.7],[-26.2,-91.4],[-23.6,-96.0],[-24.0,-97.3],[-22.7,-97.7],[-21.5,-99.8],[-21.7,-100.4],[-20.2,-101.5],[-16.5,-99.4],[-15.8,-99.6],[-14.1,-98.7],[-14.3,-96.9],[-16.9,-92.2],[-16.5,-90.9],[-17.8,-90.6],[-19.9,-86.8],[-19.5,-85.2],[-14.8,-82.6],[-14.2,-82.8],[-13.2,-81.6],[-8.5,-80.2],[-7.9,-79.3],[-3.7,-76.9],[-2.1,-77.4],[0.5,-82.0],[0.3,-82.7],[23.1,-125.5],[22.7,-126.8],[23.4,-127.0],[23.2,-127.7],[23.8,-127.9],[27.1,-133.7],[27.7,-133.9],[29.2,-137.5],[28.7,-139.2],[11.7,-148.1]],
-  patio_biblioteca: [[62.8,-121.3],[56.1,-125.1],[55.4,-124.9],[53.5,-126.5],[51.9,-126.0],[40.4,-103.3],[40.8,-101.6],[42.7,-101.1],[43.0,-100.1],[41.4,-98.3],[41.8,-97.0],[40.5,-96.6],[39.8,-95.3],[40.2,-94.0],[38.9,-93.7],[38.4,-92.8],[38.8,-91.5],[38.3,-90.7],[37.0,-90.3],[36.7,-87.7],[36.0,-87.6],[35.3,-85.2],[33.5,-82.9],[34.1,-80.6],[40.5,-76.8],[39.7,-75.9],[34.7,-78.7],[31.9,-78.6],[29.8,-79.8],[28.1,-79.3],[21.1,-65.6],[21.6,-64.0],[23.5,-63.5],[23.8,-62.2],[26.6,-61.2],[28.2,-61.7],[28.1,-64.5],[30.5,-69.7],[31.3,-69.6],[31.5,-66.1],[33.2,-65.2],[35.9,-65.6],[37.6,-67.2],[36.8,-65.2],[37.1,-63.9],[35.8,-63.5],[35.3,-61.6],[34.2,-60.5],[34.4,-59.9],[32.4,-59.3],[32.9,-57.7],[35.2,-56.9],[36.7,-55.6],[38.3,-56.1],[46.7,-72.2],[46.3,-73.9],[44.5,-75.1],[46.1,-78.1],[46.0,-78.7],[64.7,-114.5],[64.1,-116.8],[62.4,-117.7],[63.2,-119.7]],
-  ceibos: [[-53.1,-102.8],[-92.1,-124.5],[-93.8,-124.0],[-94.5,-121.7],[-95.2,-121.5],[-110.6,-93.8],[-110.1,-92.1],[-108.6,-91.9],[-108.2,-90.6],[-99.0,-85.4],[-98.4,-85.6],[-98.2,-85.0],[-70.9,-69.8],[-69.2,-70.2],[-62.9,-81.6],[-63.3,-82.9],[-62.7,-83.1],[-61.5,-85.2],[-61.7,-85.8],[-60.3,-87.3],[-60.3,-88.3],[-59.0,-88.7],[-55.5,-95.0],[-55.7,-95.7],[-52.6,-101.1]],
-  magnolios: [[137.9,-143.8],[126.2,-150.4],[124.9,-150.0],[123.3,-152.0],[117.8,-155.0],[115.7,-155.1],[114.8,-155.6],[114.4,-156.9],[110.2,-159.2],[108.6,-158.8],[108.1,-157.9],[108.5,-156.6],[107.2,-156.3],[90.1,-124.5],[90.2,-121.7],[86.9,-119.7],[85.0,-116.4],[85.5,-114.7],[106.5,-103.1],[107.8,-103.4],[108.2,-102.1],[113.2,-99.3],[114.8,-99.8],[123.2,-114.9],[122.9,-116.2],[124.2,-116.6],[129.3,-125.8],[128.9,-127.1],[130.2,-127.5],[135.6,-137.2],[135.2,-138.5],[136.5,-138.8],[138.4,-142.2]],
-  piscina: [[83.8,-155.2],[59.2,-168.4],[58.6,-168.2],[48.5,-173.8],[47.9,-173.6],[33.6,-181.5],[32.0,-181.1],[19.8,-158.2],[20.2,-156.5],[37.4,-146.9],[38.1,-147.1],[50.3,-140.4],[50.9,-140.6],[53.4,-139.2],[53.6,-138.5],[55.5,-138.0],[55.7,-137.3],[56.4,-137.5],[70.9,-130.0],[72.5,-130.5],[77.4,-139.3],[77.2,-139.9],[78.1,-140.5],[78.9,-142.9],[79.5,-143.1],[79.3,-143.7],[84.2,-152.5]],
-  cancha_tenis: [[-82.6,-147.5],[-93.5,-163.5],[-122.9,-145.2],[-115.7,-133.5],[-110.9,-130.2]],
-  patio_canon: [[-100.1,-116.0],[-132.0,-133.7],[-142.3,-115.3],[-110.4,-97.5]],
-  patio_calistenia: [[127.9,-103.0],[121.3,-108.9],[111.8,-109.7],[103.1,-105.8],[73.2,-52.1],[85.1,-43.8],[99.2,-37.6],[105.6,-47.2],[100.7,-52.1],[124.5,-95.0]],
+const ROT = toRad(PLANO.rot);
+// píxel del plano <-> metros este/norte respecto a ORIGIN
+const fromPlan = (px, py) => {
+  const X = (px - PLANO.ax) * PLANO.mpp, Y = (PLANO.ay - py) * PLANO.mpp;
+  return { x: X * Math.cos(ROT) + Y * Math.sin(ROT), y: -X * Math.sin(ROT) + Y * Math.cos(ROT) };
 };
-const DEST_BLD = { a_puerta:"A",patio_bib:"patio_biblioteca",tenis:"cancha_tenis",g1:"gimnasio1",b_puerta:"B",fed:"federacion",t_puerta:"T",patio:"patio_central",admision:"patio_central",biblio:"U",casino:"D",arqui:"D",fisica:"E",inform:"F",c_puerta:"C",m_clases:"M",r_port:"R",p_clases:"P",cancha:"cancha" };
-// Edificios que cuentan como uno solo al llegar (P2 es parte de P, R2 de R).
-const GROUPS = { P: ["P", "P2"], R: ["R", "R2"] };
+const toPlan = (x, y) => {
+  const X = x * Math.cos(ROT) - y * Math.sin(ROT), Y = x * Math.sin(ROT) + y * Math.cos(ROT);
+  return { px: PLANO.ax + X / PLANO.mpp, py: PLANO.ay - Y / PLANO.mpp };
+};
+const toXY = p => ({ x: (p.lng - ORIGIN.lng) * 111320 * Math.cos(toRad(ORIGIN.lat)), y: (p.lat - ORIGIN.lat) * 111320 });
+
+// Grafo de caminos: viene de OpenStreetMap (grafo.js, generado con tools/generar-grafo.py).
+// Cada tramo puede ser una escalera; los destinos son edificios unidos a su camino más cercano.
+const nodesList = GRAFO.nodos.map(([lat, lng], i) => ({ id: "n" + i, lat, lng, ...toXY({ lat, lng }), edges: [] }));
 const graph = Object.fromEntries(nodesList.map(n => [n.id, n]));
-edgePairs.forEach(([a, b]) => { graph[a].edges.push(b); graph[b].edges.push(a); });
-const DESTS = nodesList.filter(n => n.name);
+const edgePairs = GRAFO.aristas.map(([a, b]) => ["n" + a, "n" + b]);
+const stairs = new Set();                                   // "a|b" de los tramos que son escaleras
+GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph["n" + b].edges.push("n" + a); if (t === 1) { stairs.add(`n${a}|n${b}`); stairs.add(`n${b}|n${a}`); } });
+const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
+
+// ---------- Contornos de edificios y patios (contornos.js, generado con tools/contornos.py) ----------
+// La brújula apunta al borde más cercano del destino (no a su puerta) y se llega al estar a ARRIVE_BLD del borde.
+const ARRIVE_BLD = 15;   // m
+const CONT = { ...CONTORNOS.edificios, ...CONTORNOS.espacios };          // clave -> polígono en píxeles del plano
+const AREAS = Object.fromEntries(Object.entries(CONT).map(([k, pts]) => [k, pts.map(([px, py]) => { const m = fromPlan(px, py); return [m.x, m.y]; })]));
+const GROUPS = CONTORNOS.grupos;                                        // P2 cuenta como P, R2 como R
+const grupo = k => GROUPS[k] || [k];
+
+// Distancia (m) de un punto al polígono (0 si está dentro) y punto más cercano de su borde.
+function nearestOnPoly(q, poly) {
+  let inside = false, best = { d: Infinity, x: 0, y: 0 };
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [x1, y1] = poly[j], [x2, y2] = poly[i], dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
+    if ((y1 > q.y) !== (y2 > q.y) && q.x < (x2 - x1) * (q.y - y1) / (y2 - y1) + x1) inside = !inside;
+    const t = L2 ? Math.max(0, Math.min(1, ((q.x - x1) * dx + (q.y - y1) * dy) / L2)) : 0;
+    const x = x1 + t * dx, y = y1 + t * dy, d = Math.hypot(q.x - x, q.y - y);
+    if (d < best.d) best = { d, x, y };
+  }
+  return inside ? { d: 0, x: q.x, y: q.y } : best;
+}
+function nearestOnArea(p, key) {            // { lat, lng, d } del borde más cercano de un área (o grupo)
+  const q = toXY(p); let best = { d: Infinity };
+  for (const k of grupo(key)) { const r = nearestOnPoly(q, AREAS[k]); if (r.d < best.d) best = r; }
+  return { ...fromXY(best.x, best.y), d: best.d };
+}
+const distToArea = (p, key) => nearestOnArea(p, key).d;
+
+// Destinos que el grafo no trae (Casino, patios, canchas...): se unen al nodo del grafo más cercano a su borde.
+const AREA_DE = { ...CONTORNOS.areaDe };
+for (const e of CONTORNOS.extra) {
+  if (!AREAS[e.area]) continue;
+  let node = null, bd = Infinity;
+  for (const n of nodesList) { const d = Math.min(...grupo(e.area).map(k => nearestOnPoly(n, AREAS[k]).d)); if (d < bd) { bd = d; node = n.id; } }
+  DESTS.push({ id: e.id, name: e.nombre, node }); AREA_DE[e.id] = e.area;
+}
+const DEST = Object.fromEntries(DESTS.map(d => [d.id, d]));
+const areaOf = id => AREA_DE[id] || null;
+const NOMBRE_NODO = {}; DESTS.forEach(d => { NOMBRE_NODO[d.node] ??= d.name; });
+const destNode = () => DEST[state.destId].node;             // nodo del grafo del destino elegido
+const PENAL_ESCALERA = 15;                                  // m extra por escalera cuando se permiten
 
 // ---------- A* ----------
 function astar(graph, start, goal) {
-  const h = id => distance(graph[id], graph[goal]);
-  const open = new Set([start]), came = {}, g = { [start]: 0 }, f = { [start]: h(start) };
-  while (open.size) {
-    let cur = null;
-    for (const id of open) if (cur === null || f[id] < f[cur]) cur = id;
+  const sinEscaleras = state.accesible, h = id => distance(graph[id], graph[goal]);
+  const heap = [], came = {}, g = { [start]: 0 }, done = new Set();
+  const push = it => { heap.push(it); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i;
+    if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+  push([h(start), start]);
+  while (heap.length) {
+    let [, cur] = pop(); if (done.has(cur)) continue; done.add(cur);
     if (cur === goal) {
       const path = [cur];
       while (came[cur]) { cur = came[cur]; path.unshift(cur); }
       return path;
     }
-    open.delete(cur);
     for (const n of graph[cur].edges) {
-      const t = g[cur] + distance(graph[cur], graph[n]);
-      if (t < (g[n] ?? Infinity)) { came[n] = cur; g[n] = t; f[n] = t + h(n); open.add(n); }
+      const esc = stairs.has(cur + "|" + n); if (esc && sinEscaleras) continue;
+      const t = g[cur] + distance(graph[cur], graph[n]) + (esc ? PENAL_ESCALERA : 0);
+      if (t < (g[n] ?? Infinity)) { came[n] = cur; g[n] = t; push([t + h(n), n]); }
     }
   }
   return null;
@@ -252,8 +229,6 @@ const SNAP_MAX = 40;   // m: más lejos que esto del camino, se usa la posición
 const ARRIVE_R = 15;   // m: radio para dar un nodo por alcanzado
 const HYST = 15;       // m: ventaja mínima para cambiar de nodo objetivo
 
-const toXY = p => ({ x: (p.lng - ORIGIN.lng) * 111320 * Math.cos(toRad(ORIGIN.lat)), y: (p.lat - ORIGIN.lat) * 111320 });
-
 // Proyecta la posición sobre la arista más cercana del grafo.
 function snapToGraph(p) {
   const q = toXY(p); let best = null;
@@ -266,40 +241,9 @@ function snapToGraph(p) {
   return best;
 }
 
-// Distancia (m) de un punto al borde de un edificio; 0 si está dentro de la huella.
-const ARRIVE_BLD = 15;   // m: llegaste si estás a menos de esto del borde del edificio
-function distToBuilding(p, id) {
-  return Math.min(...(GROUPS[id] || [id]).map(k => distToPoly(p, BUILDINGS[k] || SPACES[k])));
-}
-// Punto más cercano del borde del edificio (o de su grupo): { lat, lng, d } con d en metros.
-function nearestOnArea(p, id) {
-  const q = toXY(p); let best = { d: Infinity, x: 0, y: 0 };
-  for (const k of GROUPS[id] || [id]) {
-    const poly = BUILDINGS[k] || SPACES[k];
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      const [x1, y1] = poly[j], [x2, y2] = poly[i], dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
-      const t = L2 ? Math.max(0, Math.min(1, ((q.x - x1) * dx + (q.y - y1) * dy) / L2)) : 0;
-      const x = x1 + t * dx, y = y1 + t * dy, d = Math.hypot(q.x - x, q.y - y);
-      if (d < best.d) best = { d, x, y };
-    }
-  }
-  return { ...fromXY(best.x, best.y), d: best.d };
-}
-function distToPoly(p, poly) {
-  const q = toXY(p); let inside = false, best = Infinity;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [x1, y1] = poly[j], [x2, y2] = poly[i];
-    if ((y1 > q.y) !== (y2 > q.y) && q.x < (x2 - x1) * (q.y - y1) / (y2 - y1) + x1) inside = !inside;
-    const dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
-    const t = L2 ? Math.max(0, Math.min(1, ((q.x - x1) * dx + (q.y - y1) * dy) / L2)) : 0;
-    best = Math.min(best, Math.hypot(q.x - (x1 + t * dx), q.y - (y1 + t * dy)));
-  }
-  return inside ? 0 : best;
-}
-
 // Devuelve el siguiente nodo de la ruta, la posición ajustada y la distancia restante.
 function guide() {
-  const dest = state.destId, snap = snapToGraph(state.user);
+  const dest = destNode(), snap = snapToGraph(state.user);
   const onGraph = snap.d <= SNAP_MAX;
   const pos = onGraph ? snap : state.user;
   const cands = onGraph ? [snap.a, snap.b] : [nearest(graph, state.user)];
@@ -327,15 +271,22 @@ const state = {
   mode: "sim",                       // "sim" | "gps"
   user: fromXY(0, 0),
   heading: 0,                        // rumbo suavizado
-  destId: DESTS[0].id,
+  destId: DEST["edificio-c"] ? "edificio-c" : DESTS[0].id,
+  accesible: false,                  // true = ruta sin escaleras
 };
 
 // ---------- UI ----------
 const $ = id => document.getElementById(id);
 $("dest").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
-$("dest").onchange = e => { state.destId = e.target.value; state.target = null; render(); };
-$("from").innerHTML = nodesList.map(n => `<option value="${n.id}">${n.name || "Cruce " + n.id}</option>`).join("");
-$("from").onchange = e => { state.user = { lat: graph[e.target.value].lat, lng: graph[e.target.value].lng }; render(); };
+$("dest").value = state.destId;
+$("dest").onchange = e => { state.destId = e.target.value; state.target = null; mapV.fitted = false; render(); };
+$("from").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+$("from").onchange = e => { const n = graph[DEST[e.target.value].node]; state.user = { lat: n.lat, lng: n.lng }; render(); };
+$("accBtn").onclick = () => {
+  state.accesible = !state.accesible; state.target = null; mapV.fitted = false;
+  $("accBtn").classList.toggle("on", state.accesible); $("accBtn").setAttribute("aria-pressed", state.accesible);
+  $("accBtn").textContent = "♿ Ruta sin escaleras: " + (state.accesible ? "SÍ" : "NO"); render();
+};
 $("head").oninput = e => { setHeading(+e.target.value); $("hv").textContent = e.target.value; };
 
 // Rumbo suavizado con promedio circular (evita el salto 359° -> 0°)
@@ -391,7 +342,7 @@ $("modeBtn").onclick = async () => {
 // ---------- Render ----------
 function fit(c) {
   const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-  if (c.width !== Math.round(r.width * dpr)) { c.width = r.width * dpr; c.height = r.height * dpr; }
+  if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
   const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { ctx, w: r.width, h: r.height };
 }
@@ -439,85 +390,219 @@ function drawDial(bDest, arrived) {
   ctx.fillText(arrived ? "destino" : cardinal(state.heading), cx, cy + 28);
 }
 
-const label = id => graph[id].name || "cruce";
+const label = id => NOMBRE_NODO[id] || "cruce";
+
+// ---------- Mapa (plano.jpeg de fondo, mismo estilo oscuro/amarillo que la brújula) ----------
+const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0 };
+const Z_MIN = 0.35, Z_MAX = 4;
+let planoDark = null;
+{ // el plano es claro: se invierte una sola vez en un canvas aparte para que combine con el tema oscuro
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+    x.globalCompositeOperation = "difference"; x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+    planoDark = c; render();
+  };
+  img.src = PLANO.src;
+}
+const mapPx = n => toPlan(n.x, n.y);                     // nodo -> {px,py}
+const posPx = p => { const q = toXY(p); return toPlan(q.x, q.y); };   // lat/lng -> {px,py}
+const toScr = (px, py) => [mapV.w / 2 + (px - mapV.cx) * mapV.z, mapV.h / 2 + (py - mapV.cy) * mapV.z];
+const fromScr = (sx, sy) => ({ px: mapV.cx + (sx - mapV.w / 2) / mapV.z, py: mapV.cy + (sy - mapV.h / 2) / mapV.z });
+const clampZ = z => Math.max(Z_MIN, Math.min(Z_MAX, z));
+
+function fitPoints(pts) {
+  if (!pts.length || !mapV.w) return;
+  const xs = pts.map(p => p.px), ys = pts.map(p => p.py), pad = 50;
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  mapV.z = clampZ(Math.min((mapV.w - 2 * pad) / Math.max(x1 - x0, 60), (mapV.h - 2 * pad) / Math.max(y1 - y0, 60)));
+  mapV.cx = (x0 + x1) / 2; mapV.cy = (y0 + y1) / 2;
+}
+function routePath(g) {                                  // nodos que faltan hasta el destino
+  return g ? astar(graph, g.target, destNode()) : null;
+}
+function fitRoute(g) {
+  const path = routePath(g);
+  const pts = path ? path.map(id => mapPx(graph[id])) : [mapPx(graph[destNode()])];
+  if (g) pts.push(posPx(g.pos)); else if (state.fix || DEBUG) pts.push(posPx(state.user));
+  if (pts.length === 1) { mapV.cx = pts[0].px; mapV.cy = pts[0].py; mapV.z = Math.max(mapV.z, 1.2); }
+  else fitPoints(pts);
+}
 
 function drawMap(g) {
   const { ctx, w, h } = fit($("map"));
-  ctx.clearRect(0, 0, w, h);
-  const pad = 36, xs = nodesList.map(n => n.x), ys = nodesList.map(n => n.y);
-  const minX = Math.min(...xs) - 10, maxX = Math.max(...xs) + 10, minY = Math.min(...ys) - 10, maxY = Math.max(...ys) + 10;
-  const s = Math.min((w - 2 * pad) / (maxX - minX), (h - 2 * pad) / (maxY - minY));
-  const ox = (w - s * (maxX - minX)) / 2, oy = (h + s * (maxY - minY)) / 2;
-  mapT = { s, ox, oy, minX, minY };
-  const P = (x, y) => [ox + (x - minX) * s, oy - (y - minY) * s];
-  ctx.lineWidth = 1;
-  for (const [id, poly] of [...Object.entries(BUILDINGS), ...Object.entries(SPACES)]) {
-    const space = id in SPACES;   // patios en verde, edificios en gris
-    ctx.beginPath(); poly.forEach(([x, y], i) => { const [px, py] = P(x, y); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.closePath();
-    ctx.fillStyle = space ? "rgba(76,217,100,.18)" : "rgba(138,148,163,.22)"; ctx.strokeStyle = space ? "#3d9a50" : "#566174"; ctx.fill(); ctx.stroke();
-    const cx = poly.reduce((a, p) => a + p[0], 0) / poly.length, cy = poly.reduce((a, p) => a + p[1], 0) / poly.length, [lx, ly] = P(cx, cy);
-    ctx.fillStyle = "#566174"; ctx.font = "bold 12px system-ui"; ctx.textAlign = "center"; ctx.fillText(id, lx, ly + 4);
+  if (!w || !h) return;
+  mapV.w = w; mapV.h = h;
+  if (!mapV.fitted) { fitRoute(g); mapV.fitted = true; }
+  ctx.fillStyle = "#0b0e13"; ctx.fillRect(0, 0, w, h);
+  if (planoDark) {
+    const [x0, y0] = toScr(0, 0);
+    ctx.globalAlpha = .85; ctx.drawImage(planoDark, x0, y0, PLANO.w * mapV.z, PLANO.h * mapV.z); ctx.globalAlpha = 1;
   }
-  ctx.strokeStyle = "#3a4452"; ctx.lineWidth = 3;
-  for (const [a, b] of edgePairs) { const [x1, y1] = P(graph[a].x, graph[a].y), [x2, y2] = P(graph[b].x, graph[b].y); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
-  ctx.font = "11px system-ui"; ctx.textAlign = "center";
-  for (const n of nodesList) {
-    const [x, y] = P(n.x, n.y);
-    ctx.fillStyle = n.id === state.destId ? "#ffd23f" : "#8a94a3";
-    ctx.beginPath(); ctx.arc(x, y, n.name ? 5 : 3, 0, 7); ctx.fill();
-    if (n.name) ctx.fillText(n.name, x, y - 9);
+  const P = n => toScr(...Object.values(mapPx(n)));
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  // caminos
+  ctx.lineWidth = 3;
+  for (const esc of [false, true]) {                         // primero caminos, luego escaleras (naranjo, punteado)
+    ctx.strokeStyle = esc ? "#ff9f43" : "#5b6b80"; ctx.setLineDash(esc ? [5, 4] : []); ctx.beginPath();
+    for (const [a, b] of edgePairs) if (stairs.has(a + "|" + b) === esc) { const [x1, y1] = P(graph[a]), [x2, y2] = P(graph[b]); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // contorno del destino (edificio o patio), calcado del plano
+  const ak = areaOf(state.destId);
+  if (ak) {
+    ctx.strokeStyle = "#ffd23f"; ctx.fillStyle = "rgba(255,210,63,.14)"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    for (const k of grupo(ak)) {
+      ctx.beginPath(); CONT[k].forEach(([px, py], i) => { const [x, y] = toScr(px, py); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  // ruta restante (amarilla, desde tu posición ajustada)
+  const path = routePath(g);
+  if (path) {
+    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 6; ctx.beginPath();
+    ctx.moveTo(...toScr(...Object.values(posPx(g.pos))));
+    for (const id of path) ctx.lineTo(...P(graph[id]));
+    ctx.stroke();
+  }
+  // nodos y etiquetas
+  ctx.font = "600 13px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.lineJoin = "round";
+  for (const d of DESTS) {
+    const [x, y] = P(graph[d.node]), isDest = d.id === state.destId;
+    const corto = d.name.split(" - ")[0].replace("Edificio ", "");   // "Edificio A" -> "A"
+    ctx.fillStyle = isDest ? "#ffd23f" : "#e8edf3";
+    ctx.beginPath(); ctx.arc(x, y, isDest ? 9 : 6, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.strokeText(isDest ? d.name : corto, x, y - 13);
+    ctx.fillStyle = isDest ? "#ffd23f" : "#fff"; ctx.fillText(isDest ? d.name : corto, x, y - 13);
   }
   if (g) {
-    const [tx, ty] = P(graph[g.target].x, graph[g.target].y);
-    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(tx, ty, 10, 0, 7); ctx.stroke();
-    const u = toXY(state.user), [ux, uy] = P(u.x, u.y), [sx, sy] = P(g.snap.x, g.snap.y);
-    ctx.strokeStyle = "#6aa9ff"; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = "#4cd964"; ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 7); ctx.fill();   // ajustado
-    ctx.fillStyle = "#6aa9ff"; ctx.beginPath(); ctx.arc(ux, uy, 5, 0, 7); ctx.fill();   // GPS crudo
+    const [tx, ty] = P(graph[g.target]);
+    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(tx, ty, 13, 0, 7); ctx.stroke();
+  }
+  // tú: GPS crudo (azul), ajustado al camino (verde) y hacia dónde miras
+  if (g || state.fix || DEBUG) {
+    const raw = posPx(state.user), [ux, uy] = toScr(raw.px, raw.py);
+    const sn = g ? posPx(g.pos) : raw, [sx, sy] = toScr(sn.px, sn.py);
+    if (state.user.acc) { ctx.fillStyle = "#6aa9ff22"; ctx.beginPath(); ctx.arc(ux, uy, state.user.acc / PLANO.mpp * mapV.z, 0, 7); ctx.fill(); }
+    if (g && g.onGraph) {
+      ctx.strokeStyle = "#6aa9ff"; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "#6aa9ff"; ctx.beginPath(); ctx.arc(ux, uy, 5, 0, 7); ctx.fill();
+    }
+    const th = toRad(state.heading - PLANO.rot);          // el "arriba" del plano puede no ser el norte
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate(th);
+    ctx.fillStyle = "#4cd96488"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 34, -Math.PI / 2 - .5, -Math.PI / 2 + .5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#4cd964"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(sx, sy, 8, 0, 7); ctx.fill(); ctx.stroke();
   }
 }
-let mapT = null;
+
+// gestos: arrastrar, pellizcar, rueda y toque (elige destino; con ?debug mueve tu posición)
+const ptrs = new Map(); let gest = null;
+const mapEl = $("map");
+const zoomAt = (sx, sy, z2) => {
+  const before = fromScr(sx, sy); mapV.z = clampZ(z2);
+  mapV.cx = before.px - (sx - mapV.w / 2) / mapV.z; mapV.cy = before.py - (sy - mapV.h / 2) / mapV.z;
+};
+const rel = e => { const r = mapEl.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+mapEl.onpointerdown = e => {
+  mapEl.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, rel(e));
+  gest = { t: Date.now(), moved: 0, d0: null, z0: mapV.z };
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; gest.d0 = Math.hypot(a.x - b.x, a.y - b.y); }
+};
+mapEl.onpointermove = e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const prev = ptrs.get(e.pointerId), cur = rel(e); ptrs.set(e.pointerId, cur);
+  gest.moved += Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y);
+  if (ptrs.size === 2 && gest.d0) {
+    const [a, b] = [...ptrs.values()];
+    zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, gest.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gest.d0);
+  } else if (ptrs.size === 1) { mapV.cx -= (cur.x - prev.x) / mapV.z; mapV.cy -= (cur.y - prev.y) / mapV.z; }
+  render();
+};
+const endPtr = e => {
+  const wasTap = ptrs.size === 1 && gest && gest.moved < 8 && Date.now() - gest.t < 500;
+  const p = ptrs.get(e.pointerId); ptrs.delete(e.pointerId);
+  if (wasTap && e.type === "pointerup" && p) tapMap(p.x, p.y);
+};
+mapEl.onpointerup = endPtr; mapEl.onpointercancel = endPtr;
+mapEl.onwheel = e => { e.preventDefault(); const p = rel(e); zoomAt(p.x, p.y, mapV.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); render(); };
+
+function tapMap(sx, sy) {
+  let best = null, bd = 28;                              // toque cerca de un lugar con nombre -> nuevo destino
+  for (const n of DESTS) { const [x, y] = toScr(...Object.values(mapPx(graph[n.node]))), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = n; } }
+  if (best) { state.destId = best.id; state.target = null; mapV.fitted = false; $("dest").value = best.id; render(); return; }
+  if (DEBUG && state.mode === "sim") {
+    const q = fromScr(sx, sy), m = fromPlan(q.px, q.py);
+    state.user = fromXY(m.x, m.y); render();
+  }
+}
+$("zIn").onclick  = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z * 1.4); render(); };
+$("zOut").onclick = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z / 1.4); render(); };
+$("mYo").onclick  = () => {
+  if (!DEBUG && !state.fix) { $("mapInfo").textContent = "Aún no tengo tu ubicación: activa el GPS."; return; }
+  const u = posPx(state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.z = Math.max(mapV.z, 1.3); render();
+};
+$("mRuta").onclick = () => { mapV.fitted = false; render(); };
+
+// pestañas
+function setTab(t) {
+  const m = t === "mapa";
+  document.body.classList.toggle("tabMapa", m);
+  $("tabBrujula").classList.toggle("on", !m); $("tabMapa").classList.toggle("on", m);
+  $("tabBrujula").setAttribute("aria-selected", !m); $("tabMapa").setAttribute("aria-selected", m);
+  mapV.fitted = false; render();
+}
+$("tabBrujula").onclick = () => setTab("brujula");
+$("tabMapa").onclick = () => setTab("mapa");
 
 function render() {
+  const enMapa = document.body.classList.contains("tabMapa");
+  const draw = g => { if (enMapa) drawMap(g); }
   const waiting = (!DEBUG && !state.active) ? "Toca «Activar» para empezar"
                 : (state.mode === "gps" && !state.fix) ? "Buscando señal GPS…" : null;
   if (waiting) {
     $("dir").textContent = "—"; $("dist").textContent = waiting; $("sub").textContent = "";
-    drawDial(null, false); if (DEBUG) drawMap(null);
+    $("mapInfo").innerHTML = `<b>${DEST[state.destId].name}</b> · ${waiting}`;
+    if (!enMapa) drawDial(null, false); draw(null);
     return;
   }
-  const dest = graph[state.destId];
+  const dest = Object.assign({}, graph[destNode()], { name: DEST[state.destId].name });
   const straight = distance(state.user, dest);
-  const bld = DEST_BLD[state.destId];
-  const arrived = bld ? distToBuilding(state.user, bld) < ARRIVE_BLD : straight < 20;
-  // La brújula solo indica hacia dónde está el edificio (su borde más cercano); la ruta la muestra el mapa.
-  const aim = bld ? nearestOnArea(state.user, bld) : { ...dest, d: straight };
-  let b = bearing(state.user, aim), g = null;
+  // La brújula solo indica hacia dónde está el destino (el borde más cercano de su edificio o patio);
+  // el camino lo muestra el mapa.
+  const area = areaOf(state.destId);
+  const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
+  const arrived = area ? aim.d < ARRIVE_BLD : straight < 20;
+  let b = bearing(state.user, aim), g = null, resumen;
   if (arrived) {
     state.target = null;
     $("dir").textContent = "Estás llegando";
     $("dist").textContent = dest.name;
     $("sub").textContent = "";
+    resumen = `Estás llegando a <b>${dest.name}</b>`;
   } else if ((g = guide())) {
+    const min = Math.max(1, Math.round(g.remaining / 80));
     const m = aim.d < 30 ? Math.round(aim.d) : Math.round(aim.d / 5) * 5;
     $("dir").textContent = cardinal(b);
     $("dist").textContent = `${m} m en línea recta`;
-    $("sub").textContent = `Ruta a pie: ~${Math.round(g.remaining / 10) * 10} m · ${Math.max(1, Math.round(g.remaining / 80))} min` +
-      (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
+    $("sub").textContent = `Ruta a pie: ~${Math.round(g.remaining / 10) * 10} m · ${min} min` +
+      (g.onGraph ? "" : " · lejos del camino") + (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
+    resumen = `<b>${dest.name}</b> · ~${Math.round(g.remaining / 10) * 10} m · ${min} min · ${cardinal(b)}` + (g.onGraph ? "" : " · lejos del camino");
   } else {
-    $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = "Destino no conectado al grafo";
+    $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = state.accesible ? "No hay camino sin escaleras" : "Destino no conectado al grafo";
+    resumen = state.accesible ? "Sin ruta sin escaleras: prueba desactivando la opción" : "Sin ruta: destino no conectado";
   }
-  drawDial(b, arrived);
-  if (DEBUG) drawMap(g);
+  $("mapInfo").innerHTML = resumen;
+  if (!enMapa) drawDial(b, arrived);
+  draw(g);
 }
-$("map").onclick = e => {
-  if (state.mode !== "sim" || !mapT) return;
-  const r = e.target.getBoundingClientRect(), { s, ox, oy, minX, minY } = mapT;
-  state.user = fromXY((e.clientX - r.left - ox) / s + minX, (oy - (e.clientY - r.top)) / s + minY);
-  render();
-};
 window.addEventListener("resize", render);
-render();
+if (location.hash === "#mapa") setTab("mapa"); else render();   // index.html#mapa abre directo el mapa
 </script>
 </body>
 </html>
