@@ -23,7 +23,7 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 |---|---|---|
 | `index.html` | Interfaz y lógica | A mano |
 | `grafo.js` | Caminos del campus y destinos, desde OpenStreetMap | `python3 tools/generar-grafo.py` (necesita internet) |
-| `contornos.js` | Contornos de edificios y patios, y destinos extra | `python3 tools/contornos.py` |
+| `contornos.js` | Contornos de edificios y patios (los 37 destinos tienen cuadro), y destinos extra | `python3 tools/contornos.py` (necesita numpy, scipy, matplotlib y pillow) |
 | `datos.js` | Nombre, letra, detalle, pista y foto de cada destino | `python3 tools/generar-datos.py` (lee `data/edificios.json`) |
 | `img/` | Mapas del diseño (claro y oscuro) y fotos con licencia libre de A, B y F | — |
 | `fuentes.css`, `fonts/` | Tipografías | — |
@@ -49,6 +49,12 @@ Se pueden combinar: `/?debug&tema=claro`.
 - **Las fotos de la comunidad se guardan solo en el teléfono** (`localStorage`, JPEG de máximo 900 px). El PRD deja sin definir dónde se guardan y cómo se moderan; mientras tanto no hay publicación real. La pantalla lo avisa.
 - **«Vas bien»** solo aparece si no te estás alejando (compara con lo más cerca que estuviste en los últimos 20 s), por la crítica de diseño que señala que el mensaje fijo refuerza rumbos equivocados.
 - **Calibración del plano**: la app usa 0,4601 m/px y 155,3°; `data/georef.json` da 0,4666 m/px y 154,8°. Las dos coinciden a 1 a 6 m (máximo en los bordes del plano), así que no hay desfase relevante. Si se unifican, hay que cambiar también `tools/generar-grafo.py`.
+
+## Supuestos en los contornos
+
+- **Comedores** es la parte norte del bloque D (OpenStreetMap lo dibuja separado; el plano lo trae dentro del cuadro de D). Su contorno sale de OSM recortado al cuadro de D. Elegir «Edificio D» también se cumple al entrar a Comedores, porque está dentro de D.
+- **Innovación Tecnológica** se asignó al edificio rotulado «Edificio Bari» en el plano (borde izquierdo): tiene la misma forma que el polígono de OSM y queda en el mismo lugar, pero es una inferencia, **por confirmar**.
+- **Cafetería Vivendum** usa la «O» del plano (OSM la llama «Q»; ver `docs/pendientes-datos.md`).
 
 ## Contenido de ejemplo que hay que reemplazar
 

@@ -27,6 +27,11 @@ SEEDS = {
   "M": (363, 488), "M2": (412, 523), "R": (435, 317), "R2": (485, 360),
   "U": (737, 652), "P": (775, 250), "P2": (775, 170), "federacion": (735, 245),
   "H": (602, 750), "I": (767, 855), "J": (949, 330), "K": (970, 435), "O": (995, 550), "T": (1227, 825),
+  "L": (619, 598),                                           # Tribuna: edificio fino junto a la cancha
+  # «Edificio Bari» en el plano, al borde izquierdo. Se asume que es el «Edificio de Innovación Tecnológica» de OSM:
+  # tiene la misma forma (franja larga con una muesca abajo) y queda en el mismo lugar, pero el polígono de OSM sale
+  # corrido ~15 px porque la calibración se extrapola lejos del campus. Por eso se traza del plano. Por confirmar.
+  "bari": (142, 620),
 }
 # Gimnasio 1: el tramo de A entre el cuerpo principal y B. Se recorta de B y se suma a A.
 NECK = (793, 586, 846, 629)
@@ -45,6 +50,14 @@ SPACE_POLYS = {
   "patio_calistenia": [(632, 552), (650, 548), (668, 556), (680, 572), (680, 700), (650, 703), (618, 700), (616, 676), (630, 672), (630, 570)],
   "cancha": [(450, 475), (602, 475), (602, 700), (450, 700)],            # cancha 11x11 (8007), no las gradas
 }
+# Edificios que el plano no dibuja como contorno propio (hoy solo Comedores): polígono de OpenStreetMap pasado a píxeles del plano
+# con la calibración de index.html (0,4601 m/px, giro 155,3°, píxel 810,850 = -33.034358, -71.595779).
+OSM_POLYS = {
+  # «Edificio Comerdores» (sic) en OSM: la parte norte del bloque D, con una muesca. En el plano forma un solo cuadro
+  # con D, así que se recorta al contorno de D (CLIP_A_D) para que calce con las líneas del plano.
+  "comedores": [(1017, 631), (1024, 631), (1024, 610), (922, 608), (922, 624), (956, 624), (956, 636), (964, 636), (964, 653), (1000, 654), (1000, 631)],
+}
+CLIP_A_D = ["comedores"]
 # Edificios que cuentan como uno solo al llegar (P2 es parte de P, R2 de R).
 GROUPS = {"P": ["P", "P2"], "R": ["R", "R2"]}
 
@@ -55,6 +68,8 @@ AREA_DE = {
   "edificio-m2-gimnasio-2": "M2", "edificio-p": "P", "edificio-r": "R", "edificio-t": "T",
   "edificio-u-biblioteca": "U", "gimnasio-1": "gimnasio1", "museo-institucional-utfsm": "H",
   "patio-central": "patio_central",
+  "edificio-l-tribuna": "L", "edificio-comedores": "comedores", "edificio-de-innovacion-tecnologica": "bari",
+  "edificio-q-cafeteria-vivendum": "O",                      # OSM la llama «Q»; en el plano oficial es la «O»
 }
 # Destinos que el grafo no trae: nombre como lo conoce un mechón y el área donde están.
 EXTRA = [
@@ -80,7 +95,8 @@ EXTRA = [
 def rdp(p, e):
     if len(p) < 3: return p
     a, b = np.array(p[0]), np.array(p[-1]); d = b - a; L = np.hypot(*d)
-    ds = [abs(np.cross(d, np.array(q) - a)) / L if L else np.hypot(*(np.array(q) - a)) for q in p[1:-1]]
+    cruz = lambda u, v: u[0] * v[1] - u[1] * v[0]               # np.cross ya no acepta vectores 2D (numpy 2)
+    ds = [abs(cruz(d, np.array(q) - a)) / L if L else np.hypot(*(np.array(q) - a)) for q in p[1:-1]]
     i = int(np.argmax(ds)) + 1
     if ds[i - 1] > e: return rdp(p[:i + 1], e)[:-1] + rdp(p[i:], e)
     return [p[0], p[-1]]
@@ -100,11 +116,20 @@ def contorno(lab, seed, h, w, clip=None, add=None, sub=None):
     if area > 40000 or area < 30: return None, area            # fuga o semilla en una línea
     m = ndi.binary_fill_holes(ndi.binary_closing(m, iterations=2))
     m = ndi.binary_dilation(m, iterations=2)                    # hasta el centro de la línea negra
+    return trazar(m), area
+
+
+def trazar(m):                                                  # contorno exterior de una máscara, simplificado
     ys, xs = np.where(m); x0, y0 = max(xs.min() - 3, 0), max(ys.min() - 3, 0)
     sub_ = np.pad(m[y0:ys.max() + 4, x0:xs.max() + 4].astype(float), 1)
     segs = max(plt.contour(sub_, [0.5]).allsegs[0], key=len)
     pts = [(x - 1 + x0, y - 1 + y0) for x, y in segs]
-    return rdp(pts, 0.8)[:-1], area
+    return rdp(pts, 0.8)[:-1]
+
+
+def mascara(poly, h, w):                                        # polígono (px del plano) -> máscara booleana
+    im = Image.new("L", (w, h), 0); ImageDraw.Draw(im).polygon([tuple(p) for p in poly], fill=1)
+    return np.array(im).astype(bool)
 
 
 def main():
@@ -119,6 +144,13 @@ def main():
                               add=neck if k == "A" else None, sub=neck if k == "B" else None)
         print(f"{k:11s} área={area:6d} px  ", f"{len(poly)} vértices" if poly else "DESCARTADO (fuga o semilla mala)")
         if poly: edificios[k] = poly
+    for k, poly in OSM_POLYS.items():
+        if k in CLIP_A_D and "D" in edificios:                  # recorta al cuadro negro de D
+            m = mascara(poly, h, w) & mascara(edificios["D"], h, w)
+            poly = trazar(m); print(f"{k:11s} recortado al contorno de D: {int(m.sum()):6d} px   {len(poly)} vértices")
+        else:
+            print(f"{k:11s} de OpenStreetMap:           {len(poly)} vértices")
+        edificios[k] = poly
     for k, (s, clip) in SPACE_SEEDS.items():
         poly, area = contorno(lab, s, h, w, clip)
         print(f"{k:16s} área={area:6d} px  ", f"{len(poly)} vértices" if poly else "DESCARTADO")
