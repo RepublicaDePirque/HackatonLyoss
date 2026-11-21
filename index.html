@@ -320,7 +320,7 @@
     <button id="mYo" class="vidrio" aria-label="Seguir mi posición" aria-pressed="false" title="Seguir mi posición">⌖</button>
     <button id="mRot" class="vidrio" aria-label="Girar el mapa según hacia dónde miro" aria-pressed="false" title="Girar el mapa según hacia dónde miro">↻</button>
     <button id="mRuta" class="vidrio" aria-label="Ver la ruta completa" title="Ver la ruta completa">⤢</button>
-    <button id="accBtn" class="vidrio" aria-label="Ruta sin escaleras" aria-pressed="false" title="Ruta sin escaleras">♿&#xFE0E;</button>
+    <button id="accBtn" class="vidrio" aria-label="Evitar escaleras" aria-pressed="false" title="Evitar escaleras"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 5l16 16" stroke-width="1.6"/></svg></button>
   </div>
   <div id="flota" class="flota">
     <div id="dato" class="tarjeta" role="status" hidden>
@@ -402,6 +402,7 @@
 <script src="grafo.js"></script>
 <script src="contornos.js"></script>
 <script src="datos.js"></script>
+<script src="escaleras.js"></script>
 <script src="fotos.js"></script>
 <script>
 // ---------- Geometría ----------
@@ -504,6 +505,7 @@ const areaOf = id => AREA_DE[id] || null;
 const NOMBRE_NODO = {}; DESTS.forEach(d => { NOMBRE_NODO[d.node] ??= d.name; });
 const destNode = () => DEST[state.destId].node;             // nodo del grafo del destino elegido
 const PENAL_ESCALERA = 15;                                  // m extra por escalera cuando se permiten
+const PENAL_EVITAR = 400;                                   // m extra por tramo de escalera con «Evitar escaleras»: solo se usan si no hay otro camino
 
 // ---------- A* ----------
 function astar(graph, start, goal) {
@@ -521,8 +523,8 @@ function astar(graph, start, goal) {
       return path;
     }
     for (const n of graph[cur].edges) {
-      const esc = stairs.has(cur + "|" + n); if (esc && sinEscaleras) continue;
-      const t = g[cur] + distance(graph[cur], graph[n]) + (esc ? PENAL_ESCALERA : 0);
+      const esc = stairs.has(cur + "|" + n);
+      const t = g[cur] + distance(graph[cur], graph[n]) + (esc ? (sinEscaleras ? PENAL_EVITAR : PENAL_ESCALERA) : 0);
       if (t < (g[n] ?? Infinity)) { came[n] = cur; g[n] = t; push([t + h(n), n]); }
     }
   }
@@ -930,11 +932,11 @@ function renderBrujula() {
       const clave = state.target + "|" + state.destId;
       if (esc <= 15 && state.avisoEsc !== clave) { state.avisoEsc = clave; vibrar([200, 100, 200]); }
     } else if (esc === null) state.avisoEsc = null;
-  } else if (ev && !ev.llego && ubic) {
-    alerta = state.accesible ? "No hay camino sin escaleras hasta aquí" : "";
   }
   $("alerta").textContent = alerta;
-  $("alertaMapa").textContent = alerta; $("alertaMapa").classList.toggle("hay", !!alerta);
+  // con «Evitar escaleras»: cuánto se alarga el camino y cuántas escaleras quedan (escaleras.js)
+  const enMapa = alerta || (state.accesible && g ? fraseEscaleras(resumenEscaleras(g)) : "");
+  $("alertaMapa").textContent = enMapa; $("alertaMapa").classList.toggle("hay", !!enMapa);
 
   // tarjetas que brotan: dato de la zona y foto «así se ve al llegar»
   if (ev && !state.zona && !casi && !ev.llego && !mapa) {
@@ -1288,5 +1290,6 @@ if (params.has("demo")) iniciarDemo();
 else if (DEBUG || location.hash === "#mapa") { if (location.hash === "#mapa") state.modo = "mapa"; ir(location.hash === "#mapa" ? "brujula" : "buscar", false); }
 else ir("permiso", false);
 </script>
+<script src="voz.js"></script>
 </body>
 </html>
