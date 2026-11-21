@@ -65,3 +65,13 @@ for (let a = 0; a < 360; a += 15) {
   assert(l >= 0 && t >= 0 && l + w <= 390 + 0.01 && t + h <= 844 + 0.01, `la barra se sale de la pantalla a ${a}°: ${l},${t},${w},${h}`);
 }
 console.log("ok: la barra queda dentro de la pantalla en los 24 ángulos revisados");
+
+// --- 4) la luz no se corta en seco en el borde (se vio como un cuadrado en Safari)
+T.senal.actual = 0; T.moverSenal();
+assert(parseFloat(els.g1.style.top) > 30, `el centro de la luz debe entrar en la pantalla, no quedar sobre el borde: top=${els.g1.style.top}`);
+assert(Math.abs(parseFloat(els.g1.style.left) - 195) < 1, "y seguir centrado en el rumbo");
+assert(parseFloat(els.barra.style.top) === 0, "la barra sí queda en el borde, marcando el punto exacto");
+const iHalos = html.indexOf('id="halos"'), iBarra = html.indexOf('id="barra"'), iCierre = html.indexOf("</div>\n    <div id=\"barra\"");
+assert(iHalos > 0 && iBarra > iCierre && iCierre > iHalos, "la barra debe quedar fuera del contenedor con máscara, o se desvanece en el borde");
+assert(/#luz #halos \{[^}]*mask-image:linear-gradient\(to bottom, transparent 0/.test(html), "las luces deben difuminarse hacia arriba y abajo con una máscara");
+console.log("ok: la luz se difumina en el borde y su centro entra en la pantalla; la barra queda en el borde");
