@@ -10,7 +10,9 @@ Orientarse en Casa Central (Valparaíso) es difícil para quien no conoce el cam
 ## 2. Usuario
 
 - Principal: mechones y estudiantes en general que no conocen bien el campus.
-- Fuera del core (trabajo futuro): personas ciegas y personas en silla de ruedas.
+- Personas ciegas o con baja visión: modo voz (ver alcance).
+- Personas con movilidad reducida (muletas, una lesión, cansancio): «Evitar escaleras» (ver alcance).
+- Fuera de alcance: personas en silla de ruedas; el campus hoy no es recorrible en silla.
 
 ## 3. Propuesta
 
@@ -30,7 +32,9 @@ Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app
 | Fotos comunitarias | Core | En los últimos 60 m aparece la tarjeta «Así se ve al llegar» con la foto del destino. Al llegar se ve la foto y el usuario puede dejar la suya, sin nombre, para quien venga después. Si el destino no tiene fotos, se invita a ser el primero. |
 | Modo simulado | Core (demo) | Recorrido simulado para presentar en sala sin depender del GPS. |
 | QR como ancla de ubicación | Idea suelta | Por definir. |
-| Accesibilidad (ciegos, silla de ruedas) | Trabajo futuro | — |
+| Evitar escaleras (movilidad reducida) | Prototipo | Para quien puede caminar pero le cuestan las escaleras: muletas, una lesión, cansancio. En el modo mapa, el botón «Evitar escaleras» elige el camino sin escaleras y dice cuánto se alarga («Sin escaleras: 285 m, 125 m más. El camino corto tiene 1 escalera»). Si no existe, ofrece el que tiene menos y lo dice. |
+| Silla de ruedas | Fuera de alcance | Casa Central está en un cerro y hoy no es recorrible en silla de ruedas; prometer una ruta sería falso. |
+| Modo voz (personas ciegas) | Prototipo | La misma brújula dicha en palabras, con el modelo «faro + entorno» de Soundscape: dirección en horas del reloj y distancia («Edificio A, a las 2, 120 metros»), avisos cada 25 m, edificios que quedan al lado, datos curiosos, escaleras y llegada. Botón grande «¿Dónde está?». Lo lee el lector de pantalla del teléfono (VoiceOver o TalkBack); «Voz de la app» es opcional. En Android vibra cuando el teléfono apunta al destino. |
 | Asignación de salas accesible | Trabajo futuro | Idea alternativa descartada para el prototipo. |
 
 ## 5. Flujo principal
@@ -89,6 +93,19 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 - El GPS del teléfono ronda los 5 m a cielo abierto y empeora entre edificios; la llegada se da al entrar al cuadro del edificio, con 5 m de margen por el error del GPS (`ARRIVE_BLD` en `index.html`).
 - El navegador no detecta zonas en segundo plano: los datos curiosos solo aparecen con la página abierta.
 - La señal directa puede apuntar a través de un edificio o un desnivel; por eso la pista textual es parte del core.
+
+### Límites de «Evitar escaleras»
+
+- Solo conoce las escaleras marcadas en OpenStreetMap. Si falta una en esos datos, la app la trata como camino plano.
+- No considera pendientes, superficies, anchos ni cuál es la puerta de cada edificio. El aviso «No considera pendientes» va siempre en pantalla.
+- Sin validar en terreno. En los datos actuales, 78 de 420 pares de destinos no tienen camino sin escaleras; entre ellos, todo lo que pasa por el Acceso Av. España.
+
+### Límites del modo voz
+
+- Orienta, no reemplaza al bastón ni al perro guía: no detecta obstáculos ni da una ruta paso a paso.
+- Exige llevar el teléfono en la mano, plano y con la pantalla encendida: la brújula mide hacia dónde apunta el teléfono, y una web se suspende con la pantalla bloqueada.
+- Las pistas actuales son visuales («el edificio de la torre»). Faltan pistas táctiles o sonoras por destino, redactadas en terreno.
+- Probado con el recorrido simulado en un navegador de escritorio. Sin probar con VoiceOver ni TalkBack en un teléfono, ni con personas ciegas.
 
 ## 8. Pitch
 
