@@ -3,3 +3,6 @@ HackatonLyoss/
 # Cachés y configuración local de impeccable
 **/.impeccable/hook.cache.json
 **/.impeccable/config.local.json
+
+# Registros del navegador automatizado (Playwright MCP)
+.playwright-mcp/
