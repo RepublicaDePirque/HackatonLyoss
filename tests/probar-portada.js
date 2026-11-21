@@ -19,7 +19,10 @@ assert(/<main id="vPortada" class="vista"/.test(html), "falta la pantalla vPorta
 assert(/<button id="btnPortada"[^>]*aria-label=/.test(html), "el botón de la portada debe tener nombre accesible");
 assert(/const VISTAS = \["portada",/.test(html), "VISTAS debe incluir «portada»");
 assert(html.includes('history.replaceState({ v: "portada" }'), "el historial debe partir en la portada");
-assert(html.includes('$("btnPortada").onclick = () => ir("permiso")'), "tocar la portada debe llevar a la bienvenida");
+assert(html.includes('$("btnPortada").onclick = entrarDesdePortada;'), "tocar la portada debe llevar a la bienvenida");
+const entrar = html.match(/function entrarDesdePortada\(\) \{[\s\S]*?\n\}/);
+assert(entrar && (entrar[0].match(/ir\("permiso"\)/g) || []).length === 2, "entrarDesdePortada debe ir a la bienvenida con y sin animación");
+assert(/if \(sinMovimiento\(\)\) \{ ir\("permiso"\); return; \}/.test(entrar[0]), "con «reducir movimiento» el paso debe ser directo");
 // el arranque normal muestra la portada; ?debug, ?demo y #mapa entran directo
 assert(/else ir\("portada", false\);\s*<\/script>/.test(html), "sin parámetros la app debe partir en la portada");
 assert(/else if \(DEBUG \|\| location\.hash === "#mapa"\)/.test(html), "?debug y #mapa deben entrar sin pasar por la portada");
