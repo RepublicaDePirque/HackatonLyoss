@@ -55,13 +55,13 @@ Por otro lado, ofrece maneras más precisas para quien las necesite: la flecha, 
   - el E y el F eran dormitorios;
   - el H, hoy museo, era la casa del rector.
 - **Otra señal para quien no entienda la luz:** selector Resplandor / Flecha / Mapa. El mapa te ubica en el plano del campus.
-- **Fotos de la comunidad:** en los últimos 60 m aparece la foto de cómo se ve el destino. Al llegar, puedes dejar la tuya (sin nombre) para quien venga después.
+- **Fotos de la comunidad:** en los últimos 60-40 m aparece la foto de cómo se ve el destino. Al llegar, puedes dejar la tuya (sin nombre) para quien venga después.
 - **Llegada:** automática por GPS, a 20 m o menos del borde del edificio, con un botón «Ya llegué» por si el GPS falla.
 
 **Accesibilidad (lo que estamos explorando).** Nos falta resolver la accesibilidad de los dos últimos usuarios; en esa parte todavía estamos experimentando. Sabemos que necesitamos una segunda funcionalidad, mucho más precisa y orientada a las capacidades físicas de cada persona:
 
-- **Silla de ruedas:** rutas sin escaleras. El grafo de la rama `wip/brujula` ya marca una escalera en una arista, pero el A* todavía no lo usa.
-- **Persona ciega:** guía por audio con giros y distancias, apoyada en un camino trazado.
+- **Movilidad reducida:** rutas sin escaleras. El grafo de la rama `wip/brujula` ya marca una escalera en una arista, pero el A* todavía no lo usa.
+- **Visibilidad reducida:** guía por audio con giros y distancias, apoyada en un camino trazado.
 - **Por discutir:** en el núcleo decidimos que el mapa ubica sin trazar ruta, mientras que esta funcionalidad sí la necesita. Falta acordar cómo conviven las dos.
 
 ## 04 Resultado esperado
@@ -93,7 +93,7 @@ El enunciado pide un prototipo funcional, no un producto terminado. Esto es lo q
 
 **Supuestos y limitaciones:**
 
-- Las coordenadas marcan el centro del edificio, no su puerta. No se midieron en terreno.
+- Las coordenadas marcan el centro del edificio, no su puerta. No se midieron en terreno. -> Ahora los edificios, en alguna branch, deberian estar contorneados, de esta manera llegas al edificio pero no solo su centro de masa por asi decirlo, las entradas a marcar las haremos nosotros al ojo.
 - Las pistas son borradores redactados desde el plano.
 - Existen dos georreferencias: la nuestra (OpenStreetMap contra el plano, 1 a 2 m de error) y la de `wip/brujula` (3 lecturas de GPS). Difieren en 10 a 30 m y no sabemos cuál se acerca más al terreno.
 - El GPS ronda los 5 m a cielo abierto y empeora entre edificios.
