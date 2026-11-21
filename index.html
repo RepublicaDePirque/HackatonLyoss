@@ -578,7 +578,11 @@ function guide() {
 const params = new URLSearchParams(location.search);
 const DEBUG = params.has("debug");                           // ?debug: panel para moverte sin GPS
 document.documentElement.classList.toggle("debug", DEBUG);
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {                          // si sale una versión nueva, la página se recarga sola una vez
+  const habiaSW = !!navigator.serviceWorker.controller; let recargado = false;
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (habiaSW && !recargado) { recargado = true; location.reload(); } });
+}
 const $ = id => document.getElementById(id);
 
 const state = {
