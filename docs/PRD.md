@@ -61,8 +61,7 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 - Paleta «confort» (la sensación buscada: sé que voy a llegar). Tema claro y oscuro.
   - Oscuro: fondo `#15131F`, texto `#F5F1EA`, texto secundario `#B3ADBF`, superficies translúcidas `rgba(40,36,56,0.62)`.
   - Claro: fondo `#F6F1EA`, texto `#1D1A26`, texto secundario `#5E5869`, superficies translúcidas `rgba(255,255,255,0.68)`.
-  - Resplandor lejos (calma): azul `#8FA6FF` y lila `#B79CFF`.
-  - Resplandor cerca (calidez): naranja `#FF8A3D` y rosa `#FF5C7A`. El color se interpola según la cercanía, en espacio OKLCH para que el paso de frío a cálido no se ensucie. Una franja fina en el borde marca el punto exacto, y un velo suave detrás de la cifra mantiene el contraste.
+  - Resplandor según la distancia (decidido después del diseño, para que el color diga «frío o caliente» sin leer la cifra): azul `#5B8CFF` si está lejos, morado `#A66BFF` a mitad de camino y rojo `#FF3D4F` cuando está cerca (0 m = rojo, 220 m o más = azul). El color se interpola en espacio OKLCH para que el paso no se ensucie. Una franja fina en el borde marca el punto exacto, y un velo suave detrás de la cifra mantiene el contraste.
   - Llegada y comunidad (vivo, saturado): coral `#FF5C39` y amarillo `#FFB800`. La pantalla de llegada es un degradado coral → amarillo con texto oscuro. El mismo coral marca lo que viene de otros estudiantes (la marca «con fotos» y el botón de aportar), de modo que llegar se lee como sumarse a la comunidad.
   - Decidido: paleta propia, sin colores institucionales de la USM. La sensación de comunidad la lleva solo el color, sin conteos ni indicadores de otros estudiantes.
 - Movimiento: fluido y lento. Curva `cubic-bezier(0.22, 1, 0.36, 1)`, entre 900 y 1400 ms; el resplandor «respira» en ciclos de 5 a 7 s; las superficies son de vidrio esmerilado (desenfoque de fondo). Con «reducir movimiento» activado se quitan las animaciones.
