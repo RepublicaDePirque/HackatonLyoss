@@ -73,6 +73,17 @@
   #btnPortada .nombre { margin-top:-28px; font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:30px; letter-spacing:.02em; animation:aparece 1400ms 250ms var(--ease) both; }
   #btnPortada .toca { font-size:15px; color:#B3ADBF; animation:aparece 1400ms 500ms var(--ease) both, late 3.2s 1.9s ease-in-out infinite; }
   #vPortada #btnPortada:focus-visible { outline-offset:-6px; }
+  /* Paso a la bienvenida: la luz del faro se abre en un círculo que revela la bienvenida, y su contenido entra en cascada.
+     --ox/--oy (la lámpara del faro) las fija entrarDesdePortada(). */
+  #vPortada.saliendo { display:flex; pointer-events:none; }
+  #vPortada.saliendo #btnPortada img { animation:logoSale 900ms var(--ease) both; }
+  #vPortada.saliendo #btnPortada .nombre, #vPortada.saliendo #btnPortada .toca { animation:textoSale 300ms ease-out both; }
+  #vPermiso.entrando { z-index:5; background:var(--bg); animation:abre 950ms cubic-bezier(.65,0,.35,1) both; }
+  #vPermiso.entrando > * { animation:sube 900ms var(--ease) both; }
+  #vPermiso.entrando > .tel { animation:funde 900ms 200ms var(--ease) both; }   /* solo opacidad: en pantallas bajas la .tel va achicada con transform */
+  #vPermiso.entrando > :nth-child(2) { animation-delay:300ms; }
+  #vPermiso.entrando > :nth-child(3) { animation-delay:380ms; }
+  #vPermiso.entrando > :nth-child(4) { animation-delay:460ms; }
   #vPermiso { gap:24px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #vPermiso .tel { align-self:center; position:relative; width:150px; height:250px; flex-shrink:0; border-radius:30px; border:2px solid var(--line); overflow:hidden; background:var(--surface); }
   #vPermiso .tel .mancha { position:absolute; left:64px; top:-90px; width:200px; height:200px; animation:recorre 9s cubic-bezier(.45,0,.55,1) infinite; }
@@ -240,6 +251,10 @@
   @keyframes brota { from { opacity:0; transform:translateY(24px) scale(.97) } to { opacity:1; transform:none } }
   @keyframes hoja { from { opacity:0; transform:translateY(60px) } to { opacity:1; transform:none } }
   @keyframes sube { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:none } }
+  @keyframes funde { from { opacity:0 } to { opacity:1 } }
+  @keyframes abre { from { clip-path:circle(0 at var(--ox, 50%) var(--oy, 40%)) } to { clip-path:circle(150% at var(--ox, 50%) var(--oy, 40%)) } }
+  @keyframes logoSale { to { opacity:.5; transform:scale(1.06) } }
+  @keyframes textoSale { to { opacity:0; transform:translateY(8px) } }
   @keyframes recorre { 0%,100% { transform:translate(0,0) } 33% { transform:translate(46px,40px) } 66% { transform:translate(-30px,60px) } }
   @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
 
@@ -1123,7 +1138,20 @@ function renderBrujula() {
   if (mapa) dibujarMapa(ev, g);
 }
 
-$("btnPortada").onclick = () => ir("permiso");              // la portada muestra el logo; al tocar se entra
+// La portada muestra el logo; al tocar se entra a la bienvenida. La bienvenida queda debajo y la portada se
+// desvanece encima; si el teléfono pide menos movimiento, el paso es directo.
+function entrarDesdePortada() {
+  const portada = $("vPortada"), bienvenida = $("vPermiso");
+  if (portada.classList.contains("saliendo")) return;
+  if (sinMovimiento()) { ir("permiso"); return; }
+  const logo = portada.querySelector("img").getBoundingClientRect();    // la lámpara del faro, dentro del logo
+  bienvenida.style.setProperty("--ox", Math.round(logo.left + logo.width * .45) + "px");
+  bienvenida.style.setProperty("--oy", Math.round(logo.top + logo.height * .4) + "px");
+  portada.classList.add("saliendo"); bienvenida.classList.add("entrando");
+  ir("permiso");
+  setTimeout(() => { portada.classList.remove("saliendo"); bienvenida.classList.remove("entrando"); }, 1500);
+}
+$("btnPortada").onclick = entrarDesdePortada;
 $("btnAtras").onclick = () => ir("buscar");
 // «Ya llegué»: con foto se pregunta antes (ayuda a notar que es otro edificio); sin foto va directo.
 $("btnYaLlegue").onclick = () => { state.llego = state.destId; if (fotoDe(state.destId)) { state.confirmando = "manual"; render(); } else ir("llegada"); };
