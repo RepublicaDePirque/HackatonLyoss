@@ -43,7 +43,7 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 ## Dónde la implementación se aparta del PRD
 
-- **El mapa traza la ruta** (A* sobre los caminos de OpenStreetMap, con aviso de escaleras y opción «sin escaleras»); el PRD dice que el modo mapa «te ubica; no traza ruta». Lo dejé porque ya estaba hecho y funciona; la brújula, que es el producto, sigue sin mostrar ruta. Si el equipo prefiere el mapa sin ruta, basta quitar el dibujo de `path` en `dibujarMapa`.
+- **El mapa traza la ruta** (A* sobre los caminos de OpenStreetMap, con aviso de escaleras y opción «Evitar escaleras», que suma 400 m de costo por tramo de escalera en vez de prohibirlos: así entrega el camino con menos escaleras cuando no hay uno sin ninguna; la comparación está en `escaleras.js` y se prueba con `node tools/probar-escaleras.js`); el PRD dice que el modo mapa «te ubica; no traza ruta». Lo dejé porque ya estaba hecho y funciona; la brújula, que es el producto, sigue sin mostrar ruta. Si el equipo prefiere el mapa sin ruta, basta quitar el dibujo de `path` en `dibujarMapa`.
 - **El mapa puede girar con el rumbo** (botón ↻, apagado por defecto). El PRD decidió que no gira; por defecto se respeta (orientación del plano) y el giro es opcional. Una brújula con la N marca dónde queda el norte porque el plano no está orientado así.
 - **El resplandor se mueve en 0,7 s** (posición) y 1,4 s (tamaño y color), no 1,4 s en todo: con la brújula del teléfono emitiendo decenas de lecturas por segundo, 1,4 s en la posición se sentía arrastrado.
 - **Las fotos de la comunidad se guardan solo en el teléfono** (`localStorage`, JPEG de máximo 900 px). El PRD deja sin definir dónde se guardan y cómo se moderan; mientras tanto no hay publicación real. La pantalla lo avisa.
