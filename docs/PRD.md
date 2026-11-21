@@ -40,7 +40,7 @@ Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app
 2. Seguir la brújula: señal, distancia, pista.
 3. En el trayecto: tarjetas de datos curiosos al entrar en una zona.
 4. Últimos 60 m: foto de cómo se ve el destino.
-5. Llegada: automática por GPS (al estar adentro del cuadro del edificio, según su huella en `huellas-edificios.geojson`), con un botón secundario «Ya llegué» por si el GPS falla. La pantalla de llegada muestra la foto, un dato y la invitación a dejar la propia; «Aún no llego» devuelve a la brújula.
+5. Llegada: el GPS la detecta (al estar adentro del cuadro del edificio, según su huella en `huellas-edificios.geojson`), y antes de pasar a la llegada la persona lo confirma con la foto del destino («¿Es este el lugar?»: «Sí, llegué» / «Aún no»), porque el GPS puede errar 5 a 15 m y los edificios están pegados. Un botón secundario «Ya llegué» queda por si el GPS falla. La pantalla de llegada muestra la foto, un dato y la invitación a dejar la propia; «Aún no llego» devuelve a la brújula.
 
 Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en línea recta), pasando junto al Edificio C (dato: era el hall de montaje). Se eligió el A porque tiene foto con licencia libre.
 
