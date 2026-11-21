@@ -169,6 +169,20 @@
   #hoja button { margin-top:auto; height:56px; border:0; border-radius:18px; background:var(--fg); color:var(--bg); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:18px; flex-shrink:0; }
 
   /* controles del mapa */
+  /* confirmación al llegar: ¿es este el lugar? */
+  #confirma { position:absolute; left:0; right:0; bottom:0; z-index:6; padding:14px 20px calc(env(safe-area-inset-bottom) + 20px); border-radius:28px 28px 0 0; background:var(--hoja); box-shadow:0 -20px 50px rgba(12,10,24,.3); display:flex; flex-direction:column; gap:12px; animation:hoja 900ms var(--ease) both; max-height:92%; overflow-y:auto; }
+  #confirma .agarre { align-self:center; width:40px; height:5px; border-radius:3px; background:var(--line); flex-shrink:0; }
+  #confirma h2 { margin:0; font-family:'Chakra Petch',sans-serif; font-size:28px; line-height:1.1; }
+  #confImg { width:100%; height:clamp(150px, 26dvh, 230px); object-fit:cover; border-radius:18px; flex-shrink:0; }
+  #confSinFoto { display:flex; align-items:center; gap:14px; padding:14px; border-radius:18px; border:2px dashed var(--line); }
+  #confLetra { width:56px; height:56px; border-radius:14px; background:var(--badge-bg); color:var(--badge); display:flex; align-items:center; justify-content:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:24px; flex-shrink:0; }
+  #confSinFoto span { font-size:15px; line-height:1.4; color:var(--sub); }
+  .conf-datos { display:flex; flex-direction:column; gap:2px; }
+  .conf-datos b { font-family:'Chakra Petch',sans-serif; font-size:20px; }
+  .conf-datos span { font-size:15px; color:var(--sub); }
+  .conf-datos small { font-size:12px; color:var(--muted); }
+  #confAyuda { margin:0; font-size:15px; line-height:1.4; color:var(--sub); }
+  #confirma .btn-texto { color:var(--fg); font-weight:600; }
   #mapaCtl { position:absolute; right:14px; top:50%; transform:translateY(-50%); display:none; flex-direction:column; gap:8px; z-index:2; }
   .modo-mapa #mapaCtl { display:flex; }
   #mapaCtl button { width:44px; height:44px; border-radius:22px; padding:0; font-size:20px; font-weight:600; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--fg); }
@@ -341,6 +355,16 @@
     <h2 id="hojaTitulo"></h2>
     <div id="hojaTexto" style="display:flex;flex-direction:column;gap:14px"></div>
     <button id="hojaCerrar">Seguir caminando</button>
+  </div>
+  <div id="confirma" role="dialog" aria-modal="true" aria-labelledby="confTitulo" hidden>
+    <span class="agarre" aria-hidden="true"></span>
+    <h2 id="confTitulo">¿Es este el lugar?</h2>
+    <img id="confImg" alt="" hidden>
+    <div id="confSinFoto" hidden><span id="confLetra" aria-hidden="true">•</span><span id="confSinFotoTxt">Aún no hay foto de este lugar.</span></div>
+    <div class="conf-datos"><b id="confNombre"></b><span id="confDetalle"></span><small id="confCred"></small></div>
+    <p id="confAyuda"></p>
+    <button id="confSi" class="btn-principal">Sí, llegué</button>
+    <button id="confNo" class="btn-texto">Aún no</button>
   </div>
   <div id="chipDemo" class="chip-demo vidrio" hidden><span>Recorrido de ejemplo</span><button id="demoSalir">Salir</button></div>
 </main>
@@ -627,7 +651,8 @@ const state = {
   accesible: false,                  // true = ruta sin escaleras
   demo: false, gpsError: "",
   hist: [],                          // [tiempo, metros al borde] para saber si te acercas o te alejas
-  llego: null,                       // destino cuya llegada ya se mostró (o se pospuso con «Aún no llego»)
+  llego: null,                       // destino cuya llegada ya se propuso (o se pospuso con «Aún no»)
+  confirmando: null,                 // «auto» o «manual» mientras se pregunta «¿Es este el lugar?»
   zonasVistas: new Set(), zona: null, hojaAbierta: false, entradaCerrada: false,
 };
 const tieneUbicacion = () => state.sim || (state.mode === "gps" && state.fix);
@@ -682,6 +707,7 @@ function reducirFoto(file) {                                 // máx. 900 px y J
 const VISTAS = ["permiso", "buscar", "brujula", "llegada"];
 const idVista = v => "v" + v[0].toUpperCase() + v.slice(1);
 function ir(v, push = true) {
+  state.confirmando = null;
   if (state.demo && v !== "brujula" && v !== "llegada") detenerDemo();
   state.vista = v;
   for (const x of VISTAS) $(idVista(x)).classList.toggle("activa", x === v);
@@ -699,7 +725,7 @@ function elegir(id) {                                        // desde la lista o
   setDest(id); ir("brujula");
 }
 function setDest(id) {
-  state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false;
+  state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false; state.confirmando = null;
   if (state.llego === id) state.llego = null;
   mapV.fitted = false; render();
 }
@@ -949,9 +975,9 @@ function renderBrujula() {
     }
   }
   const z = state.zona;
-  $("dato").hidden = !(z && !mapa && !casi && !(ev && ev.llego) && !state.hojaAbierta);
+  $("dato").hidden = !(z && !mapa && !casi && !(ev && ev.llego) && !state.hojaAbierta && !state.confirmando);
   if (z) { $("datoTitulo").textContent = z.titulo; $("datoGancho").textContent = z.gancho; $("datoTexto").textContent = z.texto; }
-  const foto = fotoDe(state.destId), verEntrada = casi && !mapa && !!foto && !state.entradaCerrada;
+  const foto = fotoDe(state.destId), verEntrada = casi && !mapa && !!foto && !state.entradaCerrada && !state.confirmando;
   $("entrada").hidden = !verEntrada;
   if (verEntrada) {
     if ($("entradaImg").getAttribute("src") !== foto.src) $("entradaImg").src = foto.src;
@@ -965,16 +991,46 @@ function renderBrujula() {
   $("chipDemo").hidden = !state.demo;
   $("accBtn").setAttribute("aria-pressed", state.accesible);
 
-  // llegada automática por GPS (PRD §5: a ≤ 20 m del borde); «Aún no llego» la pospone hasta que te alejes
+  // El GPS dice que llegaste: la persona lo comprueba con la foto («¿Es este el lugar?») antes de pasar a la llegada.
+  // «Aún no» lo pospone hasta que te alejes. El GPS puede errar 5 a 15 m y los edificios están pegados.
   if (ev && state.vista === "brujula") {
-    if (ev.llego && state.llego !== state.destId) { state.llego = state.destId; vibrar([120, 70, 120, 70, 300]); ir("llegada"); return; }
-    if (!ev.llego && ev.aim.d > REARMAR && state.llego === state.destId) state.llego = null;
+    if (ev.llego && state.llego !== state.destId) {
+      state.llego = state.destId; state.confirmando = "auto"; vibrar([120, 70, 120]);
+      if (state.demo) setTimeout(() => { if (state.confirmando === "auto" && state.demo) confirmarLlegada(); }, 3500);   // en la demo se confirma sola
+    }
+    if (!ev.llego && ev.aim.d > REARMAR) {                   // te alejaste: se vuelve a armar el aviso y se cierra la pregunta automática
+      if (state.llego === state.destId) state.llego = null;
+      if (state.confirmando === "auto") state.confirmando = null;   // la manual («Ya llegué») espera tu respuesta
+    }
   }
+  renderConfirma();
   if (mapa) dibujarMapa(ev, g);
 }
 
 $("btnAtras").onclick = () => ir("buscar");
-$("btnYaLlegue").onclick = () => { state.llego = state.destId; ir("llegada"); };
+// «Ya llegué»: con foto se pregunta antes (ayuda a notar que es otro edificio); sin foto va directo.
+$("btnYaLlegue").onclick = () => { state.llego = state.destId; if (fotoDe(state.destId)) { state.confirmando = "manual"; render(); } else ir("llegada"); };
+function confirmarLlegada() { state.confirmando = null; state.llego = state.destId; vibrar([120, 70, 120, 70, 300]); ir("llegada"); }
+$("confSi").onclick = confirmarLlegada;
+$("confNo").onclick = () => { state.confirmando = null; render(); };
+function renderConfirma() {
+  const hoja = $("confirma"); hoja.hidden = !state.confirmando;
+  if (!state.confirmando) { hoja.dataset.dest = ""; return; }
+  if (hoja.dataset.dest === state.destId) return;            // ya está pintada para este destino
+  hoja.dataset.dest = state.destId;
+  const i = info(state.destId), f = fotoDe(state.destId);
+  $("confNombre").textContent = i.nombre; $("confDetalle").textContent = i.detalle || "";
+  $("confImg").hidden = !f; $("confSinFoto").hidden = !!f;
+  if (f) {
+    $("confImg").src = f.src; $("confImg").alt = "Foto de " + i.nombre; $("confCred").textContent = f.cred;
+    $("confAyuda").textContent = "Compara la foto con lo que ves. Si coincide, estás en el lugar correcto.";
+  } else {
+    $("confLetra").textContent = i.letra || "•"; $("confCred").textContent = "";
+    $("confSinFotoTxt").textContent = "Aún no hay foto de este lugar.";
+    $("confAyuda").textContent = "Mira el edificio a tu alrededor. Al llegar puedes dejar tu foto para quien venga después.";
+  }
+  try { $("confSi").focus({ preventScroll: true }); } catch (e) {}
+}
 $("btnAbrirMapa").onclick = () => setModo("mapa");
 $("selRes").onclick = () => setModo("resplandor");
 $("selFle").onclick = () => setModo("flecha");
