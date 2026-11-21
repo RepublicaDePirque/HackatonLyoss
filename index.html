@@ -652,8 +652,9 @@ function cruzaEdificio(a, b, k) {                           // ¿el tramo puerta
   }
 })();
 // ---------- Pasos por dentro de edificios (PASOS en js/generado/entradas.js, de data/entradas.json) ----------
-// Atajos que cruzan un edificio de puerta a puerta. Cada punto del trazo es un nodo del grafo; los extremos se unen a la puerta
-// marcada a ≤ 6 m (si no hay, al camino más cercano). Un paso «con escalera» cuenta como tramo de escalera. La ruta avisa cuándo
+// Atajos que cruzan un edificio de puerta a puerta. Cada punto del trazo es un nodo del grafo; un punto sobre una puerta marcada
+// (≤ 6 m) es esa puerta, así que un paso puede ser una cadena que visita varias; un extremo sin puerta se une al camino más
+// cercano. Un paso «con escalera» cuenta como tramo de escalera. La ruta avisa cuándo
 // pasa por dentro (con la nota del paso, por ejemplo el horario) y el mapa los dibuja punteados.
 const interiores = new Set();           // "a|b" de los tramos por dentro (en los dos sentidos)
 const infoInterior = new Map();         // "a|b" -> { nombre, nota, area }
@@ -666,7 +667,8 @@ const PUERTA_PASO_M = 6;
     if (!AREAS[s.k] || s.p.length < 2) return;
     const ids = s.p.map(([px, py], j) => {
       const m = fromPlan(px, py), extremo = j === 0 || j === s.p.length - 1;
-      if (extremo) { const pu = puertas.find(d => Math.hypot(d.x - m.x, d.y - m.y) <= PUERTA_PASO_M); if (pu) return pu.id; }
+      const pu = puertas.map(d => [Math.hypot(d.x - m.x, d.y - m.y), d]).filter(([dist]) => dist <= PUERTA_PASO_M).sort((a, b) => a[0] - b[0])[0];
+      if (pu) return pu[1].id;                               // sobre una puerta marcada: es esa puerta (la más cercana)
       const ll = fromXY(m.x, m.y), id = `i:${i}:${j}`;
       graph[id] = { id, lat: ll.lat, lng: ll.lng, x: m.x, y: m.y, edges: [], interior: true, area: s.k };
       if (extremo) {                                         // sin puerta cerca: se une al camino más cercano

@@ -45,8 +45,9 @@ for (const s of PASOS) {
   assert.ok(Array.isArray(s.p) && s.p.length >= 2, `paso «${s.n}»: necesita al menos 2 puntos`);
   for (const [x, y] of s.p) assert.ok(x > -60 && x < 1371 && y > -60 && y < 1066, `paso «${s.n}»: un punto cae fuera del plano`);
   assert.ok([true, false, null].includes(s.a), `paso «${s.n}»: accesible debe ser true, false o null`);
-  const largo = s.p.reduce((t, q, i) => i ? t + Math.hypot(q[0] - s.p[i - 1][0], q[1] - s.p[i - 1][1]) * MPP : 0, 0);
-  assert.ok(largo > 3 && largo <= 250, `paso «${s.n}» mide ${largo.toFixed(0)} m: ¿está bien trazado?`);
+  // un paso puede ser una cadena que visita varias puertas: se revisa cada tramo, no el total
+  const tramos = s.p.slice(1).map((q, i) => Math.hypot(q[0] - s.p[i][0], q[1] - s.p[i][1]) * MPP).filter(m => m > 0);
+  assert.ok(tramos.length > 0 && Math.max(...tramos) <= 200, `paso «${s.n}»: un tramo mide ${Math.max(...tramos).toFixed(0)} m: ¿está bien trazado?`);
 }
 assert.strictEqual(PASOS.length, (fuente.pasos || []).length, "algún paso de data/entradas.json no llegó a la salida: correr tools/generar-entradas.py");
 // La página carga las entradas y las usa.

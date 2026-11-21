@@ -58,8 +58,9 @@ for i, p in enumerate(datos.get("pasos", []), 1):
     if any(not (-60 <= x <= W + 60 and -60 <= y <= H + 60) for x, y in pts): errores.append(f"paso {i} («{nom}»): un punto cae fuera del plano"); continue
     acc = p.get("accesible")
     if acc not in (True, False, None): errores.append(f"paso {i} («{nom}»): «accesible» debe ser true, false o null"); continue
-    largo = sum(math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]) for j in range(1, len(pts))) * MPP
-    if largo > 250: avisos.append(f"paso «{nom}»: mide {largo:.0f} m (¿está bien trazado?)")
+    # un paso puede ser una cadena que visita varias puertas: se revisa cada tramo, no el total
+    tramos = [math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]) * MPP for j in range(1, len(pts))]
+    if max(tramos) > 200: avisos.append(f"paso «{nom}»: un tramo mide {max(tramos):.0f} m (¿está bien trazado?)")
     for extremo in (pts[0], pts[-1]):                      # un extremo sin puerta cerca se conecta al camino más cercano
         if not puertas_px or min(math.hypot(extremo[0] - a, extremo[1] - b) for a, b in puertas_px) * MPP > 6:
             avisos.append(f"paso «{nom}»: un extremo no coincide con una puerta marcada (a más de 6 m): se unirá al camino más cercano"); break
