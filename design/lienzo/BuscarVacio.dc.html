@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Búsqueda sin resultados</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Chakra+Petch:wght@500;600;700&display=swap">
+<style>
+body{margin:0}
+a{text-decoration:none}a:hover{opacity:0.92}
+a:focus-visible,button:focus-visible{outline:3px solid #FFB877;outline-offset:3px}
+.campo:focus-within{outline:3px solid #FFB877;outline-offset:2px}
+.campo input::placeholder{color:inherit;opacity:0.85}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; width: 390px; height: 844px; box-sizing: border-box; padding: 32px 20px 28px; background: {{bg}}; color: {{fg}}; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: {{muted}}">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>
+Estás en la entrada de Av. Los Placeres
+</span>
+<h1 style="margin: 0; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 38px; line-height: 1.05">¿A dónde vas?</h1>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="destino" style="font-size: 14px; font-weight: 600; color: {{muted}}">Busca un edificio o un lugar</label>
+<div class="campo" style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 6px 0 16px; border-radius: 18px; background: {{surface}}; border: 1px solid {{line}}; box-sizing: border-box; color: {{muted}}">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input id="destino" type="search" value="{{q}}" onChange="{{escribir}}" placeholder="Ej.: Biblioteca, Casino o la letra C" autocomplete="off" style="flex-grow: 1; min-width: 0; height: 44px; background: transparent; border: 0; outline: 0; color: {{fg}}; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 16px">
+<sc-if value="{{hayConsulta}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{borrar}}" aria-label="Borrar búsqueda" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; background: transparent; color: {{muted}}; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</button>
+</sc-if>
+</div>
+</div>
+<sc-if value="{{sinResultados}}" hint-placeholder-val="{{false}}">
+<div role="status" style="display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 20px; background: {{surface}}; border: 1px solid {{line}}">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 20px">No encontramos «{{q}}»</span>
+<span style="font-size: 15px; line-height: 1.45; color: {{sub}}">Prueba con la letra del edificio, o con un lugar como Biblioteca o Casino.</span>
+<button type="button" onClick="{{borrar}}" style="align-self: flex-start; height: 44px; margin-top: 4px; padding: 0 18px; border: 0; border-radius: 22px; background: {{fg}}; color: {{bg}}; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer">Ver todos los destinos</button>
+</div>
+</sc-if>
+<sc-for list="{{secciones}}" as="s" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 14px; font-weight: 600; color: {{muted}}">{{s.titulo}}</span>
+<sc-for list="{{s.filas}}" as="e" hint-placeholder-count="3">
+<a href="Main.dc.html" aria-label="{{e.aria}}" style="display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 8px 14px 8px 8px; border-radius: 18px; background: {{surface}}; border: 1px solid {{line}}; box-sizing: border-box; color: {{fg}}">
+<span aria-hidden="true" style="width: 44px; height: 44px; border-radius: 12px; background: {{badgeBg}}; display: flex; align-items: center; justify-content: center; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 19px; color: {{badge}}; flex-shrink: 0">{{e.letra}}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+<span style="font-size: 16px; font-weight: 600">{{e.nombre}}</span>
+<span style="font-size: 13px; color: {{muted}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{e.detalle}}</span>
+</span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0">
+<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums">{{e.dist}}</span>
+<sc-if value="{{e.foto}}" hint-placeholder-val="{{false}}">
+<span style="display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: {{coral}}"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 4px; background: #FF5C39"></span>con fotos</span>
+</sc-if>
+</span>
+</a>
+</sc-for>
+</div>
+</sc-for>
+<span style="margin-top: auto; font-size: 14px; line-height: 1.4; color: {{muted}}">Distancias en línea recta. Tú eliges el camino.</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema": {"editor": "enum", "options": ["oscuro", "claro"], "section": "Aspecto", "default": "oscuro"}, "consulta": {"editor": "enum", "options": ["ninguna", "gimnasio", "edificio"], "section": "Estado", "default": "gimnasio"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+var self = this;
+var D = {"tema": "oscuro", "consulta": "gimnasio"};
+var P = this.props || {};
+var S = this.state || {};
+var val = function (k) { return P[k] !== undefined && P[k] !== null ? P[k] : D[k]; };
+var claro = val('tema') === 'claro';
+var cq = val('consulta');
+var q = S.q !== undefined ? S.q : (cq && cq !== 'ninguna' ? cq : '');
+var todos = [
+{ letra: 'P', nombre: 'Edificio P', detalle: 'Salas de clases', m: 85, cerca: true },
+{ letra: 'C', nombre: 'Edificio C', detalle: 'Salas de clases', m: 90, cerca: true },
+{ letra: 'Fe', nombre: 'Federación', detalle: 'Federación de Estudiantes, junto al P', m: 90, cerca: true },
+{ letra: 'A', nombre: 'Edificio A', detalle: 'La torre, sobre Av. España', m: 205, foto: true },
+{ letra: 'U', nombre: 'Biblioteca', detalle: 'Edificio U', m: 190 },
+{ letra: 'D', nombre: 'Comedores', detalle: 'Casino, piso 1 del Edificio D', m: 155 },
+{ letra: 'F', nombre: 'Edificio F', detalle: 'Informática, Matemática, Industrias', m: 250, foto: true },
+{ letra: 'M', nombre: 'Edificio M', detalle: 'Salas de clases', m: 275 }
+].map(function (e) {
+return { letra: e.letra, nombre: e.nombre, detalle: e.detalle, dist: e.m + ' m', foto: !!e.foto, cerca: !!e.cerca, aria: e.nombre + ', ' + e.detalle + ', a ' + e.m + ' metros' + (e.foto ? ', con fotos' : '') };
+});
+var norm = function (s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); };
+var nq = norm(q);
+var secciones;
+if (nq) {
+var exactos = todos.filter(function (e) { return norm(e.letra) === nq; });
+var hits = exactos.length ? exactos : todos.filter(function (e) { return norm(e.nombre + ' ' + e.detalle).indexOf(nq) !== -1; });
+secciones = hits.length ? [{ titulo: 'Resultados', filas: hits }] : [];
+} else {
+secciones = [
+{ titulo: 'Cerca de ti', filas: todos.filter(function (e) { return e.cerca; }) },
+{ titulo: 'Todos los destinos', filas: todos.filter(function (e) { return !e.cerca; }) }
+];
+}
+return {
+bg: claro ? '#F6F1EA' : '#15131F',
+fg: claro ? '#1D1A26' : '#F5F1EA',
+muted: claro ? '#5E5869' : '#B3ADBF',
+sub: claro ? '#3A3446' : '#DDD7E6',
+surface: claro ? 'rgba(255,255,255,0.72)' : 'rgba(40,36,56,0.62)',
+line: claro ? 'rgba(29,26,38,0.09)' : 'rgba(255,255,255,0.10)',
+badge: claro ? '#4B3BA8' : '#C9B8FF',
+badgeBg: claro ? 'rgba(91,69,201,0.10)' : 'rgba(201,184,255,0.12)',
+coral: claro ? '#B8330F' : '#FF8A6B',
+q: q,
+hayConsulta: !!nq,
+sinResultados: !!nq && secciones.length === 0,
+secciones: secciones,
+escribir: function (ev) { self.setState({ q: ev && ev.target ? ev.target.value : '' }); },
+borrar: function () { self.setState({ q: '' }); }
+};
+}
+}
+</script>
+</body>
+</html>
