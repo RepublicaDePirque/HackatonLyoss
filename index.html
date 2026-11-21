@@ -503,10 +503,13 @@ GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph
 const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
 
 // ---------- Contornos de edificios y patios (js/generado/contornos.js, generado con tools/contornos.py) ----------
-// La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al ENTRAR al cuadro del edificio o patio
-// (contorno en contornos.js) y se llega al estar ADENTRO, al menos ARRIVE_ADENTRO metros bajo el borde (se limita en zonas
-// chicas, ver reqAdentro). El GPS tiene 5 a 15 m de error: si no avisa, bajarlo; si avisa antes de tiempo, subirlo.
-const ARRIVE_ADENTRO = 3;  // m adentro del contorno
+// La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al estar ADENTRO del cuadro del edificio o patio
+// (contorno en js/generado/contornos.js), a una profundidad que depende del tamaño de cada zona (ver reqAdentro): la zona de llegada es el
+// «núcleo» del contorno, más chico cuanto más grande es el edificio. El GPS tiene 5 a 15 m de error: si no avisa, bajar
+// ADENTRO_FRACCION; si avisa antes de tiempo (o en el edificio vecino), subirla.
+const ADENTRO_FRACCION = 0.6;  // parte de la profundidad máxima de la zona que hay que haber entrado
+const ADENTRO_MIN = 1.5;       // m: lo mínimo que se exige, aunque la zona sea muy angosta
+const ADENTRO_MAX = 4.5;       // m: tope en edificios grandes (C, B, A…): basta con pasar el hall, sin tener que caminar hasta el centro
 const ARRIVE_NODO = 12;  // m: destinos sin contorno (accesos), se llega al estar a esta distancia del punto del camino
 const REARMAR = 25;      // m: tras «Aún no llego», el aviso vuelve a armarse al alejarte esto del borde
 const CONT = { ...CONTORNOS.edificios, ...CONTORNOS.espacios };          // clave -> polígono en píxeles del plano
@@ -557,7 +560,10 @@ function interior(key) {
   }
   return INTERIOR[key] = best;
 }
-const reqAdentro = key => Math.min(ARRIVE_ADENTRO, 0.6 * Math.max(0, interior(key).p));   // en zonas angostas se exige menos
+const reqAdentro = key => {                                 // proporcional a cada zona, no igual para todas
+  const p = Math.max(0, interior(key).p);                    // lo más adentro que se puede estar
+  return Math.min(p * 0.9, Math.max(ADENTRO_MIN, Math.min(ADENTRO_MAX, ADENTRO_FRACCION * p)));   // nunca más de lo posible
+};
 
 // Destinos que el grafo no trae (Casino, patios, canchas...): se unen al nodo del grafo más cercano a su borde.
 const AREA_DE = { ...CONTORNOS.areaDe };
