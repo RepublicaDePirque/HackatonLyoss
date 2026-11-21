@@ -57,6 +57,20 @@ Se pueden combinar: `/?debug&tema=claro`.
 - **El color del resplandor va de azul a rojo pasando por morado** (el diseño iba de azul a naranja). Cada luz es un degradado que llega a transparente en el borde de su caja, sin `filter: blur`: el desenfoque dejaba ver la caja cuadrada en algunos móviles. Además las luces se difuminan con una máscara cerca del borde de arriba y de abajo y su centro entra 56 px en la pantalla: en Safari el borde de la página no es el de la pantalla (hay barras del navegador y del sistema) y cortar la luz en seco, justo donde es más fuerte, dibujaba un rectángulo. La barra fina queda fuera de la máscara, en el borde. El resplandor, la barra y la flecha giran con un suavizado por tiempo (`senal` en `index.html`) por el camino más corto, así que 359° → 1° no da una vuelta entera ni se arrastra con cada lectura del GPS.
 - **Calibración del plano**: la app usa 0,4601 m/px y 155,3°; `data/georef.json` da 0,4666 m/px y 154,8°. Las dos coinciden a 1 a 6 m (máximo en los bordes del plano), así que no hay desfase relevante. Si se unifican, hay que cambiar también `tools/generar-grafo.py`.
 
+## Entradas de los edificios
+
+La señal apunta a la **puerta** del edificio (no a su borde) y la ruta termina ahí.
+
+- **Datos:** `data/entradas.json` es la fuente (exportado de `marcar-entradas.html`). `python3 tools/generar-entradas.py` lo valida y escribe `js/generado/entradas.js`. Hoy hay 40 puertas en 19 edificios, marcadas a mano sobre el plano, **aproximadas**: falta afinarlas en terreno.
+- **En la app:** cada puerta es un nodo del grafo, unido al camino más cercano que no atraviese el edificio. Si el destino tiene varias, elige la de menor costo desde donde estás (se recalcula cada 1,5 s y no cambia de puerta por menos de 20 m de diferencia).
+- **Evitar escaleras:** una puerta marcada «con escalera» cuenta como un tramo de escalera, así que con la opción activa se prefiere una puerta sin escaleras si existe. Si no existe (B, F y T no tienen ninguna marcada), usa la que hay: nunca queda sin ruta. Con la opción apagada también pesa un poco (15 m).
+- **Pista y mapa:** la pista muestra «Entrada principal · con escalera» y el mapa dibuja las puertas del destino (verde sin escaleras, rojo con escalera, gris sin confirmar), con un aro en la elegida.
+- **La llegada no cambia:** sigue midiéndose contra la zona del edificio (ver arriba), no contra la puerta.
+- **Destinos que comparten edificio:** Casino, Arquitectura, Comedores y Gimnasio 1 usan solo las puertas cuyo nombre los menciona (`PUERTA_PALABRA` en `index.html`).
+- **Sin puertas marcadas** (Federación, Acceso, Entrada Placeres, patios y canchas) la señal sigue apuntando al borde.
+- **Puertas descartadas:** el generador omite las que quedan a más de 25 m de su edificio. Hoy una: «Entrada calle edificio IDP» (asignada al R, queda a 52 m; es el Edificio Matta/IDP, que no es un destino).
+- **Para agregar o afinar:** marcar en `marcar-entradas.html`, guardar el JSON en `data/entradas.json` y correr el generador. La prueba `node tests/probar-entradas.js` valida los datos.
+
 ## Herramienta temporal: marcar entradas
 
 `marcar-entradas.html` (en Pages: `/marcar-entradas.html`) sirve para levantar la puerta de cada edificio y exportar un `entradas.json`. No es parte de la app ni de su caché; se borra cuando las entradas estén integradas.
