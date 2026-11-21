@@ -461,8 +461,11 @@ GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph
 const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
 
 // ---------- Contornos de edificios y patios (contornos.js, generado con tools/contornos.py) ----------
-// La brújula apunta al borde más cercano del destino (no a su puerta) y se llega al estar a ARRIVE_BLD del borde.
-const ARRIVE_BLD = 20;   // m: PRD §5, la llegada es automática a 20 m o menos del borde del edificio
+// La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al ENTRAR al cuadro del edificio o patio
+// (contorno en contornos.js), con ARRIVE_BLD de margen por el error del GPS (5 a 15 m): subirlo si no avisa, bajarlo si avisa antes.
+const ARRIVE_BLD = 5;    // m del borde (0 = dentro del cuadro)
+const ARRIVE_NODO = 12;  // m: destinos sin contorno (accesos), se llega al estar a esta distancia del punto del camino
+const REARMAR = 25;      // m: tras «Aún no llego», el aviso vuelve a armarse al alejarte esto del borde
 const CONT = { ...CONTORNOS.edificios, ...CONTORNOS.espacios };          // clave -> polígono en píxeles del plano
 const AREAS = Object.fromEntries(Object.entries(CONT).map(([k, pts]) => [k, pts.map(([px, py]) => { const m = fromPlan(px, py); return [m.x, m.y]; })]));
 const GROUPS = CONTORNOS.grupos;                                        // P2 cuenta como P, R2 como R
@@ -829,7 +832,7 @@ function evaluar() {
   const dest = graph[destNode()], area = areaOf(state.destId), straight = distance(state.user, dest);
   // La señal indica hacia dónde está el destino (el borde más cercano de su edificio o patio); el camino lo muestra el mapa.
   const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
-  const llego = area ? aim.d < ARRIVE_BLD : straight < ARRIVE_BLD;
+  const llego = area ? aim.d <= ARRIVE_BLD : straight < ARRIVE_NODO;
   const b = bearing(state.user, aim), rel = norm360(b - state.heading);
   const g = llego ? null : guide();
   if (llego) state.target = null;
@@ -935,7 +938,7 @@ function renderBrujula() {
   // llegada automática por GPS (PRD §5: a ≤ 20 m del borde); «Aún no llego» la pospone hasta que te alejes
   if (ev && state.vista === "brujula") {
     if (ev.llego && state.llego !== state.destId) { state.llego = state.destId; vibrar([120, 70, 120, 70, 300]); ir("llegada"); return; }
-    if (!ev.llego && ev.aim.d > 45 && state.llego === state.destId) state.llego = null;
+    if (!ev.llego && ev.aim.d > REARMAR && state.llego === state.destId) state.llego = null;
   }
   if (mapa) dibujarMapa(ev, g);
 }

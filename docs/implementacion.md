@@ -12,7 +12,7 @@ Todo vive en `index.html`, una pantalla a la vez (el botón «atrás» del telé
 | Buscar | «Cerca de ti» y «Todos los destinos» (37), ordenados por distancia en línea recta. Busca por nombre, lugar o letra («C»). Marca «con fotos». Estado vacío. | `Buscar.tpl.html` |
 | Brújula | Resplandor en el borde (color OKLCH, frío→cálido según cercanía), flecha o mapa, con selector fijo. Cifra en metros al centro, mensaje de estado, pista siempre visible. | `Brujula.tpl.html` |
 | Tarjetas | Dato curioso al pasar por una zona («Leer más» abre una hoja) y «Así se ve al llegar» a 60 m o menos, con foto. | `Brujula.tpl.html` |
-| Llegada | Automática a 20 m o menos del borde del edificio; botón «Ya llegué» por si el GPS falla. Foto, «Sabías que», tomar y publicar una foto. «Aún no llego» vuelve a la brújula. | `Llegada.tpl.html` |
+| Llegada | Automática al entrar al cuadro del edificio o patio (o a 5 m de su borde, por el error del GPS); botón «Ya llegué» por si el GPS falla. Foto, «Sabías que», tomar y publicar una foto. «Aún no llego» vuelve a la brújula. | `Llegada.tpl.html` |
 | Recorrido de ejemplo | De la Entrada Av. Los Placeres al Edificio A, de unos 35 s, con dato en el trayecto, foto y llegada. | `Demo.tpl.html` |
 
 Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan las animaciones. Tipografías (Chakra Petch e Instrument Sans) alojadas en `fonts/` para que la PWA funcione sin conexión.
