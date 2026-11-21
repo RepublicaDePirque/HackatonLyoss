@@ -158,9 +158,9 @@ Todo el equipo usó **Claude** (Anthropic) durante el desarrollo: **Claude Code*
 
 | Integrante | Rol principal |
 |---|---|
-| Agustín Venegas Fellenberg | Visor de mapa e integración de toda la aplicación |
-| Eduardo Ignacio Morales | Producto (PRD), prototipo de interfaz, datos del campus y accesibilidad |
-| Pía Correa Brenni | Base de la app (PWA, GPS y brújula), grafo de caminos, contornos de edificios, llegada por cercanía al borde y fotos comunitarias con Firebase |
+| Agustín Venegas Fellenberg | Mapa y rutas: plano calibrado, grafo de OpenStreetMap, A* y camino sin escaleras. Integró la interfaz, la llegada y la herramienta de entradas |
+| Eduardo Ignacio Morales | Producto y accesibilidad: PRD, prototipo de interfaz, datos del campus, modo voz y evitar escaleras |
+| Pía Correa Brenni | Base y comunidad: PWA con GPS y brújula, contornos de edificios, fotos comunitarias con Firebase, logo e identidad de Solem |
 
 ## Licencia
 
