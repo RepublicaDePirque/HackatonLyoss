@@ -13,10 +13,10 @@ Elegimos Casa Central (Valparaíso). Está en un cerro, con desniveles y escaler
 
 Primero perfilemos a los distintos tipos de usuario que podrían llegar a utilizar esta aplicación:
 
-- **Mechón (o estudiante de la universidad):** cuando uno llega por primera vez a una universidad, no sabe cuál es el edificio A, B o C, dónde está el casino para comer (hay dos) ni a qué laboratorio ir.
+- **Estudiante de primer año  (o estudiante de la universidad):** cuando uno llega por primera vez a una universidad, no sabe cuál es el edificio A, B o C, dónde está el casino para comer (hay dos) ni a qué laboratorio ir.
 - **Personas con discapacidad:**
   - **Silla de ruedas:** si una persona en silla de ruedas quiere llegar a ciertos edificios, hay ciertas **rutas** que solo puede tomar (sin escaleras ni desniveles fuertes).
-  - **Persona ciega:** al no tener visión, su canal preferente es el audio. En su versión idílica más completa, la aplicación debería guiarla indicándole cuánto girar y hacia dónde ir. El problema es que la versión de solo brújula no le sirve; por eso su segunda funcionalidad debería ser un mapa con un camino trazado de verdad (A*).
+  - **Persona con visibilidad reducida:** al no tener visión, su canal preferente es el audio. En su versión idílica más completa, la aplicación debería guiarla indicándole cuánto girar y hacia dónde ir. El problema es que la versión de solo brújula no le sirve; por eso su segunda funcionalidad debería ser un mapa con un camino trazado de verdad (A*).
 
 ## 02 Problemática
 
@@ -40,7 +40,11 @@ Respondemos así a lo que el enunciado deja libre:
 
 **Filosofía.** Queremos quitar las barreras de orientación **de raíz**: la barrera baja cuando la persona conoce su universidad. La app guía sin reemplazar la exploración, y la comunidad ayuda al siguiente que llega.
 
-**Propuesta.** Una aplicación móvil tipo brújula: el usuario solo ve una señal visual que le indica hacia dónde queda su destino. La idea es que, además, vaya descubriendo la universidad (barreras de orientación), que se genere *engagement* con datos curiosos y que pueda colaborar subiendo fotos.
+**Propuesta.** Una aplicación móvil que entrega distintas maneras de ubicarse dentro del campus.
+
+Por un lado, apuesta por el factor aventura: indicaciones más vagas para que el estudiante descubra los edificios y el campus en general de una manera más interactiva y educativa. Su modo principal es una brújula: el usuario solo ve una señal visual que le indica hacia dónde queda su destino. En el camino va descubriendo la universidad (barreras de orientación), los datos curiosos generan *engagement* y él mismo puede colaborar subiendo fotos.
+
+Por otro lado, ofrece maneras más precisas para quien las necesite: la flecha, el mapa del campus y, en la etapa de accesibilidad, un camino trazado.
 
 - **Resplandor direccional:** el borde de la pantalla brilla del lado del destino, como el indicador de sonido de Fortnite. Lejos, la luz es estrecha y fría; cerca, ancha y cálida. Al centro va la distancia en metros. No hay ruta: el camino lo elige la persona.
 - **Información para no perderse:** una pista escrita por destino (por ejemplo, «el edificio de la torre, arriba de la escalinata de Av. España») y mensajes según la situación: vas bien, te estás alejando, está detrás de ti, casi llegas.
