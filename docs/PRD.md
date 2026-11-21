@@ -40,7 +40,7 @@ Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app
 2. Seguir la brújula: señal, distancia, pista.
 3. En el trayecto: tarjetas de datos curiosos al entrar en una zona.
 4. Últimos 60 m: foto de cómo se ve el destino.
-5. Llegada: automática por GPS (al entrar al cuadro del edificio o a 5 m de su borde, según su huella en `huellas-edificios.geojson`), con un botón secundario «Ya llegué» por si el GPS falla. La pantalla de llegada muestra la foto, un dato y la invitación a dejar la propia; «Aún no llego» devuelve a la brújula.
+5. Llegada: automática por GPS (al estar adentro del cuadro del edificio, según su huella en `huellas-edificios.geojson`), con un botón secundario «Ya llegué» por si el GPS falla. La pantalla de llegada muestra la foto, un dato y la invitación a dejar la propia; «Aún no llego» devuelve a la brújula.
 
 Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en línea recta), pasando junto al Edificio C (dato: era el hall de montaje). Se eligió el A porque tiene foto con licencia libre.
 
@@ -86,7 +86,7 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 ## 7. Restricciones conocidas
 
 - En iPhone, la brújula del navegador exige un toque del usuario para dar permiso y requiere HTTPS.
-- El GPS del teléfono ronda los 5 m a cielo abierto y empeora entre edificios; la llegada se da al entrar al cuadro del edificio, con 5 m de margen por el error del GPS (`ARRIVE_BLD` en `index.html`).
+- El GPS del teléfono ronda los 5 m a cielo abierto y empeora entre edificios; la llegada se da al estar adentro del cuadro del edificio, al menos 3 m bajo su borde y menos en zonas angostas (`ARRIVE_ADENTRO` en `index.html`); con el error del GPS, «Ya llegué» queda como respaldo.
 - El navegador no detecta zonas en segundo plano: los datos curiosos solo aparecen con la página abierta.
 - La señal directa puede apuntar a través de un edificio o un desnivel; por eso la pista textual es parte del core.
 

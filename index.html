@@ -462,8 +462,9 @@ const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d
 
 // ---------- Contornos de edificios y patios (contornos.js, generado con tools/contornos.py) ----------
 // La brújula apunta al borde más cercano del destino (no a su puerta). Se llega al ENTRAR al cuadro del edificio o patio
-// (contorno en contornos.js), con ARRIVE_BLD de margen por el error del GPS (5 a 15 m): subirlo si no avisa, bajarlo si avisa antes.
-const ARRIVE_BLD = 5;    // m del borde (0 = dentro del cuadro)
+// (contorno en contornos.js) y se llega al estar ADENTRO, al menos ARRIVE_ADENTRO metros bajo el borde (se limita en zonas
+// chicas, ver reqAdentro). El GPS tiene 5 a 15 m de error: si no avisa, bajarlo; si avisa antes de tiempo, subirlo.
+const ARRIVE_ADENTRO = 3;  // m adentro del contorno
 const ARRIVE_NODO = 12;  // m: destinos sin contorno (accesos), se llega al estar a esta distancia del punto del camino
 const REARMAR = 25;      // m: tras «Aún no llego», el aviso vuelve a armarse al alejarte esto del borde
 const CONT = { ...CONTORNOS.edificios, ...CONTORNOS.espacios };          // clave -> polígono en píxeles del plano
@@ -489,6 +490,32 @@ function nearestOnArea(p, key) {            // { lat, lng, d } del borde más ce
   return { ...fromXY(best.x, best.y), d: best.d };
 }
 const distToArea = (p, key) => nearestOnArea(p, key).d;
+
+// Profundidad (m) de un punto en un polígono: distancia al borde si está adentro, negativa si está afuera.
+function profundidad(q, poly) {
+  let inside = false, d = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [x1, y1] = poly[j], [x2, y2] = poly[i], dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
+    if ((y1 > q.y) !== (y2 > q.y) && q.x < (x2 - x1) * (q.y - y1) / (y2 - y1) + x1) inside = !inside;
+    const t = L2 ? Math.max(0, Math.min(1, ((q.x - x1) * dx + (q.y - y1) * dy) / L2)) : 0;
+    d = Math.min(d, Math.hypot(q.x - (x1 + t * dx), q.y - (y1 + t * dy)));
+  }
+  return inside ? d : -d;
+}
+const profArea = (p, key) => { const q = toXY(p); return Math.max(...grupo(key).map(k => profundidad(q, AREAS[k]))); };
+const INTERIOR = {};                                        // por área: el punto más adentro y cuánto es (cálculo perezoso)
+function interior(key) {
+  if (INTERIOR[key]) return INTERIOR[key];
+  let best = { p: -Infinity, x: 0, y: 0 };
+  for (const k of grupo(key)) {
+    const poly = AREAS[k], xs = poly.map(v => v[0]), ys = poly.map(v => v[1]);
+    for (let x = Math.min(...xs); x <= Math.max(...xs); x += 1.5) for (let y = Math.min(...ys); y <= Math.max(...ys); y += 1.5) {
+      const p = profundidad({ x, y }, poly); if (p > best.p) best = { p, x, y };
+    }
+  }
+  return INTERIOR[key] = best;
+}
+const reqAdentro = key => Math.min(ARRIVE_ADENTRO, 0.6 * Math.max(0, interior(key).p));   // en zonas angostas se exige menos
 
 // Destinos que el grafo no trae (Casino, patios, canchas...): se unen al nodo del grafo más cercano a su borde.
 const AREA_DE = { ...CONTORNOS.areaDe };
@@ -832,7 +859,9 @@ function evaluar() {
   const dest = graph[destNode()], area = areaOf(state.destId), straight = distance(state.user, dest);
   // La señal indica hacia dónde está el destino (el borde más cercano de su edificio o patio); el camino lo muestra el mapa.
   const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
-  const llego = area ? aim.d <= ARRIVE_BLD : straight < ARRIVE_NODO;
+  const prof = area ? profArea(state.user, area) : null;     // >0 adentro, <0 afuera
+  const llego = area ? prof >= reqAdentro(area) : straight < ARRIVE_NODO;
+  const enZona = area ? prof >= 0 : false;                  // adentro del cuadro pero quizá aún no lo bastante
   const b = bearing(state.user, aim), rel = norm360(b - state.heading);
   const g = llego ? null : guide();
   if (llego) state.target = null;
@@ -842,7 +871,7 @@ function evaluar() {
   const minD = Math.min(...h.map(x => x[1]));
   const aleja = !llego && h.length >= 3 && aim.d - minD >= 12;
   const acc = state.user.acc || 0;
-  return { dest, aim, llego, b, rel, g, aleja, m: Math.max(0, Math.round(aim.d / 5) * 5), impreciso: acc > 30, acc };
+  return { dest, aim, llego, enZona, b, rel, g, aleja, m: Math.max(0, Math.round(aim.d / 5) * 5), impreciso: acc > 30, acc };
 }
 
 // metros hasta la primera escalera de la ruta (0 si ya estás en una), o null si no hay
@@ -877,6 +906,7 @@ function renderBrujula() {
   } else if (ev.llego) { titulo = "Estás " + enDestino(nombre); bajada = "Llegaste por tu cuenta."; }
   else if (detras) { titulo = "Está detrás de ti"; bajada = flecha ? "Date vuelta hasta que la flecha apunte hacia arriba." : "Date vuelta hasta que la luz quede arriba."; }
   else if (ev.aleja) { titulo = "Te estás alejando"; bajada = flecha ? "Gira hacia donde apunta la flecha." : "Gira hacia donde brilla el borde."; }
+  else if (ev.enZona) { titulo = "Ya casi estás"; bajada = "Estás en la zona. Avanza un poco más hacia adentro, o toca «Ya llegué»."; }
   else if (casi) { titulo = "Casi llegas"; bajada = fotoDe(state.destId) ? "Mira la foto: así se ve al llegar." : "Estás muy cerca. Mira a tu alrededor."; }
   else { titulo = "Vas bien. Vas a llegar."; bajada = ev.impreciso ? "La dirección es aproximada: por eso la luz es más ancha." : "Te acercas. El camino lo eliges tú."; }
   $("titulo").textContent = titulo; $("bajada").textContent = bajada;
@@ -1195,9 +1225,10 @@ function iniciarDemo() {
   const ruta = astar(graph, ini.node, fin.node);
   if (!ruta) return;
   const pts = ruta.map(id => ({ lat: graph[id].lat, lng: graph[id].lng }));
+  const ar = areaOf(fin.id); if (ar) { const it = interior(ar); pts.push(fromXY(it.x, it.y)); }   // el camino llega al borde: sigue hasta adentro
   state.demo = true; state.sim = true; state.active = true; state.mode = "sim"; state.fix = true;
   state.modo = "resplandor"; state.hist = []; state.llego = null; state.zona = null; state.zonasVistas.clear(); state.hojaAbierta = false; state.entradaCerrada = false;
-  let i = 0, t = 0; const paso = 1.4;                         // metros por tick (~5,6 m/s: el recorrido dura ~35 s)
+  let i = 0, t = 0; const paso = 1.8;                         // metros por tick (~7 m/s: el recorrido dura ~35 s)
   state.user = pts[0]; setHeading(bearing(pts[0], pts[1]));
   ir("brujula");
   demoTimer = setInterval(() => {
