@@ -89,6 +89,18 @@
   <select id="from" style="width:100%"></select>
   <label>Rumbo del celular: <b id="hv">0</b>°</label>
   <input id="head" type="range" min="0" max="359" value="0">
+  <hr>
+  <div id="fotoDbg">
+    <b>Fotos (prueba, sin diseño)</b>
+    <div class="mut">Destino: <span id="fdDest"></span> · lado detectado: <b id="fdLado">—</b> · llegada: <b id="fdAprox">—</b></div>
+    <select id="fdLadoSel"><option value="">lado automático</option><option>N</option><option>S</option><option>E</option><option>O</option></select>
+    <button id="fdTomar">📷 Tomar foto</button>
+    <img id="fdPrev" alt="" style="display:none;max-width:100%;margin:6px 0">
+    <button id="fdPub" disabled>Publicar</button>
+    <button id="fdVer">Ver foto del destino</button>
+    <button id="fdRep" disabled>Reportar</button>
+    <div class="mut" id="fdMsg"></div>
+  </div>
 </div>
 <div id="hint" class="mut">Mantén la pantalla encendida. Si la flecha se ve rara, mueve el teléfono en forma de 8 para calibrar la brújula.</div>
 </main>
@@ -601,8 +613,44 @@ function render() {
   if (!enMapa) drawDial(b, arrived);
   draw(g);
 }
+// ---------- Panel de prueba de fotos (solo ?debug; la UI real viene del diseño) ----------
+if (DEBUG) {
+  let fdFoto = null, fdVista = null;
+  const fdMsg = t => { $("fdMsg").textContent = t; };
+  const fdLado = () => $("fdLadoSel").value || window.Fotos.ladoDesde(state.user, areaOf(state.destId));
+  const fdRefresh = () => {
+    if (!window.Fotos) return;
+    $("fdDest").textContent = DEST[state.destId].name;
+    $("fdLado").textContent = fdLado() || "—";
+    $("fdAprox").textContent = window.Fotos.ladoAproximacion(state.destId) || "—";
+  };
+  const renderOrig = render; render = function () { renderOrig(); fdRefresh(); };
+  $("fdTomar").onclick = async () => {
+    try {
+      fdFoto = await window.Fotos.capturarFoto(); if (!fdFoto) return;
+      $("fdPrev").src = fdFoto.dataUrl; $("fdPrev").style.display = "block"; $("fdPub").disabled = false;
+      fdMsg(`Foto lista: ${Math.round(fdFoto.bytes / 1000)} KB`);
+    } catch (e) { fdMsg("Error: " + e.message); }
+  };
+  $("fdPub").onclick = async () => {
+    const lado = fdLado(); if (!lado) return fdMsg("No se pudo detectar el lado: elígelo a mano.");
+    try { fdMsg("Subiendo…"); const id = await window.Fotos.publicarFoto(state.destId, lado, fdFoto.dataUrl); fdMsg(`Publicada (${lado}) id ${id}`); }
+    catch (e) { fdMsg("Error: " + e.message); }
+  };
+  $("fdVer").onclick = async () => {
+    try {
+      const lado = window.Fotos.ladoAproximacion(state.destId);
+      fdVista = await window.Fotos.fotoPara(state.destId, lado);
+      if (!fdVista) { $("fdPrev").style.display = "none"; $("fdRep").disabled = true; return fdMsg("Sin fotos: sé el primero."); }
+      $("fdPrev").src = fdVista.foto; $("fdPrev").style.display = "block"; $("fdRep").disabled = false;
+      fdMsg(`Foto del lado ${fdVista.lado} (llegada por ${lado || "?"})`);
+    } catch (e) { fdMsg("Error: " + e.message); }
+  };
+  $("fdRep").onclick = async () => { try { await window.Fotos.reportar(fdVista.id); fdMsg("Reportada"); $("fdRep").disabled = true; } catch (e) { fdMsg("Error: " + e.message); } };
+}
 window.addEventListener("resize", render);
 if (location.hash === "#mapa") setTab("mapa"); else render();   // index.html#mapa abre directo el mapa
 </script>
+<script type="module" src="fotos.js"></script>
 </body>
 </html>
