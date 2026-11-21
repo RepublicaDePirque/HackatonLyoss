@@ -1,6 +1,6 @@
 // Network-first: siempre intenta la versión nueva (revalidando, sin usar el caché HTTP de 10 min de GitHub Pages);
 // sin internet usa la copia guardada.
-const CACHE = "brujula-v14";
+const CACHE = "solem-v15";
 const FILES = ["./", "index.html", "js/generado/grafo.js", "js/generado/contornos.js", "js/generado/datos.js", "js/fotos.js", "js/escaleras.js", "js/voz.js", "assets/fuentes.css", "manifest.webmanifest", "assets/icons/icon-180.png", "assets/icons/icon-192.png", "assets/icons/icon-512.png", "assets/logo/logo-portada.jpg", "assets/img/mapa-claro.png", "assets/img/mapa-oscuro.png", "assets/img/edificio-a.jpg", "assets/img/edificio-b.jpg", "assets/img/edificio-f.jpg", "assets/fonts/ChakraPetch-500.woff2", "assets/fonts/ChakraPetch-600.woff2", "assets/fonts/ChakraPetch-700.woff2", "assets/fonts/InstrumentSans-400.woff2", "assets/fonts/InstrumentSans-500.woff2", "assets/fonts/InstrumentSans-600.woff2"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
