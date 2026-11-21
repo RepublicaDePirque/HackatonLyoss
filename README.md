@@ -22,7 +22,7 @@ Más detalle: [docs/PRD.md](docs/PRD.md) (producto y decisiones de diseño), [do
 - **Datos curiosos por zona.** Al pasar por ciertos lugares aparece una tarjeta con un dato del campus.
 - **Llegada.** Automática al entrar al cuadro del edificio o patio (con un margen de 5 m por el error del GPS), con botón «Ya llegué» por si el GPS falla.
 - **Fotos de cómo se ve el destino.** En los últimos 60 m aparece «Así se ve al llegar», y al llegar el usuario puede tomar y dejar su propia foto.
-- **Mapa del campus.** Plano de Casa Central con tu posición, el destino y la ruta sobre los caminos de OpenStreetMap, con aviso de escaleras y la opción «sin escaleras».
+- **Mapa del campus.** Plano de Casa Central con tu posición, el destino y la ruta sobre los caminos de OpenStreetMap, con aviso de escaleras y la opción «Evitar escaleras».
 - **Recorrido de ejemplo.** Un recorrido simulado de unos 35 s para mostrar la app sin depender del GPS.
 - **Tema claro y oscuro** según el teléfono, y animaciones reducidas si el usuario lo pide.
 - **Funciona sin conexión** e instalable en la pantalla de inicio.

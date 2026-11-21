@@ -16,7 +16,7 @@ Orientarse en Casa Central (Valparaíso) es difícil para quien no conoce el cam
 
 ## 3. Propuesta
 
-Una aplicación tipo brújula: el usuario elige un destino y ve una señal que apunta hacia él, con la distancia. No se le muestra una ruta ni un mapa giro a giro; decide por dónde caminar y, en el trayecto, descubre el campus.
+Una aplicación tipo brújula: el usuario elige un destino y ve una señal que apunta hacia él, con la distancia. La brújula no muestra una ruta ni indicaciones giro a giro; la persona decide por dónde caminar y, en el trayecto, descubre el campus. Quien prefiera ver el camino tiene el modo mapa, que sí lo dibuja.
 
 Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app guía sin sustituir la exploración, y la comunidad ayuda al siguiente que llega.
 
@@ -28,10 +28,10 @@ Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app
 | Información para no perderse | Core | Pista textual por destino, siempre visible, y un mensaje según el estado: vas bien, te estás alejando, está detrás de ti (con ícono de girar) o casi llegas. Con GPS impreciso la luz se ensancha y se avisa; sin ubicación se ofrece el mapa. |
 | Datos curiosos por zona | Core | Al pasar por ciertas coordenadas, una tarjeta compacta brota desde abajo sobre la misma pantalla de brújula, con transición suave. «Leer más» la abre en una hoja; se puede cerrar. |
 | Señal alternativa: flecha | Core | Selector fijo en la brújula, para quien no entienda el resplandor: Resplandor, Flecha o Mapa. Con la flecha, el resplandor baja a un tono tenue. |
-| Modo mapa | Core (segunda modalidad) | Versión más simple: el plano de Casa Central con otra piel visual, la posición del usuario («Tú», con un cono hacia donde mira) y el destino. Te ubica; no traza ruta. |
+| Modo mapa | Core (segunda modalidad) | Versión más simple: el plano de Casa Central con otra piel visual, la posición del usuario («Tú», con un cono hacia donde mira) y el destino. Siempre traza la ruta por los caminos del campus (A* sobre OpenStreetMap), con aviso de escaleras. La brújula sigue sin ruta. |
 | Fotos comunitarias | Core | En los últimos 60 m aparece la tarjeta «Así se ve al llegar» con la foto del destino. Al llegar se ve la foto y el usuario puede dejar la suya, sin nombre, para quien venga después. Si el destino no tiene fotos, se invita a ser el primero. |
 | Modo simulado | Core (demo) | Recorrido simulado para presentar en sala sin depender del GPS. |
-| QR como ancla de ubicación | Idea suelta | Por definir. |
+| QR como ancla de ubicación | Idea suelta | No se define aún, por decisión del equipo (ver «Punto de entrada» en la sección 9). |
 | Evitar escaleras (movilidad reducida) | Prototipo | Para quien puede caminar pero le cuestan las escaleras: muletas, una lesión, cansancio. En el modo mapa, el botón «Evitar escaleras» elige el camino sin escaleras y dice cuánto se alarga («Sin escaleras: 285 m, 125 m más. El camino corto tiene 1 escalera»). Si no existe, ofrece el que tiene menos y lo dice. |
 | Silla de ruedas | Fuera de alcance | Casa Central está en un cerro y hoy no es recorrible en silla de ruedas; prometer una ruta sería falso. |
 | Modo voz (personas ciegas) | Prototipo | La misma brújula dicha en palabras, con el modelo «faro + entorno» de Soundscape: dirección en horas del reloj y distancia («Edificio A, a las 2, 120 metros»), avisos cada 25 m, edificios que quedan al lado, datos curiosos, escaleras y llegada. Botón grande «¿Dónde está?». Lo lee el lector de pantalla del teléfono (VoiceOver o TalkBack); «Voz de la app» es opcional. En Android vibra cuando el teléfono apunta al destino. |
@@ -39,8 +39,8 @@ Filosofía: la barrera se reduce cuando la persona conoce su universidad. La app
 
 ## 5. Flujo principal
 
-0. Primera vez: una pantalla explica la señal y pide ubicación y brújula con un toque (requisito de iPhone). Quien no acepta puede ver solo el mapa.
-1. Elegir destino: búsqueda (por nombre, lugar o letra) y lista con «Cerca de ti» y «Todos los destinos», distancia en línea recta y marca «con fotos».
+0. Primera vez: una pantalla explica la señal y pide ubicación y brújula con un toque (requisito de iPhone). Quien no acepta puede ver solo el mapa. Decidido: el mapa se abre sin destino, con su posición y los edificios, y al tocar un edificio queda elegido. **Falta implementarlo**: hoy abre con el Edificio A como destino, sin que la persona lo elija.
+1. Elegir destino: búsqueda (por nombre, lugar o letra; decidido que no lee códigos de sala como «C-210» ni incluye servicios, porque los mechones buscan por letra o nombre del edificio) y lista con «Cerca de ti» y «Todos los destinos», distancia en línea recta y marca «con fotos».
 2. Seguir la brújula: señal, distancia, pista.
 3. En el trayecto: tarjetas de datos curiosos al entrar en una zona.
 4. Últimos 60 m: foto de cómo se ve el destino.
@@ -123,5 +123,6 @@ Recorrido de la demo: de la Entrada Av. Los Placeres al Edificio A (205 m en lí
 - Sin ubicar (trabajo futuro): testamento de la entrada y memorial del reloj de sol; no figuran en OpenStreetMap. Cajero BancoEstado: hay un cajero sin banco indicado en Av. Los Placeres que podría serlo, por confirmar.
 - Letra por confirmar: la cafetería Vivendum es «Q» en OpenStreetMap y «O» en el plano oficial. El punto del edificio P es el centro de P y P2 juntos. Los datos de Google Maps no se extrajeron: API de pago y términos que no permiten copiarlos en bloque.
 - Datos curiosos por zona: sin recolectar.
+- Punto de entrada: sin definir por ahora, por decisión del equipo (QR en las entradas del campus o enlace previo). Hoy la app siempre parte en la bienvenida, aunque la persona ya haya pasado por ella.
 - Sin definir: nombre del producto, moderación de fotos, dónde se guardan las fotos, stack concreto.
 - Sin confirmar: entregables y ponderaciones de las bases oficiales, hora de entrega, tamaño del equipo.

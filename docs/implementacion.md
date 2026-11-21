@@ -28,6 +28,7 @@ Tema claro y oscuro según el teléfono. Con «reducir movimiento» se quitan la
 | `datos.js` | Nombre, letra, detalle, pista y foto de cada destino | `python3 tools/generar-datos.py` (lee `data/edificios.json`) |
 | `img/` | Mapas del diseño (claro y oscuro) y fotos con licencia libre de A, B y F | — |
 | `fuentes.css`, `fonts/` | Tipografías | — |
+| `escaleras.js` | «Evitar escaleras» en el modo mapa: con el botón activo, cada tramo de escalera suma 400 m de costo en vez de quedar prohibido, así que si no hay camino sin escaleras se entrega el de menos. Se prueba con `node tools/probar-escaleras.js` | A mano |
 | `sw.js` | Caché para usarla sin conexión | Subir `CACHE` al cambiar archivos |
 
 ## Cómo probarla
@@ -45,7 +46,6 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 ## Dónde la implementación se aparta del PRD
 
-- **El mapa traza la ruta** (A* sobre los caminos de OpenStreetMap, con aviso de escaleras y opción «Evitar escaleras», que suma 400 m de costo por tramo de escalera en vez de prohibirlos: así entrega el camino con menos escaleras cuando no hay uno sin ninguna; la comparación está en `escaleras.js` y se prueba con `node tools/probar-escaleras.js`); el PRD dice que el modo mapa «te ubica; no traza ruta». Lo dejé porque ya estaba hecho y funciona; la brújula, que es el producto, sigue sin mostrar ruta. Si el equipo prefiere el mapa sin ruta, basta quitar el dibujo de `path` en `dibujarMapa`.
 - **El mapa puede girar con el rumbo** (botón ↻, apagado por defecto). El PRD decidió que no gira; por defecto se respeta (orientación del plano) y el giro es opcional. Una brújula con la N marca dónde queda el norte porque el plano no está orientado así.
 - **El resplandor se mueve en 0,7 s** (posición) y 1,4 s (tamaño y color), no 1,4 s en todo: con la brújula del teléfono emitiendo decenas de lecturas por segundo, 1,4 s en la posición se sentía arrastrado.
 - **Las fotos de la comunidad se guardan solo en el teléfono** (`localStorage`, JPEG de máximo 900 px). El PRD deja sin definir dónde se guardan y cómo se moderan; mientras tanto no hay publicación real. La pantalla lo avisa.
@@ -56,7 +56,7 @@ Se pueden combinar: `/?debug&tema=claro`.
 
 - **Comedores** es la parte norte del bloque D (OpenStreetMap lo dibuja separado; el plano lo trae dentro del cuadro de D). Su contorno sale de OSM recortado al cuadro de D. Elegir «Edificio D» también se cumple al entrar a Comedores, porque está dentro de D.
 - **Innovación Tecnológica** se asignó al edificio rotulado «Edificio Bari» en el plano (borde izquierdo): tiene la misma forma que el polígono de OSM y queda en el mismo lugar, pero es una inferencia, **por confirmar**.
-- **Cafetería Vivendum** usa la «O» del plano (OSM la llama «Q»; ver `docs/pendientes-datos.md`).
+- **Cafetería Vivendum**: su contorno es el edificio rotulado «O» en el plano, pero la app la muestra con la letra «Q» de OpenStreetMap (`datos.js`). Cuál es la correcta está por confirmar (ver `docs/pendientes-datos.md`).
 
 ## Contenido de ejemplo que hay que reemplazar
 
