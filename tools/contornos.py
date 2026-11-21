@@ -28,13 +28,13 @@ SEEDS = {
 # Espacios abiertos (patios): semilla y, opcional, rectángulo (x1, y1, x2, y2) para no escapar por zonas abiertas.
 SPACE_SEEDS = {
   "patio_central": ((870, 660), (845, 586, 915, 735)),
-  "patio_canon": ((762, 640), None),
   "ceibos": ((1005, 775), (960, 738, 1055, 812)),
   "magnolios": ((690, 500), (655, 470, 722, 572)),
   "piscina": ((775, 515), (761, 502, 889, 564)),
 }
 # Espacios sin línea negra que los cierre: polígono trazado a mano (px del plano).
 SPACE_POLYS = {
+  "patio_canon": [(1060, 759), (1136, 759), (1136, 803), (1060, 803)],   # a la derecha de Ceibos
   "patio_calistenia": [(632, 552), (650, 548), (668, 556), (680, 572), (680, 700), (650, 703), (618, 700), (616, 676), (630, 672), (630, 570)],
 }
 # Puntos de referencia reales: (px, py) del plano -> (lat, lng)
