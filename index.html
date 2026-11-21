@@ -35,24 +35,55 @@
   #hint { text-align:center; margin-top:auto; }
   #simBox, #hint.dbg { display:none; }
   .debug #simBox { display:block; }
+
+  /* pestañas Brújula / Mapa */
+  #tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  #tabs button { min-height:46px; padding:10px; font-size:16px; font-weight:600; }
+  section { display:flex; flex-direction:column; gap:10px; flex:1; min-height:0; }
+  #vMapa { display:none; }
+  .tabMapa #vMapa { display:flex; }
+  .tabMapa #vBrujula { display:none; }
+  #map { flex:1 1 0; min-height:300px; aspect-ratio:auto; touch-action:none; cursor:grab; background:#0b0e13; }
+  #mapCtl { display:grid; grid-template-columns:1fr 1fr 2fr 2fr; gap:8px; }
+  #mapCtl button { min-height:44px; padding:8px; font-size:16px; }
+  #mapInfo { text-align:center; }
+  #mapInfo b { color:var(--acc); }
 </style>
 </head>
 <body>
 <main>
 <select id="dest" aria-label="Destino"></select>
-
-<canvas id="dial"></canvas>
-<div id="info">
-  <div id="dir">—</div>
-  <div id="dist">—</div>
-  <div class="mut" id="sub"></div>
+<div id="tabs" role="tablist">
+  <button id="tabBrujula" class="on" role="tab" aria-selected="true">🧭 Brújula</button>
+  <button id="tabMapa" role="tab" aria-selected="false">🗺️ Mapa</button>
 </div>
+
+<section id="vBrujula" aria-label="Brújula">
+  <canvas id="dial"></canvas>
+  <div id="info">
+    <div id="dir">—</div>
+    <div id="dist">—</div>
+    <div class="mut" id="sub"></div>
+  </div>
+</section>
+
+<section id="vMapa" aria-label="Mapa del campus">
+  <canvas id="map" aria-label="Plano del campus con tu ruta"></canvas>
+  <div id="mapCtl">
+    <button id="zOut" aria-label="Alejar">−</button>
+    <button id="zIn" aria-label="Acercar">+</button>
+    <button id="mYo">📍 Yo</button>
+    <button id="mRuta">🧭 Ruta</button>
+  </div>
+  <div id="mapInfo" class="mut">—</div>
+  <div class="mut" style="text-align:center;font-size:12px">Plano del campus · nodos y escala de ejemplo, por calibrar en terreno.</div>
+</section>
+
 <div id="warn"></div>
 <button id="modeBtn" class="big">Activar ubicación y brújula</button>
 
 <div id="simBox">
-  <div class="mut">Debug (sin GPS): toca el mapa para mover tu posición (azul = GPS crudo, verde = ajustada al camino, aro amarillo = siguiente nodo) y gira el celular con el deslizador.</div>
-  <canvas id="map" style="aspect-ratio:7/4;margin-top:8px;cursor:crosshair"></canvas>
+  <div class="mut">Debug (sin GPS): en la pestaña Mapa, toca el plano para mover tu posición (azul = GPS crudo, verde = ajustada al camino, aro amarillo = siguiente nodo) y gira el celular con el deslizador.</div>
   <label>Posición simulada</label>
   <select id="from" style="width:100%"></select>
   <label>Rumbo del celular: <b id="hv">0</b>°</label>
@@ -82,30 +113,54 @@ function distance(a, b) {
 const DIRS = ["Norte","Noreste","Este","Sureste","Sur","Suroeste","Oeste","Noroeste"];
 const cardinal = deg => DIRS[Math.round(deg / 45) % 8];
 
-// ---------- Grafo de ejemplo ----------
-// ⚠ COORDENADAS DE EJEMPLO: origen aproximado (Casa Central USM, Valparaíso) y
-// nodos en metros respecto a él. Reemplazar por los nodos reales del plano.
+// ---------- Plano y grafo ----------
+// ⚠ CALIBRACIÓN DE EJEMPLO: la escala (mpp = metros por píxel), el norte del plano (rot) y la
+// posición geográfica (ORIGIN = píxel ax,ay) hay que medirlos en terreno. Los nodos están
+// puestos "a ojo" sobre plano.jpeg (1311×1006 px): verificar que sigan pasillos reales.
 const ORIGIN = { lat: -33.0346, lng: -71.5965 };
 const fromXY = (x, y) => ({
   lat: ORIGIN.lat + y / 111320,
   lng: ORIGIN.lng + x / (111320 * Math.cos(toRad(ORIGIN.lat)))
 });
-const N = (id, name, x, y) => ({ id, name, x, y, ...fromXY(x, y), edges: [] });
+const PLANO = {
+  src: "plano.jpeg", w: 1311, h: 1006,
+  mpp: 0.5,          // metros por píxel (estimado)
+  rot: 0,            // grados que separan el "arriba" del plano del norte, en sentido horario (por medir con la brújula)
+  ax: 810, ay: 850,  // píxel del plano que corresponde a ORIGIN (acceso Av. España)
+};
+const ROT = toRad(PLANO.rot);
+// píxel del plano <-> metros este/norte respecto a ORIGIN
+const fromPlan = (px, py) => {
+  const X = (px - PLANO.ax) * PLANO.mpp, Y = (PLANO.ay - py) * PLANO.mpp;
+  return { x: X * Math.cos(ROT) + Y * Math.sin(ROT), y: -X * Math.sin(ROT) + Y * Math.cos(ROT) };
+};
+const toPlan = (x, y) => {
+  const X = x * Math.cos(ROT) - y * Math.sin(ROT), Y = x * Math.sin(ROT) + y * Math.cos(ROT);
+  return { px: PLANO.ax + X / PLANO.mpp, py: PLANO.ay - Y / PLANO.mpp };
+};
+const N = (id, name, px, py) => { const { x, y } = fromPlan(px, py); return { id, name, px, py, x, y, ...fromXY(x, y), edges: [] }; };
 const nodesList = [
-  N("entrada","Entrada",        0,   0),
-  N("n2","",                    0,  80),
-  N("biblio","Biblioteca",      0, 160),
-  N("n4","",                  100, 160),
-  N("casino","Casino",        200, 160),
-  N("n6","",                  200,  80),
-  N("gym","Gimnasio",         200,   0),
-  N("n8","",                  100,   0),
-  N("labs","Laboratorios",    -80,  80),
+  N("espana","Acceso Av. España", 810, 850),
+  N("a","Edificio A",             813, 776),
+  N("w1","",                      713, 780),
+  N("w2","",                      700, 600),
+  N("w3","",                      690, 500),
+  N("w4","",                      700, 458),
+  N("c","Edificio C",             770, 457),
+  N("cn","",                      935, 458),
+  N("ne","",                      950, 485),
+  N("b","Edificio B",             947, 555),
+  N("d","Edificio D",             905, 612),
+  N("pc","Patio Central",         873, 680),
+  N("e1","",                      880, 775),
+  N("f1","",                      915, 805),
+  N("f","Edificio F",             990, 808),
+  N("g1","",                     1150, 800),
+  N("t","Edificio T",            1195, 805),
 ];
-// Edificio en el centro (100,80): no hay arista que lo cruce, la ruta lo rodea.
 const edgePairs = [
-  ["entrada","n2"],["n2","biblio"],["biblio","n4"],["n4","casino"],
-  ["casino","n6"],["n6","gym"],["gym","n8"],["n8","entrada"],["labs","n2"],
+  ["espana","a"],["a","w1"],["w1","w2"],["w2","w3"],["w3","w4"],["w4","c"],["c","cn"],["cn","ne"],["ne","b"],
+  ["b","d"],["d","pc"],["pc","e1"],["e1","a"],["e1","f1"],["f1","f"],["f","g1"],["g1","t"],
 ];
 const graph = Object.fromEntries(nodesList.map(n => [n.id, n]));
 edgePairs.forEach(([a, b]) => { graph[a].edges.push(b); graph[b].edges.push(a); });
@@ -187,13 +242,14 @@ const state = {
   mode: "sim",                       // "sim" | "gps"
   user: fromXY(0, 0),
   heading: 0,                        // rumbo suavizado
-  destId: DESTS[0].id,
+  destId: "c",
 };
 
 // ---------- UI ----------
 const $ = id => document.getElementById(id);
 $("dest").innerHTML = DESTS.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
-$("dest").onchange = e => { state.destId = e.target.value; state.target = null; render(); };
+$("dest").value = state.destId;
+$("dest").onchange = e => { state.destId = e.target.value; state.target = null; mapV.fitted = false; render(); };
 $("from").innerHTML = nodesList.map(n => `<option value="${n.id}">${n.name || "Cruce " + n.id}</option>`).join("");
 $("from").onchange = e => { state.user = { lat: graph[e.target.value].lat, lng: graph[e.target.value].lng }; render(); };
 $("head").oninput = e => { setHeading(+e.target.value); $("hv").textContent = e.target.value; };
@@ -251,7 +307,7 @@ $("modeBtn").onclick = async () => {
 // ---------- Render ----------
 function fit(c) {
   const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-  if (c.width !== Math.round(r.width * dpr)) { c.width = r.width * dpr; c.height = r.height * dpr; }
+  if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
   const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { ctx, w: r.width, h: r.height };
 }
@@ -301,71 +357,199 @@ function drawDial(bDest, arrived) {
 
 const label = id => graph[id].name || "cruce";
 
+// ---------- Mapa (plano.jpeg de fondo, mismo estilo oscuro/amarillo que la brújula) ----------
+const mapV = { cx: PLANO.ax, cy: PLANO.ay, z: 1, fitted: false, w: 0, h: 0 };
+const Z_MIN = 0.35, Z_MAX = 4;
+let planoDark = null;
+{ // el plano es claro: se invierte una sola vez en un canvas aparte para que combine con el tema oscuro
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+    x.globalCompositeOperation = "difference"; x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+    planoDark = c; render();
+  };
+  img.src = PLANO.src;
+}
+const mapPx = n => toPlan(n.x, n.y);                     // nodo -> {px,py}
+const posPx = p => { const q = toXY(p); return toPlan(q.x, q.y); };   // lat/lng -> {px,py}
+const toScr = (px, py) => [mapV.w / 2 + (px - mapV.cx) * mapV.z, mapV.h / 2 + (py - mapV.cy) * mapV.z];
+const fromScr = (sx, sy) => ({ px: mapV.cx + (sx - mapV.w / 2) / mapV.z, py: mapV.cy + (sy - mapV.h / 2) / mapV.z });
+const clampZ = z => Math.max(Z_MIN, Math.min(Z_MAX, z));
+
+function fitPoints(pts) {
+  if (!pts.length || !mapV.w) return;
+  const xs = pts.map(p => p.px), ys = pts.map(p => p.py), pad = 50;
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  mapV.z = clampZ(Math.min((mapV.w - 2 * pad) / Math.max(x1 - x0, 60), (mapV.h - 2 * pad) / Math.max(y1 - y0, 60)));
+  mapV.cx = (x0 + x1) / 2; mapV.cy = (y0 + y1) / 2;
+}
+function routePath(g) {                                  // nodos que faltan hasta el destino
+  return g ? astar(graph, g.target, state.destId) : null;
+}
+function fitRoute(g) {
+  const path = routePath(g);
+  const pts = path ? path.map(id => mapPx(graph[id])) : [mapPx(graph[state.destId])];
+  if (g) pts.push(posPx(g.pos)); else if (state.fix || DEBUG) pts.push(posPx(state.user));
+  if (pts.length === 1) { mapV.cx = pts[0].px; mapV.cy = pts[0].py; mapV.z = Math.max(mapV.z, 1.2); }
+  else fitPoints(pts);
+}
+
 function drawMap(g) {
   const { ctx, w, h } = fit($("map"));
-  ctx.clearRect(0, 0, w, h);
-  const pad = 36, minX = -80, maxX = 200, minY = 0, maxY = 160;
-  const s = Math.min((w - 2 * pad) / (maxX - minX), (h - 2 * pad) / (maxY - minY));
-  const ox = (w - s * (maxX - minX)) / 2, oy = (h + s * (maxY - minY)) / 2;
-  mapT = { s, ox, oy, minX, minY };
-  const P = (x, y) => [ox + (x - minX) * s, oy - (y - minY) * s];
-  ctx.strokeStyle = "#3a4452"; ctx.lineWidth = 3;
-  for (const [a, b] of edgePairs) { const [x1, y1] = P(graph[a].x, graph[a].y), [x2, y2] = P(graph[b].x, graph[b].y); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
-  ctx.font = "11px system-ui"; ctx.textAlign = "center";
+  if (!w || !h) return;
+  mapV.w = w; mapV.h = h;
+  if (!mapV.fitted) { fitRoute(g); mapV.fitted = true; }
+  ctx.fillStyle = "#0b0e13"; ctx.fillRect(0, 0, w, h);
+  if (planoDark) {
+    const [x0, y0] = toScr(0, 0);
+    ctx.globalAlpha = .85; ctx.drawImage(planoDark, x0, y0, PLANO.w * mapV.z, PLANO.h * mapV.z); ctx.globalAlpha = 1;
+  }
+  const P = n => toScr(...Object.values(mapPx(n)));
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  // caminos
+  ctx.strokeStyle = "#5b6b80"; ctx.lineWidth = 3;
+  for (const [a, b] of edgePairs) { const [x1, y1] = P(graph[a]), [x2, y2] = P(graph[b]); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  // ruta restante (amarilla, desde tu posición ajustada)
+  const path = routePath(g);
+  if (path) {
+    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 6; ctx.beginPath();
+    ctx.moveTo(...toScr(...Object.values(posPx(g.pos))));
+    for (const id of path) ctx.lineTo(...P(graph[id]));
+    ctx.stroke();
+  }
+  // nodos y etiquetas
+  ctx.font = "600 13px system-ui"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.lineJoin = "round";
   for (const n of nodesList) {
-    const [x, y] = P(n.x, n.y);
-    ctx.fillStyle = n.id === state.destId ? "#ffd23f" : "#8a94a3";
-    ctx.beginPath(); ctx.arc(x, y, n.name ? 5 : 3, 0, 7); ctx.fill();
-    if (n.name) ctx.fillText(n.name, x, y - 9);
+    const [x, y] = P(n), isDest = n.id === state.destId;
+    ctx.fillStyle = isDest ? "#ffd23f" : (n.name ? "#e8edf3" : "#8a94a3");
+    ctx.beginPath(); ctx.arc(x, y, isDest ? 9 : (n.name ? 6 : 3.5), 0, 7); ctx.fill();
+    if (n.name) {
+      ctx.strokeStyle = "#000"; ctx.strokeText(n.name, x, y - 13);
+      ctx.fillStyle = isDest ? "#ffd23f" : "#fff"; ctx.fillText(n.name, x, y - 13);
+    }
   }
   if (g) {
-    const [tx, ty] = P(graph[g.target].x, graph[g.target].y);
-    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(tx, ty, 10, 0, 7); ctx.stroke();
-    const u = toXY(state.user), [ux, uy] = P(u.x, u.y), [sx, sy] = P(g.snap.x, g.snap.y);
-    ctx.strokeStyle = "#6aa9ff"; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = "#4cd964"; ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 7); ctx.fill();   // ajustado
-    ctx.fillStyle = "#6aa9ff"; ctx.beginPath(); ctx.arc(ux, uy, 5, 0, 7); ctx.fill();   // GPS crudo
+    const [tx, ty] = P(graph[g.target]);
+    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(tx, ty, 13, 0, 7); ctx.stroke();
+  }
+  // tú: GPS crudo (azul), ajustado al camino (verde) y hacia dónde miras
+  if (g || state.fix || DEBUG) {
+    const raw = posPx(state.user), [ux, uy] = toScr(raw.px, raw.py);
+    const sn = g ? posPx(g.pos) : raw, [sx, sy] = toScr(sn.px, sn.py);
+    if (state.user.acc) { ctx.fillStyle = "#6aa9ff22"; ctx.beginPath(); ctx.arc(ux, uy, state.user.acc / PLANO.mpp * mapV.z, 0, 7); ctx.fill(); }
+    if (g && g.onGraph) {
+      ctx.strokeStyle = "#6aa9ff"; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(sx, sy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "#6aa9ff"; ctx.beginPath(); ctx.arc(ux, uy, 5, 0, 7); ctx.fill();
+    }
+    const th = toRad(state.heading - PLANO.rot);          // el "arriba" del plano puede no ser el norte
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate(th);
+    ctx.fillStyle = "#4cd96488"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 34, -Math.PI / 2 - .5, -Math.PI / 2 + .5); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#4cd964"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(sx, sy, 8, 0, 7); ctx.fill(); ctx.stroke();
   }
 }
-let mapT = null;
+
+// gestos: arrastrar, pellizcar, rueda y toque (elige destino; con ?debug mueve tu posición)
+const ptrs = new Map(); let gest = null;
+const mapEl = $("map");
+const zoomAt = (sx, sy, z2) => {
+  const before = fromScr(sx, sy); mapV.z = clampZ(z2);
+  mapV.cx = before.px - (sx - mapV.w / 2) / mapV.z; mapV.cy = before.py - (sy - mapV.h / 2) / mapV.z;
+};
+const rel = e => { const r = mapEl.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+mapEl.onpointerdown = e => {
+  mapEl.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, rel(e));
+  gest = { t: Date.now(), moved: 0, d0: null, z0: mapV.z };
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; gest.d0 = Math.hypot(a.x - b.x, a.y - b.y); }
+};
+mapEl.onpointermove = e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const prev = ptrs.get(e.pointerId), cur = rel(e); ptrs.set(e.pointerId, cur);
+  gest.moved += Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y);
+  if (ptrs.size === 2 && gest.d0) {
+    const [a, b] = [...ptrs.values()];
+    zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, gest.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gest.d0);
+  } else if (ptrs.size === 1) { mapV.cx -= (cur.x - prev.x) / mapV.z; mapV.cy -= (cur.y - prev.y) / mapV.z; }
+  render();
+};
+const endPtr = e => {
+  const wasTap = ptrs.size === 1 && gest && gest.moved < 8 && Date.now() - gest.t < 500;
+  const p = ptrs.get(e.pointerId); ptrs.delete(e.pointerId);
+  if (wasTap && e.type === "pointerup" && p) tapMap(p.x, p.y);
+};
+mapEl.onpointerup = endPtr; mapEl.onpointercancel = endPtr;
+mapEl.onwheel = e => { e.preventDefault(); const p = rel(e); zoomAt(p.x, p.y, mapV.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); render(); };
+
+function tapMap(sx, sy) {
+  let best = null, bd = 28;                              // toque cerca de un lugar con nombre -> nuevo destino
+  for (const n of DESTS) { const [x, y] = toScr(...Object.values(mapPx(n))), d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = n; } }
+  if (best) { state.destId = best.id; state.target = null; mapV.fitted = false; $("dest").value = best.id; render(); return; }
+  if (DEBUG && state.mode === "sim") {
+    const q = fromScr(sx, sy), m = fromPlan(q.px, q.py);
+    state.user = fromXY(m.x, m.y); render();
+  }
+}
+$("zIn").onclick  = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z * 1.4); render(); };
+$("zOut").onclick = () => { zoomAt(mapV.w / 2, mapV.h / 2, mapV.z / 1.4); render(); };
+$("mYo").onclick  = () => {
+  if (!DEBUG && !state.fix) { $("mapInfo").textContent = "Aún no tengo tu ubicación: activa el GPS."; return; }
+  const u = posPx(state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.z = Math.max(mapV.z, 1.3); render();
+};
+$("mRuta").onclick = () => { mapV.fitted = false; render(); };
+
+// pestañas
+function setTab(t) {
+  const m = t === "mapa";
+  document.body.classList.toggle("tabMapa", m);
+  $("tabBrujula").classList.toggle("on", !m); $("tabMapa").classList.toggle("on", m);
+  $("tabBrujula").setAttribute("aria-selected", !m); $("tabMapa").setAttribute("aria-selected", m);
+  mapV.fitted = false; render();
+}
+$("tabBrujula").onclick = () => setTab("brujula");
+$("tabMapa").onclick = () => setTab("mapa");
 
 function render() {
+  const enMapa = document.body.classList.contains("tabMapa");
+  const draw = g => { if (enMapa) drawMap(g); }
   const waiting = (!DEBUG && !state.active) ? "Toca «Activar» para empezar"
                 : (state.mode === "gps" && !state.fix) ? "Buscando señal GPS…" : null;
   if (waiting) {
     $("dir").textContent = "—"; $("dist").textContent = waiting; $("sub").textContent = "";
-    drawDial(null, false); if (DEBUG) drawMap(null);
+    $("mapInfo").innerHTML = `<b>${graph[state.destId].name}</b> · ${waiting}`;
+    if (!enMapa) drawDial(null, false); draw(null);
     return;
   }
   const dest = graph[state.destId];
   const straight = distance(state.user, dest);
   const arrived = straight < 20;
-  let b = bearing(state.user, dest), g = null;
+  let b = bearing(state.user, dest), g = null, resumen;
   if (arrived) {
     state.target = null;
     $("dir").textContent = "Estás llegando";
     $("dist").textContent = dest.name;
     $("sub").textContent = "";
+    resumen = `Estás llegando a <b>${dest.name}</b>`;
   } else if ((g = guide())) {
     b = bearing(g.pos, graph[g.target]);
+    const min = Math.max(1, Math.round(g.remaining / 80));
     $("dir").textContent = cardinal(b);
-    $("dist").textContent = `~${Math.round(g.remaining / 10) * 10} m · ${Math.max(1, Math.round(g.remaining / 80))} min`;
+    $("dist").textContent = `~${Math.round(g.remaining / 10) * 10} m · ${min} min`;
     $("sub").textContent = `Siguiente: ${label(g.target)} (${Math.round(distance(g.pos, graph[g.target]))} m)` +
       (g.onGraph ? "" : " · lejos del camino") + (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
+    resumen = `<b>${dest.name}</b> · ~${Math.round(g.remaining / 10) * 10} m · ${min} min · ${cardinal(b)}` + (g.onGraph ? "" : " · lejos del camino");
   } else {
     $("dir").textContent = cardinal(b); $("dist").textContent = "Sin ruta"; $("sub").textContent = "Destino no conectado al grafo";
+    resumen = "Sin ruta: destino no conectado";
   }
-  drawDial(b, arrived);
-  if (DEBUG) drawMap(g);
+  $("mapInfo").innerHTML = resumen;
+  if (!enMapa) drawDial(b, arrived);
+  draw(g);
 }
-$("map").onclick = e => {
-  if (state.mode !== "sim" || !mapT) return;
-  const r = e.target.getBoundingClientRect(), { s, ox, oy, minX, minY } = mapT;
-  state.user = fromXY((e.clientX - r.left - ox) / s + minX, (oy - (e.clientY - r.top)) / s + minY);
-  render();
-};
 window.addEventListener("resize", render);
-render();
+if (location.hash === "#mapa") setTab("mapa"); else render();   // index.html#mapa abre directo el mapa
 </script>
 </body>
 </html>
