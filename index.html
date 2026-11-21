@@ -76,7 +76,7 @@
     <button id="mRuta">🧭 Ruta</button>
   </div>
   <div id="mapInfo" class="mut">—</div>
-  <div class="mut" style="text-align:center;font-size:12px">Plano del campus · nodos y escala de ejemplo, por calibrar en terreno.</div>
+  <div class="mut" style="text-align:center;font-size:12px">Plano del campus · calibración aproximada (±30 m) y nodos por verificar en terreno.</div>
 </section>
 
 <div id="warn"></div>
@@ -114,19 +114,23 @@ const DIRS = ["Norte","Noreste","Este","Sureste","Sur","Suroeste","Oeste","Noroe
 const cardinal = deg => DIRS[Math.round(deg / 45) % 8];
 
 // ---------- Plano y grafo ----------
-// ⚠ CALIBRACIÓN DE EJEMPLO: la escala (mpp = metros por píxel), el norte del plano (rot) y la
-// posición geográfica (ORIGIN = píxel ax,ay) hay que medirlos en terreno. Los nodos están
-// puestos "a ojo" sobre plano.jpeg (1311×1006 px): verificar que sigan pasillos reales.
-const ORIGIN = { lat: -33.0346, lng: -71.5965 };
+// CALIBRACIÓN: ajuste por mínimos cuadrados (semejanza) con 4 puntos de control, error 8–31 m:
+//   esquina sup. derecha del espejo de agua del patio del edificio B  px(852,520)  -33.035597,-71.595048
+//   esquina más a la derecha del edificio T                           px(1261,820) -33.035270,-71.597775
+//   esquina más a la izquierda del edificio M                         px(338,541)  -33.034716,-71.592954
+//   esquina sup. izquierda del edificio Matta (IDP)                   px(449,148)  -33.036930,-71.592636
+// Para afinar: sumar puntos medidos en terreno con GPS (idealmente al centro y al sur del campus).
+// Los nodos están puestos "a ojo" sobre plano.jpeg (1311×1006 px): verificar que sigan pasillos reales.
+const ORIGIN = { lat: -33.03437, lng: -71.595651 };      // = píxel (ax,ay), acceso Av. España
 const fromXY = (x, y) => ({
   lat: ORIGIN.lat + y / 111320,
   lng: ORIGIN.lng + x / (111320 * Math.cos(toRad(ORIGIN.lat)))
 });
 const PLANO = {
   src: "plano.jpeg", w: 1311, h: 1006,
-  mpp: 0.5,          // metros por píxel (estimado)
-  rot: 0,            // grados que separan el "arriba" del plano del norte, en sentido horario (por medir con la brújula)
-  ax: 810, ay: 850,  // píxel del plano que corresponde a ORIGIN (acceso Av. España)
+  mpp: 0.484,        // metros por píxel (calibrado)
+  rot: 159,          // azimut del "arriba" del plano respecto al norte, horario (el plano está casi invertido)
+  ax: 810, ay: 850,  // píxel del plano que corresponde a ORIGIN
 };
 const ROT = toRad(PLANO.rot);
 // píxel del plano <-> metros este/norte respecto a ORIGIN
