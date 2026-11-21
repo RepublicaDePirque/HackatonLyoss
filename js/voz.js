@@ -23,6 +23,7 @@ if (typeof document !== "undefined") (function () {
   const V = { on: false, hablar: false, ultimo: 0, dest: null, tramo: null, estado: "", vistos: new Set(), zona: null, alerta: "", apunta: false, timer: null };
   const guardar = (k, v) => { try { localStorage.setItem(k, v ? "1" : ""); } catch (e) {} };
   const leer = k => { try { return !!localStorage.getItem(k); } catch (e) { return false; } };
+  const apagadaAMano = k => { try { return localStorage.getItem(k) === ""; } catch (e) { return false; } };   // "" = la persona la apagó; null = nunca la tocó
 
   // ---------- Interfaz (se inyecta aquí para no tocar el marcado de index.html) ----------
   const css = document.createElement("style");
@@ -59,7 +60,9 @@ if (typeof document !== "undefined") (function () {
        <button id="vozHablar" aria-pressed="false">Voz de la app</button>
      </div>`);
 
-  // ---------- Salida: lector de pantalla (región viva) y, opcional, la voz de la app ----------
+  // ---------- Salida: lector de pantalla (región viva) y la voz de la app ----------
+  // La voz de la app se enciende junto con el modo: sin VoiceOver ni TalkBack activos, la región viva no suena.
+  // Quien ya usa un lector de pantalla puede apagarla con «Voz de la app» para no oír dos voces.
   let vozEs = null;
   const elegirVoz = () => {
     const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
@@ -179,21 +182,35 @@ if (typeof document !== "undefined") (function () {
     else if (window.speechSynthesis) speechSynthesis.cancel();
     if (typeof render === "function") render();
   }
-  function setVoz(on) { V.on = on; guardar("modoVoz", on); V.dest = null; aplicar(); if (on && state.vista === "brujula") paso(); }
+  function setVoz(on) {
+    V.on = on; guardar("modoVoz", on); V.dest = null;
+    if (on) { V.hablar = true; guardar("vozApp", true); }
+    aplicar();
+    if (on) decir("Modo voz activado.", true);                 // dentro del toque: así iOS deja hablar a la app después
+    if (on && state.vista === "brujula") paso();
+  }
   function setHablar(on) { V.hablar = on; guardar("vozApp", on); aplicar(); if (on) decir("Voz de la app activada.", true); }
 
   $("vozModo").onclick = () => setVoz(!V.on);
   $("vozHablar").onclick = () => setHablar(!V.hablar);
   $("vozDonde").onclick = () => decir(dondeEsta(), true);
   btnVoz.onclick = () => {
-    V.on = true; guardar("modoVoz", true); aplicar();
+    V.on = true; V.hablar = true; guardar("modoVoz", true); guardar("vozApp", true); aplicar();
     decir("Modo voz activado. Elige un destino.", true);     // dentro del toque: así iOS deja hablar a la app después
     $("btnActivar").click();
   };
 
   const p = new URLSearchParams(location.search);
   V.on = p.has("voz") || leer("modoVoz");
-  V.hablar = p.has("voz") || leer("vozApp");
+  V.hablar = p.has("voz") || leer("vozApp") || (V.on && !apagadaAMano("vozApp"));
   aplicar();
+  // iOS solo deja hablar a una página después de un toque. Si el modo quedó encendido de una visita anterior,
+  // el primer toque dice algo inaudible y con eso la app puede hablar sola desde ahí.
+  const destrabar = () => {
+    if (!V.on || !V.hablar || !window.speechSynthesis) return;
+    try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+  };
+  document.addEventListener("touchend", destrabar, { once: true, capture: true });
+  document.addEventListener("click", destrabar, { once: true, capture: true });
   window.VOZ = { estado: V, paso, dondeEsta };               // para pruebas
 })();
