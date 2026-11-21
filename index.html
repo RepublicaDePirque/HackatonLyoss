@@ -89,11 +89,24 @@
   <select id="from" style="width:100%"></select>
   <label>Rumbo del celular: <b id="hv">0</b>°</label>
   <input id="head" type="range" min="0" max="359" value="0">
+  <hr>
+  <div id="fotoDbg">
+    <b>Fotos (prueba, sin diseño)</b>
+    <div class="mut">Destino: <span id="fdDest"></span> · lado detectado: <b id="fdLado">—</b> · llegada: <b id="fdAprox">—</b></div>
+    <select id="fdLadoSel"><option value="">lado automático</option><option>N</option><option>S</option><option>E</option><option>O</option></select>
+    <button id="fdTomar">📷 Tomar foto</button>
+    <img id="fdPrev" alt="" style="display:none;max-width:100%;margin:6px 0">
+    <button id="fdPub" disabled>Publicar</button>
+    <button id="fdVer">Ver foto del destino</button>
+    <button id="fdRep" disabled>Reportar</button>
+    <div class="mut" id="fdMsg"></div>
+  </div>
 </div>
 <div id="hint" class="mut">Mantén la pantalla encendida. Si la flecha se ve rara, mueve el teléfono en forma de 8 para calibrar la brújula.</div>
 </main>
 
 <script src="grafo.js"></script>
+<script src="contornos.js"></script>
 <script>
 // ---------- Geometría ----------
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
@@ -151,7 +164,44 @@ const edgePairs = GRAFO.aristas.map(([a, b]) => ["n" + a, "n" + b]);
 const stairs = new Set();                                   // "a|b" de los tramos que son escaleras
 GRAFO.aristas.forEach(([a, b, t]) => { graph["n" + a].edges.push("n" + b); graph["n" + b].edges.push("n" + a); if (t === 1) { stairs.add(`n${a}|n${b}`); stairs.add(`n${b}|n${a}`); } });
 const DESTS = GRAFO.destinos.map(d => ({ id: d.id, name: d.nombre, node: "n" + d.nodo }));
+
+// ---------- Contornos de edificios y patios (contornos.js, generado con tools/contornos.py) ----------
+// La brújula apunta al borde más cercano del destino (no a su puerta) y se llega al estar a ARRIVE_BLD del borde.
+const ARRIVE_BLD = 15;   // m
+const CONT = { ...CONTORNOS.edificios, ...CONTORNOS.espacios };          // clave -> polígono en píxeles del plano
+const AREAS = Object.fromEntries(Object.entries(CONT).map(([k, pts]) => [k, pts.map(([px, py]) => { const m = fromPlan(px, py); return [m.x, m.y]; })]));
+const GROUPS = CONTORNOS.grupos;                                        // P2 cuenta como P, R2 como R
+const grupo = k => GROUPS[k] || [k];
+
+// Distancia (m) de un punto al polígono (0 si está dentro) y punto más cercano de su borde.
+function nearestOnPoly(q, poly) {
+  let inside = false, best = { d: Infinity, x: 0, y: 0 };
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [x1, y1] = poly[j], [x2, y2] = poly[i], dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
+    if ((y1 > q.y) !== (y2 > q.y) && q.x < (x2 - x1) * (q.y - y1) / (y2 - y1) + x1) inside = !inside;
+    const t = L2 ? Math.max(0, Math.min(1, ((q.x - x1) * dx + (q.y - y1) * dy) / L2)) : 0;
+    const x = x1 + t * dx, y = y1 + t * dy, d = Math.hypot(q.x - x, q.y - y);
+    if (d < best.d) best = { d, x, y };
+  }
+  return inside ? { d: 0, x: q.x, y: q.y } : best;
+}
+function nearestOnArea(p, key) {            // { lat, lng, d } del borde más cercano de un área (o grupo)
+  const q = toXY(p); let best = { d: Infinity };
+  for (const k of grupo(key)) { const r = nearestOnPoly(q, AREAS[k]); if (r.d < best.d) best = r; }
+  return { ...fromXY(best.x, best.y), d: best.d };
+}
+const distToArea = (p, key) => nearestOnArea(p, key).d;
+
+// Destinos que el grafo no trae (Casino, patios, canchas...): se unen al nodo del grafo más cercano a su borde.
+const AREA_DE = { ...CONTORNOS.areaDe };
+for (const e of CONTORNOS.extra) {
+  if (!AREAS[e.area]) continue;
+  let node = null, bd = Infinity;
+  for (const n of nodesList) { const d = Math.min(...grupo(e.area).map(k => nearestOnPoly(n, AREAS[k]).d)); if (d < bd) { bd = d; node = n.id; } }
+  DESTS.push({ id: e.id, name: e.nombre, node }); AREA_DE[e.id] = e.area;
+}
 const DEST = Object.fromEntries(DESTS.map(d => [d.id, d]));
+const areaOf = id => AREA_DE[id] || null;
 const NOMBRE_NODO = {}; DESTS.forEach(d => { NOMBRE_NODO[d.node] ??= d.name; });
 const destNode = () => DEST[state.destId].node;             // nodo del grafo del destino elegido
 const PENAL_ESCALERA = 15;                                  // m extra por escalera cuando se permiten
@@ -412,6 +462,16 @@ function drawMap(g) {
     ctx.stroke();
   }
   ctx.setLineDash([]);
+  // contorno del destino (edificio o patio), calcado del plano
+  const ak = areaOf(state.destId);
+  if (ak) {
+    ctx.strokeStyle = "#ffd23f"; ctx.fillStyle = "rgba(255,210,63,.14)"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    for (const k of grupo(ak)) {
+      ctx.beginPath(); CONT[k].forEach(([px, py], i) => { const [x, y] = toScr(px, py); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
   // ruta restante (amarilla, desde tu posición ajustada)
   const path = routePath(g);
   if (path) {
@@ -525,8 +585,12 @@ function render() {
   }
   const dest = Object.assign({}, graph[destNode()], { name: DEST[state.destId].name });
   const straight = distance(state.user, dest);
-  const arrived = straight < 20;
-  let b = bearing(state.user, dest), g = null, resumen;
+  // La brújula solo indica hacia dónde está el destino (el borde más cercano de su edificio o patio);
+  // el camino lo muestra el mapa.
+  const area = areaOf(state.destId);
+  const aim = area ? nearestOnArea(state.user, area) : { ...dest, d: straight };
+  const arrived = area ? aim.d < ARRIVE_BLD : straight < 20;
+  let b = bearing(state.user, aim), g = null, resumen;
   if (arrived) {
     state.target = null;
     $("dir").textContent = "Estás llegando";
@@ -534,11 +598,11 @@ function render() {
     $("sub").textContent = "";
     resumen = `Estás llegando a <b>${dest.name}</b>`;
   } else if ((g = guide())) {
-    b = bearing(g.pos, graph[g.target]);
     const min = Math.max(1, Math.round(g.remaining / 80));
+    const m = aim.d < 30 ? Math.round(aim.d) : Math.round(aim.d / 5) * 5;
     $("dir").textContent = cardinal(b);
-    $("dist").textContent = `~${Math.round(g.remaining / 10) * 10} m · ${min} min`;
-    $("sub").textContent = `Siguiente: ${label(g.target)} (${Math.round(distance(g.pos, graph[g.target]))} m)` +
+    $("dist").textContent = `${m} m en línea recta`;
+    $("sub").textContent = `Ruta a pie: ~${Math.round(g.remaining / 10) * 10} m · ${min} min` +
       (g.onGraph ? "" : " · lejos del camino") + (state.user.acc ? ` · GPS ±${Math.round(state.user.acc)} m` : "");
     resumen = `<b>${dest.name}</b> · ~${Math.round(g.remaining / 10) * 10} m · ${min} min · ${cardinal(b)}` + (g.onGraph ? "" : " · lejos del camino");
   } else {
@@ -549,8 +613,44 @@ function render() {
   if (!enMapa) drawDial(b, arrived);
   draw(g);
 }
+// ---------- Panel de prueba de fotos (solo ?debug; la UI real viene del diseño) ----------
+if (DEBUG) {
+  let fdFoto = null, fdVista = null;
+  const fdMsg = t => { $("fdMsg").textContent = t; };
+  const fdLado = () => $("fdLadoSel").value || window.Fotos.ladoDesde(state.user, areaOf(state.destId));
+  const fdRefresh = () => {
+    if (!window.Fotos) return;
+    $("fdDest").textContent = DEST[state.destId].name;
+    $("fdLado").textContent = fdLado() || "—";
+    $("fdAprox").textContent = window.Fotos.ladoAproximacion(state.destId) || "—";
+  };
+  const renderOrig = render; render = function () { renderOrig(); fdRefresh(); };
+  $("fdTomar").onclick = async () => {
+    try {
+      fdFoto = await window.Fotos.capturarFoto(); if (!fdFoto) return;
+      $("fdPrev").src = fdFoto.dataUrl; $("fdPrev").style.display = "block"; $("fdPub").disabled = false;
+      fdMsg(`Foto lista: ${Math.round(fdFoto.bytes / 1000)} KB`);
+    } catch (e) { fdMsg("Error: " + e.message); }
+  };
+  $("fdPub").onclick = async () => {
+    const lado = fdLado(); if (!lado) return fdMsg("No se pudo detectar el lado: elígelo a mano.");
+    try { fdMsg("Subiendo…"); const id = await window.Fotos.publicarFoto(state.destId, lado, fdFoto.dataUrl); fdMsg(`Publicada (${lado}) id ${id}`); }
+    catch (e) { fdMsg("Error: " + e.message); }
+  };
+  $("fdVer").onclick = async () => {
+    try {
+      const lado = window.Fotos.ladoAproximacion(state.destId);
+      fdVista = await window.Fotos.fotoPara(state.destId, lado);
+      if (!fdVista) { $("fdPrev").style.display = "none"; $("fdRep").disabled = true; return fdMsg("Sin fotos: sé el primero."); }
+      $("fdPrev").src = fdVista.foto; $("fdPrev").style.display = "block"; $("fdRep").disabled = false;
+      fdMsg(`Foto del lado ${fdVista.lado} (llegada por ${lado || "?"})`);
+    } catch (e) { fdMsg("Error: " + e.message); }
+  };
+  $("fdRep").onclick = async () => { try { await window.Fotos.reportar(fdVista.id); fdMsg("Reportada"); $("fdRep").disabled = true; } catch (e) { fdMsg("Error: " + e.message); } };
+}
 window.addEventListener("resize", render);
 if (location.hash === "#mapa") setTab("mapa"); else render();   // index.html#mapa abre directo el mapa
 </script>
+<script type="module" src="fotos.js"></script>
 </body>
 </html>
