@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Genera js/generado/datos.js (textos de la interfaz por destino) desde data/edificios.json.
+"""Genera js/generado/datos.js (textos de la interfaz por destino) desde data/edificios.json y data/eventos.json.
 
 Uso:  python3 tools/generar-datos.py
 
-- Une cada destino de la app (ids de grafo.js y contornos.js) con su letra, detalle, pista y foto.
+- Une cada destino de la app (ids de grafo.js y contornos.js) con su letra, detalle, pista y foto (con el lado
+  del edificio que se ve: N, E, S u O; ver docs/eventos-y-trayecto.md).
+- EVENTOS sale de data/eventos.json (curados por el equipo); cada uno debe apuntar a un destino de DESTINOS.
 - Las pistas están marcadas «borrador» en data/edificios.json: redactadas desde el plano, validar en terreno.
 - Los datos curiosos (ZONAS y SABIAS) vienen de las plantillas del diseño (design/plantillas/): son de
   EJEMPLO y no están verificados. Hay que reemplazarlos por datos recolectados (ver docs/pendientes-datos.md).
@@ -68,8 +70,14 @@ for did, (nombre, letra, detalle, eid) in DESTINOS.items():
     if e and e.get("foto") and (RAIZ / f"assets/img/edificio-{eid}.jpg").exists():
         f = e["foto"]
         d["foto"] = {"src": f"assets/img/edificio-{eid}.jpg", "autor": f["autor"], "licencia": f["licencia"],
-                     "pie": PIES.get(eid, ""), "pagina": f["pagina"]}
+                     "pie": PIES.get(eid, ""), "pagina": f["pagina"], "lado": f.get("lado")}
     info[did] = d
+
+# Eventos curados: los de ejemplo traen «relativo» (minutos desde que se abre la app) en vez de fechas.
+eventos = json.load(open(RAIZ / "data/eventos.json", encoding="utf-8"))["eventos"]
+for ev in eventos:
+    assert ev["lugar"] in DESTINOS, f"evento {ev['id']}: el lugar «{ev['lugar']}» no es un destino de la app"
+    assert ("relativo" in ev) != ("inicio" in ev and "fin" in ev), f"evento {ev['id']}: usa «relativo» o «inicio» y «fin»"
 
 # ⚠ DATOS DE EJEMPLO tomados de las plantillas del diseño. Sin verificar: reemplazar por datos reales.
 zonas = [
@@ -85,11 +93,12 @@ sabias = {
     "edificio-c": "Fue el hall de montaje: aquí se armaban los aparatos que estudiaban los de Mecánica.",
 }
 
-salida = ("// GENERADO por tools/generar-datos.py desde data/edificios.json. No editar a mano.\n"
-          "// ZONAS y SABIAS son datos de EJEMPLO del diseño, sin verificar.\n"
+salida = ("// GENERADO por tools/generar-datos.py desde data/edificios.json y data/eventos.json. No editar a mano.\n"
+          "// ZONAS y SABIAS son datos de EJEMPLO del diseño, sin verificar. Los EVENTOS con «ejemplo» no son reales.\n"
           f"const INFO = {json.dumps(info, ensure_ascii=False, separators=(',', ':'))};\n"
           f"const ZONAS = {json.dumps(zonas, ensure_ascii=False, separators=(',', ':'))};\n"
-          f"const SABIAS = {json.dumps(sabias, ensure_ascii=False, separators=(',', ':'))};\n")
+          f"const SABIAS = {json.dumps(sabias, ensure_ascii=False, separators=(',', ':'))};\n"
+          f"const EVENTOS = {json.dumps(eventos, ensure_ascii=False, separators=(',', ':'))};\n")
 (RAIZ / "js/generado/datos.js").write_text(salida, encoding="utf-8")
 print(f"js/generado/datos.js: {len(info)} destinos, {sum(1 for d in info.values() if 'foto' in d)} con foto, "
-      f"{sum(1 for d in info.values() if 'pista' in d)} con pista, {len(zonas)} zona(s) de datos")
+      f"{sum(1 for d in info.values() if 'pista' in d)} con pista, {len(zonas)} zona(s) de datos, {len(eventos)} evento(s)")

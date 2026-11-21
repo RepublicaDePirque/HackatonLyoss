@@ -15,7 +15,7 @@ assert(kb < 100, `el logo de la portada pesa ${kb.toFixed(0)} KB: debe ser livia
 assert(sw.includes(`"${logo[1]}"`), "sw.js debe guardar el logo de la portada para usarlo sin conexión");
 console.log(`ok: el logo de la portada existe (${kb.toFixed(0)} KB) y está en la caché del service worker`);
 
-assert(/<main id="vPortada" class="vista"/.test(html), "falta la pantalla vPortada");
+assert(/<main id="vPortada" class="vista activa"/.test(html), "la portada debe venir activa en el HTML: es lo primero que se pinta, antes del JavaScript");
 assert(/<button id="btnPortada"[^>]*aria-label=/.test(html), "el botón de la portada debe tener nombre accesible");
 assert(/const VISTAS = \["portada",/.test(html), "VISTAS debe incluir «portada»");
 assert(html.includes('history.replaceState({ v: "portada" }'), "el historial debe partir en la portada");

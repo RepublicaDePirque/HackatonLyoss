@@ -103,7 +103,9 @@
 				"pagina": "https://commons.wikimedia.org/wiki/File:Central_Building,_Universidad_T%C3%A9cnica_Federico_Santa_Mar%C3%ADa,_Valpara%C3%ADso,_Chile.jpg",
 				"autor": "Alexxxos",
 				"licencia": "CC BY-SA 3.0",
-				"nota": "Fachada hacia Av. España. Que sea el «A» se infiere por su posición en el plano; el autor solo la describe como edificio central."
+				"nota": "Fachada hacia Av. España. Que sea el «A» se infiere por su posición en el plano; el autor solo la describe como edificio central.",
+				"lado": "N",
+				"lado_nota": "Lado del edificio que se ve (N, E, S u O geográficos, como ladoFoto() de index.html). Calculado desde el Acceso Av. España, donde se describe la toma: borde más cercano del A a 58 m, rumbo 338°."
 			},
 			"foto_estado": "con licencia libre"
 		},
@@ -132,7 +134,9 @@
 				"pagina": "https://commons.wikimedia.org/wiki/File:J28_208_Universidad_tecnica_Federico_Santa_Mar%C3%ADa.jpg",
 				"autor": "Falk2",
 				"licencia": "CC BY-SA 4.0",
-				"nota": "Vista desde la ciclovía, al otro lado de Av. España; el autor la identifica como edificio F."
+				"nota": "Vista desde la ciclovía, al otro lado de Av. España; el autor la identifica como edificio F.",
+				"lado": "N",
+				"lado_nota": "Calculado desde un punto de Av. España frente al F (40 a 70 m hacia el rumbo 335°): rumbo 350° a 8° desde el borde."
 			},
 			"foto_estado": "con licencia libre"
 		},
@@ -254,7 +258,9 @@
 				"pagina": "https://commons.wikimedia.org/wiki/File:UTFSM_4.jpg",
 				"autor": "Carigval.97",
 				"licencia": "CC BY 4.0",
-				"nota": "Fachada hacia la piscina. Que sea el «B» se infiere porque la piscina queda en su patio según OpenStreetMap; sin confirmar."
+				"nota": "Fachada hacia la piscina. Que sea el «B» se infiere porque la piscina queda en su patio según OpenStreetMap; sin confirmar.",
+				"lado": null,
+				"lado_nota": "Tomada desde el patio de la piscina, que queda dentro del contorno del B: no corresponde a ningún lado exterior."
 			},
 			"foto_estado": "con licencia libre"
 		},

@@ -28,17 +28,21 @@ if (typeof document !== "undefined") (function () {
   // ---------- Interfaz (se inyecta aquí para no tocar el marcado de index.html) ----------
   const css = document.createElement("style");
   css.textContent = `
-    .voz-solo-lector { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-    #vozDonde { display:none; min-height:96px; border:0; border-radius:22px; background:var(--fg); color:var(--bg); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:26px; }
-    #vozDicho { display:none; font-size:17px; line-height:1.4; font-weight:600; text-align:center; min-height:48px; }
-    .voz-fila { display:flex; gap:8px; }
-    .voz-fila button { flex:1 1 0; min-height:44px; border-radius:22px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:15px; font-weight:600; }
-    .voz-fila button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
-    #vozHablar { display:none; }
+    .voz-solo-lector { position:absolute; top:0; left:0; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+    #vozDonde { display:none; min-height:96px; border:0; border-radius:22px; background:var(--fg); color:var(--bg); font-family:var(--f-display); font-weight:700; font-size:var(--t-titular); }
+    #vozDicho { display:none; font-size:var(--t-cuerpo); line-height:1.4; font-weight:600; text-align:center; min-height:48px; }
     .modo-voz #vozDonde, .modo-voz #vozDicho { display:block; }
-    .modo-voz #vozHablar { display:block; }
     .modo-voz .pista, .modo-voz .selector { display:none; }
-    #btnVoz { min-height:48px; border-radius:18px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:16px; font-weight:600; width:100%; }
+    @media (max-height: 700px) {                               /* pantallas bajas: la frase dicha reemplaza a la bajada y se acorta */
+      .modo-voz #bajada { display:none; }
+      .modo-voz #vozDicho { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    }
+    @media (max-height: 500px) {
+      .modo-voz #titulo { display:none; }
+      .modo-voz #vozDicho { -webkit-line-clamp:2; min-height:0; }
+      #vozDonde { min-height:56px; font-size:var(--t-titulo); }
+    }
+    #btnVoz { min-height:48px; border-radius:18px; border:1px solid var(--line); background:transparent; color:var(--fg); font-size:var(--t-cuerpo); font-weight:600; width:100%; }
   `;
   document.head.appendChild(css);
 
@@ -54,11 +58,7 @@ if (typeof document !== "undefined") (function () {
   base.insertAdjacentHTML("afterbegin",
     `<p id="vozDicho" aria-hidden="true"></p>
      <button id="vozDonde" aria-label="¿Dónde está mi destino?">¿Dónde está?</button>`);
-  $("btnYaLlegue").insertAdjacentHTML("beforebegin",
-    `<div class="voz-fila">
-       <button id="vozModo" aria-pressed="false">Modo voz</button>
-       <button id="vozHablar" aria-pressed="false">Voz de la app</button>
-     </div>`);
+  // «Modo voz» y «Voz de la app» son interruptores de Ajustes (index.html): fuera de la brújula no se activan por error.
 
   // ---------- Salida: lector de pantalla (región viva) y la voz de la app ----------
   // La voz de la app se enciende junto con el modo: sin VoiceOver ni TalkBack activos, la región viva no suena.
@@ -109,7 +109,7 @@ if (typeof document !== "undefined") (function () {
       V.estado = "llego"; const d = info(state.destId);
       decir(`Llegaste ${aDestino(d.nombre)}. ${d.pista || ""}`, true); return;
     }
-    if (state.vista !== "brujula") return;
+    if (state.vista !== "brujula" || state.sinDestino) return;   // sin destino (solo el mapa) no hay nada que guiar
     if (!tieneUbicacion()) { if (V.estado !== "sin") { V.estado = "sin"; decir("Todavía no sabemos dónde estás. Mantén el teléfono en la mano, al aire libre."); } return; }
     const nombre = info(state.destId).nombre, i = info(state.destId);
     if (V.dest !== state.destId) {
@@ -174,8 +174,8 @@ if (typeof document !== "undefined") (function () {
   // ---------- Encendido y apagado ----------
   function aplicar() {
     $("vBrujula").classList.toggle("modo-voz", V.on);
-    $("vozModo").setAttribute("aria-pressed", V.on);
-    $("vozHablar").setAttribute("aria-pressed", V.hablar);
+    $("ajVoz").checked = V.on; $("btnVozCab").setAttribute("aria-pressed", String(V.on)); $("ajVozApp").checked = V.hablar;
+    $("ajFilaVozApp").hidden = !V.on;                          // la voz de la app solo habla en el modo voz
     ["titulo", "bajada"].forEach(id => $(id).setAttribute("aria-live", V.on ? "off" : "polite"));   // la región viva ya lo dice
     clearInterval(V.timer); clearInterval(V.timerPulso);
     if (V.on) { V.timer = setInterval(paso, 1000); V.timerPulso = setInterval(pulso, 200); }
@@ -191,8 +191,9 @@ if (typeof document !== "undefined") (function () {
   }
   function setHablar(on) { V.hablar = on; guardar("vozApp", on); aplicar(); if (on) decir("Voz de la app activada.", true); }
 
-  $("vozModo").onclick = () => setVoz(!V.on);
-  $("vozHablar").onclick = () => setHablar(!V.hablar);
+  $("ajVoz").onchange = e => setVoz(e.target.checked);
+  $("btnVozCab").onclick = () => setVoz(!V.on);
+  $("ajVozApp").onchange = e => setHablar(e.target.checked);
   $("vozDonde").onclick = () => decir(dondeEsta(), true);
   btnVoz.onclick = () => {
     V.on = true; V.hablar = true; guardar("modoVoz", true); guardar("vozApp", true); aplicar();

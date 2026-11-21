@@ -54,3 +54,10 @@ Pendientes de sacar en terreno, destinos de la demo primero:
 ## 5. Coordinación con el resto del repo
 
 - Las ramas `map` y `wip/brujula` usan otra calibración del plano (norte arriba y 0,5 m por píxel; o tres puntos con 10 a 30 m de desfase). La referencia vigente es `data/georef.json`: arriba del plano = rumbo 154,8°, 0,4666 m por píxel.
+
+## 6. Eventos y fotos por lado
+
+Ver `docs/eventos-y-trayecto.md`.
+
+- **Eventos reales**: los cinco de `data/eventos.json` son de ejemplo. Reemplazarlos por eventos con fuente (fecha, hora, lugar y quién organiza), con `inicio` y `fin` en vez de `relativo`.
+- **Fotos de cada lado**: las fotos oficiales de A y F son del lado de Av. España (N). Falta una foto del A desde el lado del campus, que es por donde se llega en la demo desde Av. Los Placeres. Al sacar una foto, anotar desde qué lado del edificio se tomó.

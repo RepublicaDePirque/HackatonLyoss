@@ -44,15 +44,25 @@
     --velo:radial-gradient(closest-side, rgba(246,241,234,.72), rgba(246,241,234,.40) 55%, rgba(246,241,234,0));
     --ruta:#D2531A; --yo:#5B6FD6;
   }
-  :root { --ease:cubic-bezier(.22,1,.36,1); }
+  :root {
+    --ease:cubic-bezier(.22,1,.36,1);
+    --f-display:'Chakra Petch', 'Instrument Sans', system-ui, sans-serif;
+    --f-texto:'Instrument Sans', system-ui, -apple-system, sans-serif;
+    /* Escala tipográfica: 6 pasos */
+    --t-cifra:clamp(56px, 11dvh, 88px); --t-titular:30px; --t-titulo:20px; --t-cuerpo:17px; --t-apoyo:15px; --t-meta:13px;
+    --comunidad:#FF5C39; --sombra:rgba(12,10,24,.3);
+    --senal-lejos:#5B8CFF; --senal-medio:#A66BFF; --senal-cerca:#FF3D4F;
+    --portada-bg:#0B0E15; --llegada-tinta:#1D1A26; --llegada-claro:#FFE3C4;
+  }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { margin:0; height:100%; background:var(--bg); }
-  body { font-family:'Instrument Sans', system-ui, -apple-system, sans-serif; color:var(--fg); -webkit-text-size-adjust:100%; }
-  h1, .titulo { font-family:'Chakra Petch', 'Instrument Sans', system-ui, sans-serif; font-weight:700; }
+  body { font-family:var(--f-texto); color:var(--fg); -webkit-text-size-adjust:100%; }
+  h1, .titulo { font-family:var(--f-display); font-weight:700; }
   button, input { font:inherit; color:inherit; }
   button { cursor:pointer; }
   a { color:inherit; }
-  :focus-visible { outline:3px solid #FFB877; outline-offset:3px; }
+  :focus-visible { outline:3px solid var(--acento); outline-offset:3px; }
+  [tabindex="-1"]:focus { outline:none; }                     /* títulos que reciben el foco al cambiar de pantalla o abrir una hoja */
   [hidden] { display:none !important; }
   .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 
@@ -61,18 +71,18 @@
   .vista.activa { display:flex; }
   .vidrio { background:var(--surface); backdrop-filter:blur(22px) saturate(1.4); -webkit-backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--line); }
   .muted { color:var(--muted); }
-  .btn-principal { height:56px; border:0; border-radius:18px; background:var(--fg); color:var(--bg); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:18px; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; text-decoration:none; }
-  .btn-texto { min-height:44px; border:0; background:transparent; color:var(--muted); font-size:16px; font-weight:500; padding:0 12px; }
+  .btn-principal { height:56px; border:0; border-radius:18px; background:var(--fg); color:var(--bg); font-family:var(--f-display); font-weight:700; font-size:var(--t-cuerpo); display:flex; align-items:center; justify-content:center; gap:10px; width:100%; text-decoration:none; }
+  .btn-texto { min-height:44px; border:0; background:transparent; color:var(--muted); font-size:var(--t-cuerpo); font-weight:500; padding:0 12px; }
   .icono-btn { width:44px; height:44px; border-radius:22px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--fg); padding:0; }
   .pad { padding:calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 24px); }
 
-  /* ---------- Permiso ---------- */
+  /* ---------- Portada y bienvenida ---------- */
   /* Portada: el logo primero; al tocar se entra a la app. Siempre oscura, porque el fondo del logo es de ese color. */
-  #vPortada { background:#0B0E15; color:#F5F1EA; }
+  #vPortada { background:var(--portada-bg); color:#F5F1EA; }
   #btnPortada { flex:1; width:100%; border:0; border-radius:0; background:transparent; color:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 24px); }
-  #btnPortada img { width:min(86vw, 420px); height:auto; aspect-ratio:1; -webkit-mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); animation:aparece 1400ms var(--ease) both; }
-  #btnPortada .nombre { margin-top:-28px; font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:30px; letter-spacing:.02em; animation:aparece 1400ms 250ms var(--ease) both; }
-  #btnPortada .toca { font-size:15px; color:#B3ADBF; animation:aparece 1400ms 500ms var(--ease) both, late 3.2s 1.9s ease-in-out infinite; }
+  #btnPortada img { width:min(86vw, 420px, 55dvh); height:auto; aspect-ratio:1; -webkit-mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); mask-image:radial-gradient(circle closest-side, #000 78%, transparent 100%); animation:aparece 1400ms var(--ease) both; }
+  #btnPortada .nombre { margin-top:-28px; font-family:var(--f-display); font-weight:700; font-size:var(--t-titular); letter-spacing:.02em; animation:aparece 1400ms 250ms var(--ease) both; }
+  #btnPortada .toca { font-size:var(--t-apoyo); color:#B3ADBF; animation:aparece 1400ms 500ms var(--ease) both, late 3.2s 1.9s ease-in-out infinite; }
   #vPortada #btnPortada:focus-visible { outline-offset:-6px; }
   /* Paso a la bienvenida: la luz del faro se abre en un círculo que revela la bienvenida, y su contenido entra en cascada.
      --ox/--oy (la lámpara del faro) las fija entrarDesdePortada(). */
@@ -88,160 +98,181 @@
   #vPermiso { gap:24px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #vPermiso .tel { align-self:center; position:relative; width:150px; height:250px; flex-shrink:0; border-radius:30px; border:2px solid var(--line); overflow:hidden; background:var(--surface); }
   #vPermiso .tel .mancha { position:absolute; left:64px; top:-90px; width:200px; height:200px; animation:recorre 9s cubic-bezier(.45,0,.55,1) infinite; }
-  #vPermiso .tel .mancha div { width:100%; height:100%; border-radius:50%; background:radial-gradient(circle,#FF8A3D 0%,#B79CFF 30%,transparent 68%); filter:blur(14px); }
-  #vPermiso .tel .cifra { position:absolute; left:0; right:0; top:100px; text-align:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:34px; }
-  #vPermiso .tel .cifra small { font-size:16px; color:var(--muted); }
-  #vPermiso h1 { margin:0; font-size:32px; line-height:1.1; }
-  #vPermiso p { margin:12px 0 0; font-size:17px; line-height:1.5; color:var(--sub); }
-  #vPermiso .nota { display:flex; gap:12px; padding:14px 16px; border-radius:18px; font-size:15px; line-height:1.45; }
+  #vPermiso .tel .mancha div { width:100%; height:100%; border-radius:50%; background:radial-gradient(circle,var(--senal-medio) 0%,var(--senal-lejos) 34%,transparent 68%); filter:blur(14px); }   /* la señal a 120 m: entre azul (lejos) y morado */
+  #vPermiso .tel .cifra { position:absolute; left:0; right:0; top:100px; text-align:center; font-family:var(--f-display); font-weight:700; font-size:var(--t-titular); }
+  #vPermiso .tel .cifra small { font-size:var(--t-cuerpo); color:var(--muted); }
+  #vPermiso h1 { margin:0; font-size:var(--t-titular); line-height:1.1; }
+  #vPermiso p { margin:12px 0 0; font-size:var(--t-cuerpo); line-height:1.5; color:var(--sub); }
+  #vPermiso .nota { display:flex; gap:12px; padding:14px 16px; border-radius:18px; font-size:var(--t-apoyo); line-height:1.45; }
   #vPermiso .acciones { margin-top:auto; display:flex; flex-direction:column; gap:6px; }
-  #permisoError { color:var(--acento); font-weight:600; font-size:15px; line-height:1.4; }
+  #permisoError { color:var(--acento); font-weight:600; font-size:var(--t-apoyo); line-height:1.4; }
   #permisoError:empty { display:none; }
 
   /* ---------- Buscar ---------- */
   #vBuscar { gap:16px; }
-  #vBuscar h1 { margin:0; font-size:36px; line-height:1.05; }
-  #buscarAqui { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--muted); min-height:20px; }
-  #buscarAqui:empty { display:none; }
+  #vBuscar h1 { margin:0; font-size:var(--t-titular); line-height:1.05; }
   .campo { display:flex; align-items:center; gap:10px; height:56px; padding:0 6px 0 16px; border-radius:18px; color:var(--muted); }
-  .campo:focus-within { outline:3px solid #FFB877; outline-offset:2px; }
-  .campo input { appearance:none; -webkit-appearance:none; flex:1; min-width:0; height:44px; background:transparent; border:0; outline:0; color:var(--fg); font-size:16px; }
+  .campo:focus-within { outline:3px solid var(--acento); outline-offset:2px; }
+  .campo input { appearance:none; -webkit-appearance:none; flex:1; min-width:0; height:44px; background:transparent; border:0; outline:0; color:var(--fg); font-size:var(--t-cuerpo); }
   .campo input::placeholder { color:inherit; opacity:.85; }
   #lista { flex:1 1 auto; min-height:0; overflow-y:auto; margin:0 -20px; padding:0 20px 8px; display:flex; flex-direction:column; gap:20px; -webkit-overflow-scrolling:touch; }
   .seccion { display:flex; flex-direction:column; gap:8px; }
-  .seccion > span { font-size:14px; font-weight:600; color:var(--muted); }
+  .seccion > span { font-size:var(--t-apoyo); font-weight:600; color:var(--muted); }
   .fila { display:flex; align-items:center; gap:14px; width:100%; min-height:60px; padding:8px 14px 8px 8px; border-radius:18px; text-align:left; border:1px solid var(--line); background:var(--surface); }
-  .fila .letra { width:44px; height:44px; border-radius:12px; background:var(--badge-bg); color:var(--badge); display:flex; align-items:center; justify-content:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:19px; flex-shrink:0; }
+  .fila .letra { width:44px; height:44px; border-radius:12px; background:var(--badge-bg); color:var(--badge); display:flex; align-items:center; justify-content:center; font-family:var(--f-display); font-weight:700; font-size:var(--t-titulo); flex-shrink:0; }
   .fila .txt { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
-  .fila .txt b { font-size:16px; font-weight:600; }
-  .fila .txt small { font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fila .txt b { font-size:var(--t-cuerpo); font-weight:600; }
+  .fila .txt small { font-size:var(--t-meta); color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .fila .der { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
-  .fila .dist { font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:16px; font-variant-numeric:tabular-nums; }
-  .fila .fotos { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--coral); }
-  .fila .fotos i { width:7px; height:7px; border-radius:4px; background:#FF5C39; }
+  .fila .dist { font-family:var(--f-display); font-weight:700; font-size:var(--t-cuerpo); font-variant-numeric:tabular-nums; }
+  .fila .fotos { display:flex; align-items:center; gap:5px; font-size:var(--t-meta); font-weight:600; color:var(--coral); }
+  .fila .fotos i { width:7px; height:7px; border-radius:4px; background:var(--comunidad); }
+  /* eventos en la lista (docs/eventos-y-trayecto.md) */
+  .fila.evento .txt small { white-space:normal; }           /* cuándo y dónde no se cortan */
+  .fila .cuando { font-weight:600; }
+  .fila .cuando.ahora { color:var(--coral); }
+  .fila .cuando i { display:inline-block; width:7px; height:7px; margin-right:5px; border-radius:4px; background:var(--comunidad); vertical-align:1px; animation:late 2s ease-in-out infinite; }
+  .ej { font-size:var(--t-meta); font-weight:600; color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:1px 6px; }
+  .cab-buscar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+  /* Hojas modales (Ajustes, dato del camino, «¿Es este el lugar?»): <dialog> abierto con showModal(), que deja inerte el
+     resto, atrapa el foco y se cierra con Escape. El contenido va en .sheet-in para distinguir un toque afuera (el fondo). */
+  dialog.sheet { position:fixed; inset:auto 0 0 0; margin:0 auto; width:100%; max-width:480px; max-height:92dvh; padding:0; border:0; border-radius:28px 28px 0 0; background:var(--hoja); color:var(--fg); box-shadow:0 -20px 50px var(--sombra); overflow:hidden; display:flex; flex-direction:column; animation:hoja 900ms var(--ease) both; }
+  dialog.sheet:not([open]) { display:none; }
+  dialog.sheet::backdrop { background:rgba(12,10,24,.45); }
+  .sheet-in { flex:1 1 auto; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:14px; padding:14px 20px 8px; }
+  .sheet-pie { flex-shrink:0; display:flex; flex-direction:column; gap:4px; padding:8px 20px calc(env(safe-area-inset-bottom) + 16px); }   /* fuera del scroll: la acción principal siempre a la vista */
+  .sheet-in > * { flex-shrink:0; }
+  .sheet .agarre { align-self:center; width:40px; height:5px; border-radius:3px; background:var(--line); }
+  .sheet h2 { margin:0; font-family:var(--f-display); font-size:var(--t-titular); line-height:1.1; }
+  .ajuste { display:flex; align-items:center; gap:14px; padding:14px; border-radius:18px; border:1px solid var(--line); cursor:pointer; }
+  .ajuste .t { display:flex; flex-direction:column; gap:4px; flex:1; }
+  .ajuste b { font-size:var(--t-cuerpo); }
+  .ajuste small { font-size:var(--t-apoyo); line-height:1.4; color:var(--sub); }
+  .ajuste input { appearance:none; -webkit-appearance:none; width:52px; height:32px; margin:0; border-radius:16px; background:transparent; box-shadow:inset 0 0 0 2px var(--muted); position:relative; flex-shrink:0; cursor:pointer; transition:background 300ms var(--ease), box-shadow 300ms var(--ease); }
+  .ajuste input::after { content:""; position:absolute; top:5px; left:5px; width:22px; height:22px; border-radius:11px; background:var(--muted); transition:transform 300ms var(--ease), background 300ms var(--ease); }
+  .ajuste input:checked { background:var(--coral); box-shadow:none; }
+  .ajuste input:checked::after { transform:translateX(20px); background:#fff; }
+  .leyenda { display:flex; flex-direction:column; gap:6px; padding:0 2px; }
+  .leyenda .grad { height:8px; border-radius:4px; background:linear-gradient(90deg, var(--senal-lejos), var(--senal-medio), var(--senal-cerca)); }
+  .leyenda .ext { display:flex; justify-content:space-between; font-size:var(--t-meta); font-weight:600; color:var(--muted); }
+  .leyenda small { font-size:var(--t-apoyo); line-height:1.4; color:var(--sub); }
   .vacio { display:flex; flex-direction:column; gap:8px; padding:20px; border-radius:20px; }
-  .vacio b { font-family:'Chakra Petch',sans-serif; font-size:20px; }
-  .vacio p { margin:0; font-size:15px; line-height:1.45; color:var(--sub); }
-  .vacio button { align-self:flex-start; height:44px; margin-top:4px; padding:0 18px; border:0; border-radius:22px; background:var(--fg); color:var(--bg); font-size:15px; font-weight:600; }
-  #buscarPie { font-size:14px; line-height:1.4; color:var(--muted); }
+  .vacio b { font-family:var(--f-display); font-size:var(--t-titulo); }
+  .vacio p { margin:0; font-size:var(--t-apoyo); line-height:1.45; color:var(--sub); }
+  .vacio button { align-self:flex-start; height:44px; margin-top:4px; padding:0 18px; border:0; border-radius:22px; background:var(--fg); color:var(--bg); font-size:var(--t-apoyo); font-weight:600; }
+  #buscarPie { font-size:var(--t-apoyo); line-height:1.4; color:var(--muted); }
 
   /* ---------- Brújula ---------- */
-  #vBrujula { overflow:hidden; }
+  #vBrujula { overflow:hidden; overflow:clip; }               /* clip: las luces grandes no dejan desplazar la pantalla de lado */
   #map { position:absolute; inset:0; width:100%; height:100%; display:none; touch-action:none; background:var(--bg); }
   .modo-mapa #map { display:block; }
   #luz { position:absolute; inset:0; pointer-events:none; }
   #luz #halos { position:absolute; inset:0; -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%); mask-image:linear-gradient(to bottom, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%); }
-  #luz .halo { position:absolute; transition:width 1400ms var(--ease), height 1400ms var(--ease), margin 1400ms var(--ease), opacity 1400ms var(--ease); }
+  #luz .halo { position:absolute; width:700px; height:700px; margin:-350px 0 0 -350px; transition:transform 1400ms var(--ease), opacity 1400ms var(--ease); }   /* el tamaño cambia con scale(): sin recalcular el diseño */
   #luz .halo > div { width:100%; height:100%; border-radius:50%; }
   #luz .barra { position:absolute; border-radius:3px; transition:opacity 1400ms var(--ease); }
   .capa { position:absolute; inset:0; display:flex; flex-direction:column; gap:12px; padding:calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px); pointer-events:none; }
   .capa > * { pointer-events:auto; }
   .cab { display:flex; align-items:center; gap:10px; }
-  .pill { height:44px; padding:0 16px; border-radius:22px; display:flex; align-items:center; gap:8px; min-width:0; }
-  .pill .de { font-size:13px; color:var(--muted); flex-shrink:0; }
-  .pill .a { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .pill .d { font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:15px; color:var(--muted); font-variant-numeric:tabular-nums; flex-shrink:0; }
-  .centro { position:relative; flex:1; min-height:0; padding-bottom:var(--flota-h, 0px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; pointer-events:none; }
+  #btnVozCab { margin-left:auto; flex-shrink:0; }
+  #btnVozCab[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
+  .sin-destino #btnVozCab { display:none; }                   /* sin destino el modo voz no tiene qué decir */
+  .pill { min-height:44px; padding:6px 16px; border-radius:22px; display:flex; align-items:center; gap:8px; min-width:0; }
+  .pill .de { font-size:var(--t-meta); color:var(--muted); flex-shrink:0; }
+  .pill .de.ej { font-size:var(--t-meta); padding:1px 6px; }
+  .pill .a { min-width:0; font-family:var(--f-display); font-weight:700; font-size:var(--t-cuerpo); line-height:1.15; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }   /* un nombre largo pasa a dos líneas */
+  .pill .d { font-family:var(--f-display); font-weight:700; font-size:var(--t-apoyo); color:var(--muted); font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .centro { position:relative; flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; pointer-events:none; }
   .centro > * { pointer-events:auto; }
   .modo-mapa #centro > * { display:none !important; }
   .centro .velo { position:absolute; left:50%; top:46%; width:360px; height:330px; margin:-165px 0 0 -180px; background:var(--velo); pointer-events:none; }
   .senal { position:relative; height:104px; display:flex; align-items:center; justify-content:center; }
   #flecha { width:104px; height:104px; display:flex; align-items:center; justify-content:center; }
-  .impreciso { height:32px; padding:0 14px; border-radius:16px; display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; }
-  #cifra { position:relative; display:flex; align-items:baseline; justify-content:center; gap:8px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:88px; line-height:1; font-variant-numeric:tabular-nums; }
-  #cifra small { font-weight:500; font-size:26px; color:var(--muted); }
-  #titulo { position:relative; margin-top:14px; font-size:19px; font-weight:600; }
-  #bajada { position:relative; margin-top:6px; max-width:290px; font-size:15px; line-height:1.45; color:var(--sub); }
-  #alerta { position:relative; margin-top:10px; font-weight:700; font-size:15px; color:var(--acento); }
+  #cifra { position:relative; display:flex; align-items:baseline; justify-content:center; gap:8px; font-family:var(--f-display); font-weight:700; font-size:var(--t-cifra); line-height:1; font-variant-numeric:tabular-nums; }
+  #cifra small { font-weight:700; font-size:.3em; color:var(--sub); }
+  #titulo { position:relative; margin-top:14px; font-size:var(--t-titulo); font-weight:600; }
+  #bajada { position:relative; margin-top:6px; max-width:290px; font-size:var(--t-apoyo); line-height:1.45; color:var(--sub); }
+  #alerta { position:relative; margin-top:10px; font-weight:700; font-size:var(--t-apoyo); color:var(--acento); }
   #alerta:empty { display:none; }
-  #btnAbrirMapa { position:relative; margin-top:18px; height:48px; padding:0 22px; border-radius:24px; font-size:15px; font-weight:600; }
+  #btnUbicar { position:relative; margin-top:16px; min-height:48px; padding:0 22px; border-radius:24px; font-size:var(--t-apoyo); font-weight:600; }
   .base { display:flex; flex-direction:column; gap:12px; }
   .pista { display:flex; gap:12px; padding:14px 16px; border-radius:18px; }
   .pista svg { flex-shrink:0; margin-top:1px; color:var(--muted); }
   .pista .t { display:flex; flex-direction:column; gap:3px; }
-  .pista .t small { font-size:13px; font-weight:600; color:var(--muted); }
-  .pista .t span { font-size:15px; line-height:1.4; }
-  #puertaTxt { font-size:13px !important; font-weight:600; color:var(--acento); }
+  .pista .t small { font-size:var(--t-meta); font-weight:600; color:var(--muted); }
+  .pista .t span { font-size:var(--t-apoyo); line-height:1.4; }
+  #puertaTxt { font-size:var(--t-meta) !important; font-weight:600; color:var(--acento); }
   #puertaTxt:empty { display:none; }
   .selector { display:flex; gap:4px; padding:4px; border-radius:26px; }
-  .selector button { flex:1 1 0; height:44px; border:0; border-radius:22px; background:transparent; color:var(--fg); font-size:15px; font-weight:600; transition:background 600ms var(--ease), color 600ms ease; }
+  .selector button { flex:1 1 0; height:44px; border:0; border-radius:22px; background:transparent; color:var(--fg); font-size:var(--t-apoyo); font-weight:600; transition:background 600ms var(--ease), color 600ms ease; }
   .selector button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
-  #btnYaLlegue { height:44px; border:0; background:transparent; color:var(--muted); font-size:15px; font-weight:500; }
+  #btnYaLlegue { height:44px; border:0; background:transparent; color:var(--muted); font-size:var(--t-apoyo); font-weight:500; }
+  .modo-mapa #btnYaLlegue { border-radius:22px; background:var(--surface-fuerte); color:var(--fg); }   /* sobre el plano no tiene fondo propio */
 
-  /* tarjetas que brotan sobre la misma pantalla */
-  .flota { position:absolute; left:20px; right:20px; bottom:calc(var(--base-h, 270px) + 32px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:10px; pointer-events:none; }
-  .flota > * { pointer-events:auto; }
-  .tarjeta { padding:16px; border-radius:22px; background:var(--surface-fuerte); backdrop-filter:blur(22px) saturate(1.4); -webkit-backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--line); box-shadow:0 16px 40px rgba(12,10,24,.22); display:flex; flex-direction:column; gap:6px; animation:brota 900ms var(--ease) both; }
-  .tarjeta .fila1 { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:600; color:var(--muted); }
-  .tarjeta .gancho { font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:19px; }
-  .tarjeta .cuerpo { font-size:15px; line-height:1.4; color:var(--sub); }
-  .tarjeta .cerrar { width:44px; height:44px; margin:-12px -10px -12px 0; border:0; border-radius:22px; background:transparent; color:var(--muted); display:flex; align-items:center; justify-content:center; }
-  #dato { padding:12px 16px; gap:2px; }
-  .tarjeta .fila2 { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .tarjeta .mas { flex-shrink:0; height:44px; margin:-8px -8px -10px 0; padding:0 8px; border:0; background:transparent; color:var(--acento); font-size:15px; font-weight:600; white-space:nowrap; }
-  .tarjeta.foto { flex-direction:row; gap:14px; align-items:center; padding:12px; }
-  .tarjeta.foto img { width:112px; height:84px; object-fit:cover; border-radius:14px; flex-shrink:0; }
-  .tarjeta.foto .t { display:flex; flex-direction:column; gap:4px; text-align:left; min-width:0; }
-  .tarjeta.foto .t b { font-family:'Chakra Petch',sans-serif; font-size:18px; }
-  .tarjeta.foto .t span { font-size:14px; line-height:1.35; color:var(--sub); }
-  .tarjeta.foto .t small { font-size:12px; color:var(--muted); }
-  #hoja { position:absolute; left:0; right:0; bottom:0; max-height:70%; padding:14px 24px calc(env(safe-area-inset-bottom) + 28px); border-radius:28px 28px 0 0; background:var(--hoja); box-shadow:0 -20px 50px rgba(12,10,24,.3); display:flex; flex-direction:column; gap:14px; animation:hoja 900ms var(--ease) both; z-index:5; overflow-y:auto; }
-  #hoja .agarre { align-self:center; width:40px; height:5px; border-radius:3px; background:var(--line); }
-  #hoja .et { font-size:14px; font-weight:600; color:var(--muted); }
-  #hoja h2 { margin:0; font-family:'Chakra Petch',sans-serif; font-size:30px; line-height:1.1; }
-  #hoja p { margin:0; font-size:17px; line-height:1.55; color:var(--sub); }
-  #hoja button { margin-top:auto; height:56px; border:0; border-radius:18px; background:var(--fg); color:var(--bg); font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:18px; flex-shrink:0; }
+  /* Tarjetas del trayecto: van en la base, sobre la pista. Al estar en el flujo empujan la señal hacia arriba en vez de taparla. */
+  .flota { display:flex; flex-direction:column; gap:10px; }
+  .tarjeta { padding:10px 6px 10px 14px; border-radius:22px; background:var(--surface-fuerte); backdrop-filter:blur(22px) saturate(1.4); -webkit-backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--line); box-shadow:0 12px 32px rgba(12,10,24,.22); display:flex; align-items:center; gap:4px; animation:brota 900ms var(--ease) both; }
+  .tarjeta .abrir { flex:1; min-width:0; min-height:44px; display:flex; align-items:center; gap:10px; padding:0; border:0; background:transparent; text-align:left; }
+  .tarjeta .abrir .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .tarjeta .fila1 { display:flex; align-items:center; gap:8px; font-size:var(--t-meta); font-weight:600; color:var(--muted); }
+  .tarjeta .gancho { font-family:var(--f-display); font-weight:700; font-size:var(--t-cuerpo); line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .tarjeta .meta { font-size:var(--t-meta); color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tarjeta .abrir > svg { flex-shrink:0; color:var(--muted); }
+  .tarjeta .cerrar { width:44px; height:44px; flex-shrink:0; border:0; border-radius:22px; background:transparent; color:var(--muted); display:flex; align-items:center; justify-content:center; }
+  .tarjeta.foto { gap:12px; padding:8px 6px 8px 8px; }
+  .tarjeta.foto img { width:88px; height:66px; object-fit:cover; border-radius:14px; flex-shrink:0; }
+  .tarjeta.foto .t { flex:1; display:flex; flex-direction:column; gap:2px; text-align:left; min-width:0; }
+  .tarjeta.foto .t b { font-family:var(--f-display); font-size:var(--t-cuerpo); }
+  .tarjeta.foto .t span { font-size:var(--t-meta); line-height:1.35; color:var(--sub); }
+  .tarjeta.foto .t small { font-size:var(--t-meta); color:var(--muted); }
+  .tarjeta.foto .cerrar { align-self:flex-start; }
+  #hoja .et { font-size:var(--t-apoyo); font-weight:600; color:var(--muted); }
+  #hoja .texto { display:flex; flex-direction:column; gap:14px; }
+  #hoja p { margin:0; font-size:var(--t-cuerpo); line-height:1.55; color:var(--sub); }
 
-  /* controles del mapa */
   /* confirmación al llegar: ¿es este el lugar? */
-  #confirma { position:absolute; left:0; right:0; bottom:0; z-index:6; padding:14px 20px calc(env(safe-area-inset-bottom) + 20px); border-radius:28px 28px 0 0; background:var(--hoja); box-shadow:0 -20px 50px rgba(12,10,24,.3); display:flex; flex-direction:column; gap:12px; animation:hoja 900ms var(--ease) both; max-height:92%; overflow-y:auto; }
-  #confirma .agarre { align-self:center; width:40px; height:5px; border-radius:3px; background:var(--line); flex-shrink:0; }
-  #confirma h2 { margin:0; font-family:'Chakra Petch',sans-serif; font-size:28px; line-height:1.1; }
-  #confImg { width:100%; height:clamp(150px, 26dvh, 230px); object-fit:cover; border-radius:18px; flex-shrink:0; }
+  #confImg { width:100%; height:clamp(110px, 26dvh, 230px); object-fit:cover; border-radius:18px; }
   #confSinFoto { display:flex; align-items:center; gap:14px; padding:14px; border-radius:18px; border:2px dashed var(--line); }
-  #confLetra { width:56px; height:56px; border-radius:14px; background:var(--badge-bg); color:var(--badge); display:flex; align-items:center; justify-content:center; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:24px; flex-shrink:0; }
-  #confSinFoto span { font-size:15px; line-height:1.4; color:var(--sub); }
+  #confLetra { width:56px; height:56px; border-radius:14px; background:var(--badge-bg); color:var(--badge); display:flex; align-items:center; justify-content:center; font-family:var(--f-display); font-weight:700; font-size:var(--t-titulo); flex-shrink:0; }
+  #confSinFoto span { font-size:var(--t-apoyo); line-height:1.4; color:var(--sub); }
   .conf-datos { display:flex; flex-direction:column; gap:2px; }
-  .conf-datos b { font-family:'Chakra Petch',sans-serif; font-size:20px; }
-  .conf-datos span { font-size:15px; color:var(--sub); }
-  .conf-datos small { font-size:12px; color:var(--muted); }
-  #confAyuda { margin:0; font-size:15px; line-height:1.4; color:var(--sub); }
+  .conf-datos b { font-family:var(--f-display); font-size:var(--t-titulo); }
+  .conf-datos span { font-size:var(--t-apoyo); color:var(--sub); }
+  .conf-datos small { font-size:var(--t-meta); color:var(--muted); }
+  #confAyuda { margin:0; font-size:var(--t-apoyo); line-height:1.4; color:var(--sub); }
   #confirma .btn-texto { color:var(--fg); font-weight:600; }
-  #mapaCtl { position:absolute; right:14px; bottom:calc(var(--base-h, 270px) + 32px + env(safe-area-inset-bottom)); display:none; flex-direction:column; gap:8px; z-index:2; }
+  #confirma .reportar { align-self:center; color:var(--muted); font-size:var(--t-apoyo); font-weight:500; }
+  /* controles del mapa: sobre la base (--base-h = alto que ocupa la base desde el borde inferior, lo mide renderBrujula) */
+  #mapaCtl { position:absolute; right:14px; bottom:calc(var(--base-h, 290px) + 28px); display:none; flex-direction:column; gap:8px; z-index:2; }
   .modo-mapa #mapaCtl { display:flex; }
-  #mapaCtl button { width:44px; height:44px; border-radius:22px; padding:0; font-size:20px; font-weight:600; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--fg); }
+  #mapaCtl button { width:44px; height:44px; border-radius:22px; padding:0; font-size:var(--t-titulo); font-weight:600; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--fg); }
   #mapaCtl button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
-  #mapaCtl .etq { font-size:10px; }
-  #alertaMapa { align-self:center; padding:8px 14px; border-radius:18px; font-weight:700; font-size:14px; color:var(--acento); display:none; }
+  #alertaMapa { align-self:center; padding:8px 14px; border-radius:18px; font-weight:700; font-size:var(--t-apoyo); color:var(--acento); display:none; }
   .modo-mapa #alertaMapa.hay { display:block; }
-  .chip-demo { position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 72px); transform:translateX(-50%); z-index:4; width:max-content; max-width:calc(100% - 32px); white-space:nowrap; height:40px; padding:0 4px 0 16px; border-radius:18px; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; }
-  .chip-demo button { height:32px; border:0; border-radius:16px; background:var(--fg); color:var(--bg); padding:0 14px; font-size:13px; font-weight:600; }
+  /* mapa sin destino («Prefiero ver solo el mapa»): solo el plano y tu posición hasta que tocas un edificio */
+  .sin-destino .selector, .sin-destino #btnYaLlegue, .sin-destino #accBtn, .sin-destino #mRuta { display:none !important; }
 
   /* ---------- Llegada ---------- */
-  #vLlegada { background:linear-gradient(162deg,#FF5C39 0%,#FF7A2E 48%,#FFB800 100%); color:#1D1A26; gap:18px; overflow-y:auto; }
-  #vLlegada :focus-visible { outline-color:#1D1A26; }
-  #vLlegada .resp { position:absolute; left:-120px; top:-180px; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle,rgba(255,233,194,.55) 0%,transparent 65%); filter:blur(20px); animation:respira 7s ease-in-out infinite; pointer-events:none; }
+  #vLlegada { background:linear-gradient(162deg,#FF5C39 0%,#FF7A2E 48%,#FFB800 100%); color:var(--llegada-tinta); gap:18px; overflow-y:auto; }
+  #vLlegada :focus-visible { outline-color:var(--llegada-tinta); }
+  #vLlegada .resp-marco { position:absolute; inset:0; overflow:hidden; pointer-events:none; }   /* recorta la luz: sin desplazamiento lateral */
+  #vLlegada .resp { position:absolute; left:-120px; top:-180px; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle,rgba(255,233,194,.55) 0%,transparent 65%); filter:blur(20px); animation:respira 7s ease-in-out infinite; }
   #vLlegada .bloque { position:relative; display:flex; flex-direction:column; gap:10px; animation:sube 900ms var(--ease) both; }
-  #vLlegada h1 { margin:0; font-size:34px; line-height:1.05; }
-  #vLlegada p { margin:0; font-size:17px; line-height:1.45; font-weight:500; }
-  #vLlegada .visto { width:52px; height:52px; border-radius:26px; background:#1D1A26; color:#FFB877; display:flex; align-items:center; justify-content:center; }
-  #vLlegada figure { position:relative; margin:0; display:flex; flex-direction:column; gap:6px; animation:sube 900ms 150ms var(--ease) both; }
-  #vLlegada figure img { width:100%; max-height:210px; object-fit:cover; border-radius:20px; box-shadow:0 14px 30px rgba(120,30,0,.25); }
-  #vLlegada figcaption { font-size:12px; font-weight:600; }
-  #vLlegada .sinfoto { position:relative; box-sizing:border-box; min-height:150px; padding:20px; border-radius:20px; border:2px dashed rgba(29,26,38,.45); background:rgba(255,255,255,.22); display:flex; flex-direction:column; justify-content:center; gap:6px; animation:sube 900ms 150ms var(--ease) both; }
-  #vLlegada .sinfoto b { font-family:'Chakra Petch',sans-serif; font-size:20px; }
-  #vLlegada .sinfoto span { font-size:15px; line-height:1.4; font-weight:500; }
+  #vLlegada h1 { margin:0; font-size:var(--t-titular); line-height:1.05; }
+  #vLlegada p { margin:0; font-size:var(--t-cuerpo); line-height:1.45; font-weight:500; }
+  #vLlegada .visto { width:52px; height:52px; border-radius:26px; background:var(--llegada-tinta); color:#FFB877; display:flex; align-items:center; justify-content:center; }
   #vLlegada .sabias { position:relative; padding:14px 16px; border-radius:18px; background:rgba(255,255,255,.32); border:1px solid rgba(29,26,38,.10); display:flex; flex-direction:column; gap:4px; animation:sube 900ms 300ms var(--ease) both; }
-  #vLlegada .sabias b { font-size:13px; }
-  #vLlegada .sabias span { font-size:15px; line-height:1.4; font-weight:500; }
+  #vLlegada .sabias b { font-size:var(--t-meta); }
+  #vLlegada .sabias span { font-size:var(--t-apoyo); line-height:1.4; font-weight:500; }
   #vLlegada .pie { position:relative; margin-top:auto; display:flex; flex-direction:column; gap:8px; animation:sube 900ms 450ms var(--ease) both; }
-  #vLlegada .pie > span { font-size:15px; line-height:1.4; font-weight:600; }
-  #vLlegada .btn-os { height:56px; border:0; border-radius:18px; background:#1D1A26; color:#FFE3C4; display:flex; align-items:center; justify-content:center; gap:10px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:18px; width:100%; }
-  #vLlegada .duo { display:flex; gap:8px; }
-  #vLlegada .duo button, #vLlegada .btn-claro { flex:1 1 0; height:44px; border:0; border-radius:22px; background:transparent; color:#1D1A26; font-size:15px; font-weight:600; }
-  #vLlegada .prev { position:relative; flex-grow:1; min-height:220px; border-radius:24px; background:rgba(29,26,38,.82); color:#FFE3C4; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  #vLlegada .pie > span { font-size:var(--t-apoyo); line-height:1.4; font-weight:600; }
+  #vLlegada .btn-os { height:56px; border:0; border-radius:18px; background:var(--llegada-tinta); color:var(--llegada-claro); display:flex; align-items:center; justify-content:center; gap:10px; font-family:var(--f-display); font-weight:700; font-size:var(--t-cuerpo); width:100%; }
+  #vLlegada .duo { display:flex; flex-wrap:wrap; gap:0 8px; }
+  #vLlegada .duo button, #vLlegada .btn-claro { flex:1 1 auto; min-height:44px; padding:0 8px; border:0; border-radius:22px; background:transparent; color:var(--llegada-tinta); font-size:var(--t-apoyo); font-weight:600; }
+  #vLlegada .prev { position:relative; flex-grow:1; min-height:220px; border-radius:24px; background:rgba(29,26,38,.82); color:var(--llegada-claro); display:flex; align-items:center; justify-content:center; overflow:hidden; }
   #vLlegada .prev img { width:100%; height:100%; object-fit:cover; }
-  #llegadaError { position:relative; font-size:14px; font-weight:700; }
+  #llegadaError { position:relative; font-size:var(--t-apoyo); font-weight:700; }
   #llegadaError:empty { display:none; }
 
   /* ---------- Panel de depuración (?debug) ---------- */
@@ -251,7 +282,7 @@
   #debug input[type=range] { width:100%; }
 
   @keyframes aparece { from { opacity:0; transform:scale(.96) } to { opacity:1; transform:none } }
-  @keyframes late { 0%,100% { opacity:1 } 50% { opacity:.4 } }
+  @keyframes late { 0%,100% { opacity:1 } 50% { opacity:.7 } }   /* sin bajar de .7: «Toca para empezar» mantiene 4,5:1 */
   @keyframes respira { 0%,100% { transform:scale(1) } 50% { transform:scale(1.08) } }
   @keyframes brota { from { opacity:0; transform:translateY(24px) scale(.97) } to { opacity:1; transform:none } }
   @keyframes hoja { from { opacity:0; transform:translateY(60px) } to { opacity:1; transform:none } }
@@ -265,27 +296,54 @@
 
   /* Pantallas bajas. iPhone SE en Safari deja 375×548 visibles; el SE de primera generación, 320×454. */
   @media (max-height: 760px) {
-    #mapaCtl { flex-direction:row; gap:6px; }                 /* en columna no cabe entre la cabecera y la pista */
+    #mapaCtl { flex-direction:row; gap:4px; }                 /* en columna no cabe entre la cabecera y la pista */
   }
   @media (max-height: 700px) {
+    #flecha { width:72px; height:72px; }
+    #flecha svg { width:64px; height:64px; }
     #vPermiso { gap:16px; }
     #vPermiso .tel { transform:scale(.56); margin:-55px 0; }  /* 250 → 140 px de alto, sin tocar su animación */
-    #vPermiso h1 { font-size:28px; }
-    #vPermiso p { margin-top:8px; font-size:16px; }
+    #vPermiso p { margin-top:8px; font-size:var(--t-cuerpo); }
     #vPermiso .nota { padding:10px 14px; }
+    /* brújula compacta: la señal sin caja fija, la pista sin rótulo y, mientras hay una tarjeta, sin la bajada */
+    .capa { gap:10px; padding-top:calc(env(safe-area-inset-top) + 12px); padding-bottom:calc(env(safe-area-inset-bottom) + 12px); }
+    .senal { height:auto; }
+    #titulo { margin-top:8px; }
+    .pista { padding:10px 14px; }
+    #pistaEt { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+    .con-tarjeta #bajada { display:none; }
+    .tarjeta.foto img { width:72px; height:54px; }
   }
   @media (max-height: 500px) {
     #vPermiso { gap:12px; }
     #vPermiso .tel { display:none; }
+    #cifra { font-size:48px; }
+    #titulo { margin-top:4px; }
+    #flecha { width:44px; height:44px; }
+    #flecha svg { width:40px; height:40px; }
+    .pad { padding-top:calc(env(safe-area-inset-top) + 14px); padding-bottom:calc(env(safe-area-inset-bottom) + 14px); }
+    #vLlegada { gap:10px; }
+    #vLlegada .prev { min-height:120px; }
+    .capa { gap:8px; }
+  }
+  @media (max-height: 440px) {                                /* teléfono horizontal: selector y «Ya llegué» en una fila */
+    #bajada { max-width:none; }
+    .base { flex-direction:row; flex-wrap:wrap; }
+    .base > :not(.selector):not(#btnYaLlegue) { flex-basis:100%; }
+    .selector { flex:1; }
+    #btnYaLlegue { padding:0 12px; }
+  }
+  @media (max-width: 360px) {
+    .pill .de:not(.ej) { display:none; }            /* «Vas hacia» sobra en el mapa: deja sitio al nombre y la distancia */
   }
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- ===================== PERMISO (primera vez) ===================== -->
 <!-- ===================== PORTADA ===================== -->
-<main id="vPortada" class="vista" aria-label="Portada">
+<!-- Viene activa en el HTML: es lo primero que se pinta, antes de que cargue el JavaScript. -->
+<main id="vPortada" class="vista activa" aria-label="Portada">
   <h1 class="sr">Solem</h1>
   <button id="btnPortada" type="button" aria-label="Entrar a Solem. Toca para empezar">
     <img src="assets/logo/logo-portada.jpg" alt="" width="768" height="768" decoding="async">
@@ -294,6 +352,7 @@
   </button>
 </main>
 
+<!-- ===================== BIENVENIDA Y PERMISOS ===================== -->
 <main id="vPermiso" class="vista pad" aria-label="Bienvenida">
   <div class="tel" role="img" aria-label="Un teléfono cuyo borde superior derecho brilla: así se ve la señal">
     <div class="mancha" aria-hidden="true"><div></div></div>
@@ -301,7 +360,7 @@
   </div>
   <div>
     <h1>El borde que brilla apunta a tu destino</h1>
-    <p>No te damos una ruta: te mostramos hacia dónde queda. Camina hacia donde brilla y descubre el campus en el camino.</p>
+    <p>No te damos una ruta: te mostramos hacia dónde queda. Camina hacia donde brilla; la luz pasa de azul a roja a medida que te acercas.</p>
   </div>
   <div class="nota vidrio">
     <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;color:var(--muted)"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>
@@ -311,18 +370,20 @@
     <div id="permisoError" role="alert"></div>
     <button id="btnActivar" class="btn-principal">Activar ubicación y brújula</button>
     <button id="btnSoloMapa" class="btn-texto">Prefiero ver solo el mapa</button>
-    <button id="btnDemo" class="btn-texto" style="min-height:36px;font-size:14px">Ver un recorrido de ejemplo</button>
+    <button id="btnDemo" class="btn-texto">Ver un recorrido de ejemplo</button>
   </div>
 </main>
 
 <!-- ===================== BUSCAR ===================== -->
 <main id="vBuscar" class="vista pad" aria-label="Elegir destino">
-  <div style="display:flex;flex-direction:column;gap:10px">
-    <span id="buscarAqui"></span>
+  <div class="cab-buscar">
     <h1>¿A dónde vas?</h1>
+    <button id="btnAjustes" class="icono-btn vidrio" aria-label="Ajustes" aria-haspopup="dialog" style="border:0">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
   </div>
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <label for="q" style="font-size:14px;font-weight:600;color:var(--muted)">Busca un edificio o un lugar</label>
+  <div>
+    <label for="q" class="sr">Busca un edificio o un lugar</label>
     <div class="campo vidrio">
       <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Ej.: Biblioteca, Casino o la letra C" autocomplete="off" enterkeyhint="search">
@@ -332,7 +393,31 @@
     </div>
   </div>
   <div id="lista"></div>
-  <span id="buscarPie">Distancias en línea recta. Tú eliges el camino.</span>
+  <span id="buscarPie">Distancias en línea recta.</span>
+  <dialog id="ajustes" class="sheet" aria-labelledby="ajTitulo">
+    <div class="sheet-in">
+      <span class="agarre" aria-hidden="true"></span>
+      <h2 id="ajTitulo" tabindex="-1" autofocus>Ajustes</h2>
+      <label class="ajuste" for="ajApurado">
+        <span class="t"><b>Voy apurado</b><small>Sin datos curiosos ni eventos en el camino. Sigues viendo la señal, la pista y la foto al llegar.</small></span>
+        <input id="ajApurado" type="checkbox" role="switch">
+      </label>
+      <label class="ajuste" for="ajVoz">
+        <span class="t"><b>Modo voz</b><small>La app te dice hacia dónde queda tu destino, para usarla sin mirar la pantalla.</small></span>
+        <input id="ajVoz" type="checkbox" role="switch">
+      </label>
+      <label id="ajFilaVozApp" class="ajuste" for="ajVozApp" hidden>
+        <span class="t"><b>Voz de la app</b><small>Lee los avisos en voz alta. Apágala si ya usas un lector de pantalla, para no oír dos voces.</small></span>
+        <input id="ajVozApp" type="checkbox" role="switch">
+      </label>
+      <div class="leyenda">
+        <span class="grad" aria-hidden="true"></span>
+        <span class="ext" aria-hidden="true"><span>Lejos</span><span>Cerca</span></span>
+        <small>El color de la luz cambia con la distancia: azul cuando el destino está lejos, rojo cuando ya casi llegas.</small>
+      </div>
+    </div>
+    <div class="sheet-pie"><button id="ajListo" class="btn-principal">Listo</button></div>
+  </dialog>
 </main>
 
 <!-- ===================== BRÚJULA (resplandor · flecha · mapa) ===================== -->
@@ -351,35 +436,50 @@
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
       <div class="pill vidrio">
-        <span class="de">Vas hacia</span><span id="pillDest" class="a">—</span><span id="pillDist" class="d" hidden></span>
+        <span id="pillDe" class="de">Vas hacia</span><span id="pillDest" class="a">—</span><span id="pillDist" class="d" hidden></span>
       </div>
+      <button id="btnVozCab" class="icono-btn vidrio" aria-label="Modo voz" aria-pressed="false" title="Modo voz">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18.3 6.5a8 8 0 0 1 0 11"/></svg>
+      </button>
     </div>
     <div id="alertaMapa" class="vidrio" role="status"></div>
     <div id="centro" class="centro">
       <div class="velo" id="velo" aria-hidden="true"></div>
-      <div class="senal">
-        <div id="flecha" role="img" aria-label="Flecha que apunta hacia el destino" hidden>
-          <svg aria-hidden="true" width="92" height="92" viewBox="0 0 120 120"><path id="flechaPath" d="M60 6 L104 110 L60 88 L16 110 Z" stroke-width="8" stroke-linejoin="round"/></svg>
+      <div class="senal" aria-hidden="true">
+        <div id="flecha" hidden>
+          <svg width="92" height="92" viewBox="0 0 120 120"><path id="flechaPath" d="M60 6 L104 110 L60 88 L16 110 Z" stroke-width="8" stroke-linejoin="round"/></svg>
         </div>
-        <span id="giro" role="img" aria-label="Date vuelta" hidden><svg aria-hidden="true" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span>
-        <div id="impreciso" class="impreciso vidrio" hidden>
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 16.5v.5"/><path d="M10.3 3.9L2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
-          Señal imprecisa entre edificios
-        </div>
+        <span id="giro" hidden><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span>
       </div>
+      <span id="dirSr" class="sr"></span>
       <div id="cifra"><span id="cifraN">—</span><small id="cifraM" hidden>m</small></div>
-      <span id="titulo" aria-live="polite">Esperando ubicación</span>
+      <span id="titulo" aria-live="polite">Buscando tu ubicación…</span>
       <span id="bajada" aria-live="polite"></span>
       <span id="alerta" role="status"></span>
-      <button id="btnAbrirMapa" class="vidrio" hidden>Abrir el mapa del campus</button>
+      <button id="btnUbicar" class="vidrio" hidden>Activar ubicación</button>
     </div>
     <div id="base" class="base">
+      <div id="flota" class="flota" hidden>
+        <div id="dato" class="tarjeta" hidden>
+          <button id="datoAbrir" class="abrir">
+            <span class="t"><span class="fila1" id="datoTitulo"></span><span id="datoGancho" class="gancho"></span><span id="datoMeta" class="meta" hidden></span></span>
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button id="datoCerrar" class="cerrar" aria-label="Cerrar tarjeta"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <div id="entrada" class="tarjeta foto" hidden>
+          <img id="entradaImg" alt="">
+          <div class="t"><b id="entradaTit">Así se ve al llegar</b><span id="entradaPie"></span><small id="entradaCred"></small></div>
+          <button id="entradaCerrar" class="cerrar" aria-label="Cerrar foto"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </div>
+      <span id="avisoTarjeta" class="sr" role="status"></span>
       <div class="pista vidrio">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
-        <div class="t"><small>Pista para no perderte</small><span id="pistaTxt">—</span><span id="puertaTxt"></span></div>
+        <div class="t"><small id="pistaEt">Pista para no perderte</small><span id="pistaTxt">—</span><span id="puertaTxt"></span></div>
       </div>
       <div class="selector vidrio" role="group" aria-label="Tipo de señal">
-        <button id="selRes" aria-pressed="true">Resplandor</button>
+        <button id="selRes" aria-pressed="true">Luz</button>
         <button id="selFle" aria-pressed="false">Flecha</button>
         <button id="selMap" aria-pressed="false">Mapa</button>
       </div>
@@ -394,61 +494,56 @@
     <button id="mRuta" class="vidrio" aria-label="Ver la ruta completa" title="Ver la ruta completa">⤢</button>
     <button id="accBtn" class="vidrio" aria-label="Evitar escaleras" aria-pressed="false" title="Evitar escaleras"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h4v-4h4v-4h4V7h4"/><path d="M4 5l16 16" stroke-width="1.6"/></svg></button>
   </div>
-  <div id="flota" class="flota">
-    <div id="dato" class="tarjeta" role="status" hidden>
-      <div class="fila1"><span id="datoTitulo"></span>
-        <button id="datoCerrar" class="cerrar" aria-label="Cerrar dato"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-      <div class="fila2"><span id="datoGancho" class="gancho"></span>
-        <button id="datoMas" class="mas">Leer más</button></div>
+  <dialog id="hoja" class="sheet" aria-labelledby="hojaTitulo">
+    <div class="sheet-in">
+      <span class="agarre" aria-hidden="true"></span>
+      <span id="hojaEt" class="et"></span>
+      <h2 id="hojaTitulo" tabindex="-1" autofocus></h2>
+      <div id="hojaTexto" class="texto"></div>
     </div>
-    <div id="entrada" class="tarjeta foto" role="status" hidden>
-      <img id="entradaImg" alt="">
-      <div class="t"><b>Así se ve al llegar</b><span id="entradaPie"></span><small id="entradaCred"></small></div>
+    <div class="sheet-pie">
+      <button id="hojaIr" class="btn-principal" hidden>Ir ahí</button>
+      <button id="hojaCerrar" class="btn-principal">Seguir caminando</button>
     </div>
-  </div>
-  <div id="hoja" role="dialog" aria-modal="true" aria-labelledby="hojaTitulo" hidden>
-    <span class="agarre" aria-hidden="true"></span>
-    <span id="hojaEt" class="et"></span>
-    <h2 id="hojaTitulo"></h2>
-    <div id="hojaTexto" style="display:flex;flex-direction:column;gap:14px"></div>
-    <button id="hojaCerrar">Seguir caminando</button>
-  </div>
-  <div id="confirma" role="dialog" aria-modal="true" aria-labelledby="confTitulo" hidden>
-    <span class="agarre" aria-hidden="true"></span>
-    <h2 id="confTitulo">¿Es este el lugar?</h2>
-    <img id="confImg" alt="" hidden>
-    <div id="confSinFoto" hidden><span id="confLetra" aria-hidden="true">•</span><span id="confSinFotoTxt">Aún no hay foto de este lugar.</span></div>
-    <div class="conf-datos"><b id="confNombre"></b><span id="confDetalle"></span><small id="confCred"></small></div>
-    <p id="confAyuda"></p>
-    <button id="confSi" class="btn-principal">Sí, llegué</button>
-    <button id="confNo" class="btn-texto">Aún no</button>
-  </div>
-  <div id="chipDemo" class="chip-demo vidrio" hidden><span>Recorrido de ejemplo</span><button id="demoSalir">Salir</button></div>
+  </dialog>
+  <dialog id="confirma" class="sheet" aria-labelledby="confTitulo">
+    <div class="sheet-in">
+      <span class="agarre" aria-hidden="true"></span>
+      <h2 id="confTitulo" tabindex="-1" autofocus>¿Es este el lugar?</h2>
+      <img id="confImg" alt="" hidden>
+      <div id="confSinFoto" hidden><span id="confLetra" aria-hidden="true">•</span><span id="confSinFotoTxt">Aún no hay foto de este lugar.</span></div>
+      <div class="conf-datos"><b id="confNombre"></b><span id="confDetalle"></span><small id="confCred"></small></div>
+      <p id="confAyuda" role="status"></p>
+      <button id="btnReportar" class="btn-texto reportar" hidden>Reportar esta foto</button>
+    </div>
+    <div class="sheet-pie">
+      <button id="confSi" class="btn-principal">Sí, llegué</button>
+      <button id="confNo" class="btn-texto">Aún no llego</button>
+    </div>
+  </dialog>
 </main>
 
 <!-- ===================== LLEGADA ===================== -->
 <main id="vLlegada" class="vista pad" aria-label="Llegada">
-  <div class="resp" aria-hidden="true"></div>
+  <div class="resp-marco" aria-hidden="true"><div class="resp"></div></div>
   <div id="llInicio" style="display:contents">
     <div class="bloque">
       <span class="visto"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
       <h1 id="llTitulo">Llegaste</h1>
       <p>Encontraste el camino por tu cuenta.</p>
     </div>
-    <figure id="llFoto" hidden><img id="llFotoImg" alt=""><figcaption id="llFotoPie"></figcaption><button id="btnReportar" class="btn-texto" hidden>Reportar esta foto</button></figure>
-    <div id="llSinFoto" class="sinfoto" hidden><b>Nadie ha dejado una foto de este lugar</b><span>Sé el primero: así quien venga después lo reconocerá al llegar.</span></div>
-    <div id="llSabias" class="sabias" hidden><b>Sabías que</b><span id="llSabiasTxt"></span></div>
+    <div id="llSabias" class="sabias" hidden><b>¿Sabías que…?</b><span id="llSabiasTxt"></span></div>
     <div class="pie">
-      <span>Ayuda al siguiente: toma una foto de lo que ves ahora.</span>
+      <span id="llInvita">Ayuda al siguiente: toma una foto de lo que ves ahora.</span>
       <button id="btnTomar" class="btn-os"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6l1.5-2h3L15 6"/></svg>Tomar foto</button>
-      <div id="llError" role="alert" style="font-size:14px;font-weight:700"></div>
-      <div class="duo"><button id="btnAunNo">Aún no llego</button><button id="btnOtro">Otro destino</button></div>
+      <div id="llError" role="alert" style="font-size:var(--t-apoyo);font-weight:700"></div>
+      <div class="duo"><button id="btnAunNo">Aún no llego</button><button id="btnOtro">Elegir otro destino</button></div>
     </div>
   </div>
   <div id="llVista" style="display:none;flex-direction:column;gap:18px;flex:1">
-    <div class="bloque"><h1 style="font-size:30px">Tu foto de <span id="llNombre2"></span></h1><p style="font-size:16px">Revísala antes de publicarla.</p></div>
+    <div class="bloque"><h1 style="font-size:var(--t-titular)">Tu foto de <span id="llNombre2"></span></h1><p style="font-size:var(--t-cuerpo)">Revísala antes de publicarla.</p></div>
     <div class="prev" role="img" aria-label="Vista previa de tu foto"><img id="llPrev" alt=""></div>
-    <span style="position:relative;font-size:14px;line-height:1.4;font-weight:600">Se publica sin tu nombre y pasa al dominio público (CC0): cualquiera podrá usarla. Evita fotografiar a personas.</span>
+    <span style="position:relative;font-size:var(--t-apoyo);line-height:1.4;font-weight:600">Se publica sin tu nombre y pasa al dominio público (CC0): cualquiera podrá usarla. Evita fotografiar a personas.</span>
     <div id="llegadaError" role="alert"></div>
     <div style="position:relative;display:flex;flex-direction:column;gap:8px">
       <button id="btnPublicar" class="btn-os">Publicar foto</button>
@@ -458,9 +553,9 @@
   <div id="llGracias" style="display:none;flex-direction:column;gap:18px;flex:1">
     <div role="status" style="position:relative;flex-grow:1;display:flex;flex-direction:column;justify-content:center;gap:14px;animation:sube 900ms var(--ease) both">
       <span class="visto" style="width:64px;height:64px;border-radius:32px"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>
-      <h1 style="font-size:34px">Gracias por ayudar al siguiente</h1>
+      <h1 style="font-size:var(--t-titular)">Gracias por ayudar al siguiente</h1>
       <p>Quien busque <span id="llNombre3"></span> verá tu foto al acercarse.</p>
-      <p id="llNota" style="font-size:14px;opacity:.85"></p>
+      <p id="llNota" style="font-size:var(--t-apoyo);opacity:.85"></p>
     </div>
     <button id="btnOtro2" class="btn-os">Elegir otro destino</button>
   </div>
@@ -819,13 +914,22 @@ const state = {
   user: fromXY(0, 0),
   heading: 0,                        // rumbo suavizado
   destId: DEST["edificio-a"] ? "edificio-a" : DESTS[0].id,
+  sinDestino: false,                 // «Prefiero ver solo el mapa»: el plano sin destino hasta que tocas un edificio
   accesible: false,                  // true = ruta sin escaleras
   demo: false, gpsError: "",
   hist: [],                          // [tiempo, metros al borde] para saber si te acercas o te alejas
   llego: null,                       // destino cuya llegada ya se propuso (o se pospuso con «Aún no»)
   confirmando: null,                 // «auto» o «manual» mientras se pregunta «¿Es este el lugar?»
   zonasVistas: new Set(), zona: null, hojaAbierta: false, entradaCerrada: false,
+  evento: null,                      // id del evento elegido en la lista (su lugar es el destino)
+  // trayecto (docs/eventos-y-trayecto.md): metros caminados, cuándo salió la última tarjeta y lado por el que llegas
+  andado: 0, ancla: null, ultimaTarjeta: -Infinity, zonaDesde: 0,
+  lado: null, ladoCand: null, ladoDesde: 0,
 };
+function reiniciarTrayecto() {                               // al cambiar de destino o empezar el recorrido de ejemplo
+  Object.assign(state, { andado: 0, ancla: null, ultimaTarjeta: -Infinity, zonaDesde: 0, zona: null, hojaAbierta: false,
+                         entradaCerrada: false, lado: null, ladoCand: null, ladoDesde: 0 });
+}
 const tieneUbicacion = () => state.sim || (state.mode === "gps" && state.fix);
 const claro = () => (document.documentElement.dataset || {}).tema === "claro";
 const info = id => INFO[id] || { nombre: DEST[id].name, letra: "", detalle: "" };
@@ -846,19 +950,20 @@ function distA(id) {
 const FOTOS_KEY = "fotosComunidad";
 let cacheFotos = null;                                       // se lee una vez: la brújula dibuja ~60 veces por segundo
 const leerFotos = () => { if (!cacheFotos) { try { cacheFotos = JSON.parse(localStorage.getItem(FOTOS_KEY)) || {}; } catch (e) { cacheFotos = {}; } } return cacheFotos; };
+const fotoLocal = id => { const l = leerFotos()[id]; return !l ? null : typeof l === "string" ? { src: l, lado: null } : l; };   // antes se guardaba solo el dataURL
 function guardarFoto(id, data) {
   try { const f = { ...leerFotos(), [id]: data }; localStorage.setItem(FOTOS_KEY, JSON.stringify(f)); cacheFotos = f; return true; } catch (e) { return false; }
 }
 // Fotos compartidas (Firestore, vía fotos.js). Se piden al elegir el destino y se guardan en `nube`,
 // porque fotoDe() se llama al dibujar y no puede esperar a la red.
-const nube = {};                                             // id de destino -> { id, src } | null (sin fotos)
+// Se piden también si hay foto oficial: puede faltar la del lado por el que llegas.
+const nube = {};                                             // id de destino -> [{ id, src, lado }], la más reciente primero ([] = sin fotos)
 const pidiendo = new Set();
 async function cargarNube(id) {
-  if (id in nube || pidiendo.has(id) || !window.Fotos || info(id).foto) return;
+  if (id in nube || pidiendo.has(id) || !window.Fotos) return;
   pidiendo.add(id);
   try {
-    const f = (await window.Fotos.fotosDe(id))[0];
-    nube[id] = f ? { id: f.id, src: f.foto } : null;
+    nube[id] = (await window.Fotos.fotosDe(id)).map(f => ({ id: f.id, src: f.foto, lado: f.lado || null }));
     if (state.destId === id) { if (state.vista === "llegada" && !fotoNueva) renderLlegada(); render(); }
   } catch (e) { /* sin conexión: se usa la foto de este teléfono, si la hay */ }
   pidiendo.delete(id);
@@ -870,14 +975,34 @@ function ladoFoto() {                                        // lado del edifici
   const b = bearing(ref || graph[destNode()], p);
   return b >= 315 || b < 45 ? "N" : b < 135 ? "E" : b < 225 ? "S" : "O";
 }
-function fotoDe(id) {                                        // la oficial con licencia libre; si no, la compartida; si no, la de este teléfono
-  const f = info(id).foto;
-  if (f) return { src: f.src, pie: f.pie, cred: `Foto: ${f.autor} · ${f.licencia}`, oficial: true };
-  const c = nube[id];
-  if (c) return { id: c.id, src: c.src, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false };
-  const l = leerFotos()[id];
-  return l ? { src: l, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false } : null;
+// Foto según el lado por el que llegas (docs/eventos-y-trayecto.md): primero una del mismo lado (oficial, compartida
+// o de este teléfono, en ese orden); si no hay, la primera de esa lista, marcada `otroLado` si se sabe que es de otro.
+// El recorrido de ejemplo usa solo las oficiales, para que la demo no dependa de lo que haya subido la comunidad.
+function fotoDe(id, lado = id === state.destId ? state.lado : null) {
+  const f = info(id).foto, cand = [];
+  if (f) cand.push({ src: f.src, pie: f.pie, cred: `Foto: ${f.autor} · ${f.licencia}`, oficial: true, lado: f.lado || null });
+  if (!state.demo) {
+    for (const c of nube[id] || []) cand.push({ id: c.id, src: c.src, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false, lado: c.lado });
+    const l = fotoLocal(id);
+    if (l) cand.push({ src: l.src, pie: "Foto de otro estudiante.", cred: "Aportada por la comunidad", oficial: false, lado: l.lado || null });
+  }
+  if (!cand.length) return null;
+  const mismo = lado && cand.find(c => c.lado === lado);
+  if (mismo) return mismo;
+  return { ...cand[0], otroLado: !!(lado && cand[0].lado && cand[0].lado !== lado) };
 }
+const LADO_FIRME_MS = 2500;                                  // el lado cambia solo si se mantiene este tiempo: el GPS salta en las esquinas
+function actualizarLado() {
+  const l = ladoFoto(), t = Date.now();
+  if (l === state.lado) { state.ladoCand = null; return; }
+  if (state.ladoCand !== l) { state.ladoCand = l; state.ladoDesde = t; }
+  if (!state.lado || t - state.ladoDesde >= LADO_FIRME_MS) { state.lado = l; state.ladoCand = null; }
+}
+
+// ---------- Ajustes (se guardan en este teléfono) ----------
+const AJUSTES_KEY = "ajustes";
+const ajustes = (() => { try { return { apurado: false, ...JSON.parse(localStorage.getItem(AJUSTES_KEY)) }; } catch (e) { return { apurado: false }; } })();
+const guardarAjustes = () => { try { localStorage.setItem(AJUSTES_KEY, JSON.stringify(ajustes)); } catch (e) {} };
 function reducirFoto(file) {                                 // máx. 900 px y JPEG: cabe en el almacenamiento del teléfono
   return new Promise((ok, mal) => {
     const lector = new FileReader();
@@ -900,8 +1025,16 @@ function reducirFoto(file) {                                 // máx. 900 px y J
 // ---------- Navegación entre pantallas ----------
 const VISTAS = ["portada", "permiso", "buscar", "brujula", "llegada"];
 const idVista = v => "v" + v[0].toUpperCase() + v.slice(1);
+// Hojas modales (<dialog>): showModal deja inerte el resto y atrapa el foco; Escape y un toque afuera hacen lo mismo que su botón de cerrar.
+function abrirHoja(d) { if (!d.open) { try { d.showModal(); } catch (e) { d.setAttribute("open", ""); } } }
+function cerrarHoja(d) { if (d.open) d.close(); }
+function alCerrar(id, fn) {
+  const d = $(id);
+  d.addEventListener("cancel", e => { e.preventDefault(); fn(); });
+  d.addEventListener("click", e => { if (e.target === d) fn(); });   // el fondo: el contenido va dentro de .sheet-in
+}
 function ir(v, push = true) {
-  state.confirmando = null;
+  state.confirmando = null; document.querySelectorAll("dialog[open]").forEach(cerrarHoja);
   if (state.demo && v !== "brujula" && v !== "llegada") detenerDemo();
   state.vista = v;
   for (const x of VISTAS) $(idVista(x)).classList.toggle("activa", x === v);
@@ -918,8 +1051,14 @@ try { history.replaceState({ v: "portada" }, ""); } catch (e) {}
 function elegir(id) {                                        // desde la lista o tocando un edificio
   setDest(id); ir("brujula");
 }
+function elegirEvento(evId) {                                // un evento lleva la brújula a su lugar
+  const e = EV[evId]; if (!e) return;
+  setDest(e.lugar); state.evento = evId;
+  if (state.vista !== "brujula") ir("brujula"); else render();
+}
 function setDest(id) {
-  state.destId = id; state.target = null; state.hist = []; state.zona = null; state.entradaCerrada = false; state.confirmando = null; state.puerta = null;
+  state.destId = id; state.sinDestino = false; state.target = null; state.hist = []; state.confirmando = null; state.puerta = null; state.evento = null;
+  reiniciarTrayecto();
   if (state.llego === id) state.llego = null;
   cargarNube(id);
   mapV.fitted = false; render();
@@ -929,14 +1068,13 @@ function setDest(id) {
 let watchId = null;
 async function enableGps() {
   $("permisoError").textContent = ""; state.gpsError = "";
-  if (!navigator.geolocation) { $("permisoError").textContent = "Este navegador no tiene geolocalización. Puedes ver el mapa o el recorrido de ejemplo."; return false; }
-  try {
-    // iOS: debe llamarse directo desde el toque del usuario, antes de cualquier otro await
-    if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
-      const r = await DeviceOrientationEvent.requestPermission();
-      if (r !== "granted") throw new Error("Sin la brújula no podemos mostrarte hacia dónde queda. Cierra Safari por completo, vuelve a abrir la página y acepta el permiso. Mientras tanto puedes ver el mapa.");
-    }
-  } catch (e) { $("permisoError").textContent = e.message; return false; }
+  if (!navigator.geolocation) { $("permisoError").textContent = "Este navegador no puede usar tu ubicación. Puedes ver el mapa o el recorrido de ejemplo."; return false; }
+  // iOS: debe llamarse directo desde el toque del usuario, antes de cualquier otro await (solo Safari en iPhone tiene requestPermission)
+  if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
+    let r = "";
+    try { r = await DeviceOrientationEvent.requestPermission(); } catch (e) {}
+    if (r !== "granted") { $("permisoError").textContent = "Sin la brújula no podemos mostrarte hacia dónde queda. Cierra Safari por completo, vuelve a abrir la página y acepta el permiso. Mientras tanto puedes ver el mapa."; return false; }
+  }
   const onOri = e => {
     let h = e.webkitCompassHeading;                                    // iOS
     if (h == null && e.absolute && e.alpha != null) h = 360 - e.alpha;   // Android
@@ -947,15 +1085,18 @@ async function enableGps() {
   watchId = navigator.geolocation.watchPosition(
     p => {
       if (state.demo) return;
-      if (!state.fix) setFollow(true);
+      const primera = !state.fix;
+      if (primera) setFollow(true);
       state.fix = true; state.gpsError = "";
       state.user = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
+      if (primera && state.vista === "buscar") renderBuscar();   // con la primera posición aparecen «Cerca de ti» y el orden por distancia
       render();
     },
     err => {
-      state.gpsError = err.code === 1 ? "Ubicación denegada. Actívala en Ajustes > Privacidad > Localización, o usa el mapa." : "No pudimos obtener tu ubicación (" + err.message + ").";
+      state.gpsError = err.code === 1 ? "No tenemos permiso para usar tu ubicación. Actívalo en los ajustes del teléfono, o usa el mapa."
+        : "No logramos obtener tu ubicación. Si estás bajo techo, sal a un lugar abierto y espera unos segundos.";
       if (state.vista === "permiso") $("permisoError").textContent = state.gpsError;
-      render();
+      pieBuscar(); render();
     },
     { enableHighAccuracy: true, maximumAge: 1000 }
   );
@@ -966,7 +1107,7 @@ $("btnActivar").onclick = async () => {
   state.mode = "gps"; state.active = true; state.sim = false;
   ir("buscar");
 };
-$("btnSoloMapa").onclick = () => { state.modo = "mapa"; ir("brujula"); };
+$("btnSoloMapa").onclick = () => { state.modo = "mapa"; state.sinDestino = true; mapV.fitted = false; ir("brujula"); };   // el plano sin destino: tocas un edificio para elegirlo
 $("btnDemo").onclick = () => iniciarDemo();
 $("btnDemoDbg").onclick = () => iniciarDemo();
 
@@ -981,6 +1122,8 @@ function setHeading(deg) {
 }
 
 // ---------- Buscar ----------
+// Destinos que repiten un edificio que ya está en la lista (Casino y Arquitectura son el D, Física el E…): salen solo al buscarlos.
+const ALIAS = new Set(["casino", "arquitectura", "fisica", "informatica", "humanisticos", "admision"]);
 function listaDestinos() {
   return DESTS.map(d => {
     const i = info(d.id), dist = distA(d.id);
@@ -988,6 +1131,35 @@ function listaDestinos() {
   });
 }
 const metrosTxt = d => d == null ? "" : d < 20 ? "aquí" : (d < 100 ? Math.round(d / 5) * 5 : Math.round(d / 10) * 10) + " m";
+
+// ---------- Eventos (data/eventos.json, curados por el equipo; docs/eventos-y-trayecto.md) ----------
+// Los de ejemplo traen «relativo» (minutos desde que se abre la app) para que la demo siempre tenga algo pasando ahora.
+const T0 = Date.now(), PROXIMOS_DIAS = 14;
+const EVS = EVENTOS.filter(e => DEST[e.lugar]).map(e => {
+  const r = e.relativo, ini = r ? T0 + r.inicio_min * 6e4 : Date.parse(e.inicio);
+  return { ...e, ini, fin: r ? ini + r.dur_min * 6e4 : Date.parse(e.fin) };
+});
+const EV = Object.fromEntries(EVS.map(e => [e.id, e]));
+function eventosVigentes(ahora = Date.now()) {              // sin los terminados ni los que empiezan en más de PROXIMOS_DIAS
+  return EVS.filter(e => e.fin > ahora && e.ini - ahora <= PROXIMOS_DIAS * 864e5).map(e => ({ ...e, enCurso: e.ini <= ahora }));
+}
+const hora = t => new Date(t).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });   // 16:28, no «04:28 p. m.»
+function cuandoTxt(e, ahora = Date.now()) {                  // «Ahora · hasta las 13:00», «Hoy, 18:00», «Mañana, 18:00», «En 9 días»
+  if (e.ini <= ahora) return "Ahora · hasta las " + hora(e.fin);
+  const hoy = new Date(ahora); hoy.setHours(0, 0, 0, 0);
+  const dias = Math.floor((e.ini - hoy) / 864e5);
+  return dias === 0 ? "Hoy, " + hora(e.ini) : dias === 1 ? "Mañana, " + hora(e.ini) : `En ${dias} días`;
+}
+function filaEventoHTML(e) {
+  const lugar = info(e.lugar).nombre, dist = distA(e.lugar), cuando = cuandoTxt(e);
+  const donde = e.donde && e.donde !== lugar ? `${lugar} · ${e.donde}` : lugar;
+  const aria = `Evento: ${e.titulo}. ${cuando}. ${donde}${dist == null ? "" : ", a " + Math.round(dist) + " metros"}${e.ejemplo ? ". Evento de ejemplo" : ""}`;
+  return `<button class="fila evento" data-evento="${esc(e.id)}" aria-label="${esc(aria)}"><span class="letra" aria-hidden="true">` +
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span>' +
+    `<span class="txt"><b>${esc(e.titulo)}</b><small><span class="cuando${e.enCurso ? " ahora" : ""}">${e.enCurso ? "<i></i>" : ""}${esc(cuando)}</span> · ${esc(donde)}</small></span>` +
+    `<span class="der"><span class="dist" data-dist="${esc(e.lugar)}">${metrosTxt(dist)}</span>` +
+    (e.ejemplo ? '<span class="ej">ejemplo</span>' : "") + `</span></button>`;
+}
 function filaHTML(e) {
   const aria = `${e.nombre}, ${e.detalle}${e.dist == null ? "" : ", a " + Math.round(e.dist) + " metros"}${e.foto ? ", con fotos" : ""}`;
   const ins = e.letra ? esc(e.letra) : '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
@@ -1001,24 +1173,34 @@ function renderBuscar() {
   $("qBorrar").hidden = !q;
   let todos = listaDestinos();
   todos.sort((a, b) => a.dist == null || b.dist == null ? a.nombre.localeCompare(b.nombre, "es") : a.dist - b.dist);
+  const evs = eventosVigentes();
   let secciones;
   if (q) {
     const exactos = todos.filter(e => sinTildes(e.letra) === q);
     const hits = exactos.length ? exactos : todos.filter(e => sinTildes(e.nombre + " " + e.detalle).includes(q));
-    secciones = hits.length ? [{ t: "Resultados", f: hits }] : [];
-  } else {
-    const cerca = todos.filter(e => e.dist != null && e.dist <= 120).slice(0, 4);
+    const evHits = exactos.length ? [] : evs.filter(e => sinTildes([e.titulo, e.donde, e.organiza, info(e.lugar).nombre].filter(Boolean).join(" ")).includes(q));
     secciones = [];
+    if (evHits.length) secciones.push({ t: "Eventos", f: evHits, ev: true });
+    if (hits.length) secciones.push({ t: evHits.length ? "Lugares" : "Resultados", f: hits });
+  } else {
+    todos = todos.filter(e => !ALIAS.has(e.id));               // sin buscar, cada edificio aparece una vez
+    const cerca = todos.filter(e => e.dist != null && e.dist <= 120).slice(0, 4);
+    const porDist = (a, b) => (distA(a.lugar) ?? Infinity) - (distA(b.lugar) ?? Infinity);
+    const ahora = evs.filter(e => e.enCurso).sort(porDist), proximos = evs.filter(e => !e.enCurso).sort((a, b) => a.ini - b.ini);
+    secciones = [];
+    if (ahora.length) secciones.push({ t: "Está pasando", f: ahora, ev: true });
     if (cerca.length) secciones.push({ t: "Cerca de ti", f: cerca });
+    if (proximos.length) secciones.push({ t: "Próximos eventos", f: proximos, ev: true });
     secciones.push({ t: "Todos los destinos", f: todos.filter(e => !cerca.includes(e)) });
   }
   $("lista").innerHTML = (q && !secciones.length)
     ? `<div class="vacio vidrio" role="status"><b>No encontramos «${esc(crudo.trim())}»</b><p>Prueba con la letra del edificio, o con un lugar como Biblioteca o Casino.</p><button id="verTodos">Ver todos los destinos</button></div>`
-    : secciones.map(s => `<div class="seccion"><span>${s.t}</span>${s.f.map(filaHTML).join("")}</div>`).join("");
-  // «Estás cerca de…»
-  const aqui = todos.filter(e => e.dist != null && e.dist <= 40).sort((a, b) => a.dist - b.dist)[0];
-  $("buscarAqui").innerHTML = aqui ? `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Estás cerca de ${esc(aqui.nombre)}` : "";
-  $("buscarPie").textContent = tieneUbicacion() ? "Distancias en línea recta. Tú eliges el camino." : "Activa la ubicación para ver qué tan lejos queda cada lugar. Tú eliges el camino.";
+    : secciones.map(s => `<div class="seccion"><span>${s.t}</span>${s.f.map(s.ev ? filaEventoHTML : filaHTML).join("")}</div>`).join("");
+  pieBuscar();
+}
+function pieBuscar() {
+  $("buscarPie").textContent = tieneUbicacion() ? "Distancias en línea recta." : state.gpsError
+    || (state.mode === "gps" && state.active ? "Buscando tu ubicación…" : "Activa la ubicación para ver qué tan lejos queda cada lugar.");
 }
 function actualizarDistBuscar() {                            // al moverte solo cambian los números, sin mover la lista
   for (const el of document.querySelectorAll("[data-dist]")) el.textContent = metrosTxt(distA(el.dataset.dist));
@@ -1028,8 +1210,13 @@ $("q").onkeydown = e => { if (e.key === "Enter") e.target.blur(); };
 $("qBorrar").onclick = () => { $("q").value = ""; renderBuscar(); $("q").focus(); };
 $("lista").onclick = e => {
   if (e.target.closest("#verTodos")) { $("q").value = ""; renderBuscar(); return; }
+  const be = e.target.closest("[data-evento]"); if (be) { elegirEvento(be.dataset.evento); return; }
   const b = e.target.closest("[data-id]"); if (b) elegir(b.dataset.id);
 };
+$("btnAjustes").onclick = () => { $("ajApurado").checked = ajustes.apurado; abrirHoja($("ajustes")); };
+$("ajApurado").onchange = e => { ajustes.apurado = e.target.checked; guardarAjustes(); if (ajustes.apurado) state.zona = null; };
+$("ajListo").onclick = () => cerrarHoja($("ajustes"));      // al cerrarse, el foco vuelve solo al botón de Ajustes
+alCerrar("ajustes", () => $("ajListo").onclick());
 
 // ---------- Resplandor (puerto de design/plantillas/Brujula.tpl.html, color en OKLCH) ----------
 const toLin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
@@ -1099,6 +1286,7 @@ function girarSenal(rel) {
 const sinMovimiento = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
 const poner = (el, o) => { for (const k in o) el.style[k] = o[k]; };
 
+const LUZ_PX = 700;                                          // lado de cada .halo en el CSS
 function pintarLuz(ev) {
   const W = $("app").clientWidth || 390, H = $("app").clientHeight || 844, cx = W / 2, cy = H / 2;
   const metros = ev.m, impreciso = ev.impreciso, esFlecha = state.modo === "flecha", cl = claro();
@@ -1108,15 +1296,13 @@ function pintarLuz(ev) {
   const ancho = impreciso ? 1.45 : 1;
   const s1 = (260 + c * 400) * ancho, s2 = s1 * 0.8, largo = (70 + c * 190) * ancho, grosor = 5;
   const gop = (cl ? 0.95 : 0.85) * (esFlecha ? 0.45 : 1) * (impreciso ? 0.8 : 1);
-  poner($("g1"), { width: s1 + "px", height: s1 + "px", marginLeft: -s1 / 2 + "px", marginTop: -s1 / 2 + "px", opacity: gop });
+  poner($("g1"), { transform: `scale(${s1 / LUZ_PX})`, opacity: gop });   // .halo mide LUZ_PX; escalar no recalcula el diseño
   poner($("g1").firstElementChild, { background: luzSuave(c1, CURVA_G1), animation: "respira 5s ease-in-out infinite" });
-  poner($("g2"), { width: s2 + "px", height: s2 + "px", marginLeft: -s2 / 2 + "px", marginTop: -s2 / 2 + "px", opacity: gop });
+  poner($("g2"), { transform: `scale(${s2 / LUZ_PX})`, opacity: gop });
   poner($("g2").firstElementChild, { background: luzSuave(c2, CURVA_G2), animation: "respira 7s ease-in-out infinite" });
   poner($("barra"), { background: fuerte, boxShadow: `0 0 14px ${fuerte}`, opacity: esFlecha ? 0.4 : impreciso ? 0.55 : 1 });
   senal.p = { W, H, cx, cy, largo, grosor };
   moverSenal();
-  $("g1").setAttribute("role", "img");
-  $("g1").setAttribute("aria-label", `El borde brilla hacia ${info(state.destId).nombre}, a ${metros} metros`);
   $("flechaPath").setAttribute("fill", fuerte); $("flechaPath").setAttribute("stroke", fuerte);
 }
 
@@ -1165,54 +1351,97 @@ function escalerasAdelante(g) {
   return null;
 }
 
+// ---------- Tarjetas del trayecto (docs/eventos-y-trayecto.md) ----------
+const PARTIDA_M = 15;      // m caminados sin tarjetas: primero orientarse
+const PAUSA_M = 30;        // m entre una tarjeta y la siguiente
+const RETIRAR_M = 60;      // m caminados tras los que una tarjeta se va sola
+const RADIO_EVENTO = 35;   // m al lugar de un evento en curso para avisarlo
+const PASO_MIN = 2;        // m: el GPS tiembla; un tramo se cuenta solo al alejarse esto del punto anterior
+function medirAndado() {
+  if (!tieneUbicacion()) return;
+  if (!state.ancla) { state.ancla = state.user; return; }
+  const d = distance(state.ancla, state.user);
+  if (d >= PASO_MIN) { if (d < 80) state.andado += d; state.ancla = state.user; }   // un salto grande (GPS que recién fija, depuración) no cuenta
+}
+function proximaTarjeta() {                                  // primero un evento en curso junto al camino; si no, un dato de la zona
+  const dest = areaOf(state.destId);
+  for (const e of eventosVigentes()) {
+    const a = areaOf(e.lugar);
+    if (!e.enCurso || !a || a === dest || e.id === state.evento || state.zonasVistas.has("ev:" + e.id)) continue;
+    if (distToArea(state.user, a) <= RADIO_EVENTO) return tarjetaEvento(e);
+  }
+  for (const z of ZONAS) {
+    if (state.zonasVistas.has(z.id) || z.area === dest) continue;
+    if (distToArea(state.user, z.area) <= z.radio) return z;
+  }
+  return null;
+}
+function tarjetaEvento(e) {                                  // misma forma que un dato ({titulo, gancho, texto}): el modo voz la anuncia igual
+  const donde = e.donde || info(e.lugar).nombre;
+  return { id: "ev:" + e.id, tipo: "evento", evento: e.id, titulo: e.ejemplo ? "Evento de ejemplo" : "Está pasando cerca", gancho: e.titulo,
+           texto: `Ahora en ${donde}, hasta las ${hora(e.fin)}.`, meta: `${donde} · hasta las ${hora(e.fin)}` };
+}
+const bajo = () => !!(window.matchMedia && matchMedia("(max-height: 500px)").matches);   // 320×454 u horizontal: no caben tarjetas
+const ladoTxt = rel => { const r = norm360(rel); return r <= 30 || r >= 330 ? "adelante" : r < 150 ? "a tu derecha" : r <= 210 ? "detrás de ti" : "a tu izquierda"; };
+const deDestino = n => aDestino(n).replace(/^a la /, "de la ").replace(/^al /, "del ").replace(/^a /, "de ");
+
 // ---------- Render de la brújula ----------
 function renderBrujula() {
-  const nombre = info(state.destId).nombre, ubic = tieneUbicacion(), mapa = state.modo === "mapa", flecha = state.modo === "flecha";
-  $("pillDest").textContent = nombre;
-  $("vBrujula").style.setProperty("--base-h", $("base").offsetHeight + "px");
-  mapV.baseH = $("base").offsetHeight;
+  const nombre = info(state.destId).nombre, ubic = tieneUbicacion(), mapa = state.modo === "mapa", flecha = state.modo === "flecha", sinDest = state.sinDestino;
+  $("vBrujula").classList.toggle("sin-destino", sinDest);
+  // pastilla: el destino (o el evento elegido); en el recorrido de ejemplo lo dice; sin destino, el plano
+  $("pillDest").textContent = sinDest ? "Plano del campus" : state.evento && EV[state.evento] ? EV[state.evento].titulo : nombre;
+  $("pillDe").textContent = state.demo ? "ejemplo" : "Vas hacia"; $("pillDe").classList.toggle("ej", state.demo); $("pillDe").hidden = sinDest;
+  $("btnAtras").setAttribute("aria-label", state.demo ? "Salir del recorrido de ejemplo" : sinDest ? "Buscar un destino" : "Cambiar destino");
   let ev = null, g = null, alerta = "";
-  if (ubic) ev = evaluar();
+  if (ubic && !sinDest) ev = evaluar();
   if (ev) g = ev.g;
   const detras = !!ev && !ev.llego && ev.rel > 135 && ev.rel < 225;
   const casi = !!ev && !ev.llego && ev.dArea <= 60;
+  if (ev && !ev.llego && ev.dArea >= 0.5 && ev.dArea <= 120) actualizarLado();   // afuera y cerca: por qué lado llegas (adentro se conserva)
+  // la foto de la llegada se decide antes que los textos, que la mencionan. Con 500 px de alto o menos no cabe ninguna tarjeta.
+  const foto = ev ? fotoDe(state.destId) : null, verEntrada = casi && !!foto && !state.entradaCerrada && !state.confirmando && !bajo();
 
   // textos según el estado (PRD §4: vas bien · te alejas · detrás · casi llegas · sin ubicación)
-  let titulo, bajada;
-  if (!ubic) {
-    titulo = "No sabemos dónde estás";
-    bajada = state.gpsError || (state.mode === "gps" && state.active ? "Buscando señal GPS…" : "Revisa que la ubicación esté activada, o usa el mapa del campus.");
-  } else if (ev.llego) { titulo = "Estás " + enDestino(nombre); bajada = "Llegaste por tu cuenta."; }
+  let titulo = "", bajada = "";
+  if (sinDest) {}
+  else if (!ubic) {
+    const buscando = state.mode === "gps" && state.active && !state.gpsError;
+    titulo = buscando ? "Buscando tu ubicación…" : "No sabemos dónde estás";
+    bajada = state.gpsError || (buscando ? "Puede tardar unos segundos; al aire libre es más rápido." : "Activa la ubicación, o mira el mapa del campus.");
+  } else if (ev.llego) { titulo = "Estás " + enDestino(nombre); bajada = "Si es aquí, toca «Ya llegué»."; }
   else if (detras) { titulo = "Está detrás de ti"; bajada = flecha ? "Date vuelta hasta que la flecha apunte hacia arriba." : "Date vuelta hasta que la luz quede arriba."; }
   else if (ev.aleja) { titulo = "Te estás alejando"; bajada = flecha ? "Gira hacia donde apunta la flecha." : "Gira hacia donde brilla el borde."; }
-  else if (ev.enZona) { titulo = "Ya casi estás"; bajada = "Estás en la zona. Avanza un poco más hacia adentro, o toca «Ya llegué»."; }
-  else if (casi) { titulo = "Casi llegas"; bajada = fotoDe(state.destId) ? "Mira la foto: así se ve al llegar." : "Estás muy cerca. Mira a tu alrededor."; }
+  else if (ev.enZona) { titulo = "Ya casi estás"; bajada = "Avanza unos pasos más, o toca «Ya llegué»."; }
+  else if (casi) { titulo = "Casi llegas"; bajada = verEntrada ? (foto.otroLado ? "Mira la foto para reconocerlo." : "Mira la foto: así se ve al llegar.") : "Estás muy cerca. Mira a tu alrededor."; }
   else { titulo = "Vas bien. Vas a llegar."; bajada = ev.impreciso ? "La dirección es aproximada: por eso la luz es más ancha." : "Te acercas. El camino lo eliges tú."; }
   $("titulo").textContent = titulo; $("bajada").textContent = bajada;
-  $("cifraN").textContent = ubic ? String(ev.m) : "—"; $("cifraM").hidden = !ubic;
-  $("btnAbrirMapa").hidden = ubic || mapa;
+  $("cifraN").textContent = ev ? String(ev.m) : "—"; $("cifraM").hidden = !ev;
+  $("dirSr").textContent = ev && !ev.llego ? `${nombre} queda ${ladoTxt(ev.rel)}.` : "";   // la luz y la flecha, dichas al lector de pantalla
+  $("btnUbicar").hidden = ubic || sinDest || (state.mode === "gps" && state.active);
 
   // pista siempre visible (PRD): la del destino o, si no tiene, lo que sabemos de él
   const i = info(state.destId);
-  $("pistaTxt").textContent = i.pista || (ev && !ev.llego ? `${i.detalle}. Queda hacia el ${cardinal(ev.b).toLowerCase()}.` : i.detalle || "—");
-  const pu = puertaActual();                                 // la entrada hacia la que apunta la señal
+  $("pistaEt").textContent = sinDest ? "Sin destino" : "Pista para no perderte";
+  $("pistaTxt").textContent = sinDest ? "Toca un edificio del plano para ir hacia él, o vuelve atrás para buscarlo."
+    : i.pista || (ev && !ev.llego ? `${i.detalle}. Queda hacia el ${cardinal(ev.b).toLowerCase()}.` : i.detalle || "—");
+  const pu = sinDest ? null : puertaActual();                // la entrada hacia la que apunta la señal
   $("puertaTxt").textContent = pu ? (/^entrada/i.test(pu.nombre) ? pu.nombre : "Entrada: " + pu.nombre) + (pu.acc === true ? " · sin escaleras" : pu.acc === false ? " · con escalera" : "") : "";
 
-  // señal: resplandor / flecha / giro / aviso de GPS impreciso
-  $("flecha").hidden = !(flecha && ubic);
+  // señal: resplandor / flecha / giro
+  $("flecha").hidden = !(flecha && ev);
   $("giro").hidden = !(detras && !flecha);
-  $("impreciso").hidden = !(ev && ev.impreciso && !flecha && !detras);
-  if (ubic) girarSenal(ev.rel);
-  const conLuz = !mapa && ubic;
+  if (ev) girarSenal(ev.rel);
+  const conLuz = !mapa && !!ev;
   $("luz").style.display = conLuz ? "" : "none"; $("velo").hidden = !conLuz;
   if (conLuz) pintarLuz(ev);
 
   // pastilla del mapa y alerta de escaleras
-  $("pillDist").hidden = !(mapa && ubic); if (mapa && ubic) $("pillDist").textContent = "· a " + ev.m + " m";
+  $("pillDist").hidden = !(mapa && ev); if (mapa && ev) $("pillDist").textContent = "· a " + ev.m + " m";
   if (g) {
     const esc = escalerasAdelante(g);
     if (esc !== null && esc <= 30) {
-      alerta = esc < 3 ? "⚠️ Estás en una escalera" : `⚠️ Escaleras en ~${Math.round(esc / 5) * 5} m`;
+      alerta = esc < 3 ? "Estás en una escalera" : `Escaleras en unos ${Math.round(esc / 5) * 5} m`;
       const clave = state.target + "|" + state.destId;
       if (esc <= 15 && state.avisoEsc !== clave) { state.avisoEsc = clave; vibrar([200, 100, 200]); }
     } else if (esc === null) state.avisoEsc = null;
@@ -1221,7 +1450,7 @@ function renderBrujula() {
     const it = interiorAdelante(g);
     if (it && it.d <= 30) {
       const nom = DEST_DE_AREA[it.info.area] ? info(DEST_DE_AREA[it.info.area]).nombre : "edificio " + it.info.area;
-      alerta = (it.d < 3 ? `🏢 Vas por dentro (${nom})` : `🏢 Atajo por dentro (${nom}) en ~${Math.round(it.d / 5) * 5} m`) + (it.info.nota ? " · " + it.info.nota : "");
+      alerta = (it.d < 3 ? `Vas por dentro (${nom})` : `Atajo por dentro (${nom}) en unos ${Math.round(it.d / 5) * 5} m`) + (it.info.nota ? " · " + it.info.nota : "");
     }
   }
   $("alerta").textContent = alerta;
@@ -1229,32 +1458,48 @@ function renderBrujula() {
   const enMapa = alerta || (state.accesible && g ? fraseEscaleras(resumenEscaleras(g)) : "");
   $("alertaMapa").textContent = enMapa; $("alertaMapa").classList.toggle("hay", !!enMapa);
 
-  // tarjetas que brotan: dato de la zona y foto «así se ve al llegar»
-  if (ev && !state.zona && !casi && !ev.llego && !mapa) {
-    for (const z of ZONAS) {
-      if (state.zonasVistas.has(z.id) || z.area === areaOf(state.destId)) continue;
-      if (distToArea(state.user, z.area) <= z.radio) { state.zona = z; state.zonasVistas.add(z.id); vibrar(150); break; }
+  // tarjetas del trayecto por fases (docs/eventos-y-trayecto.md): partida → trayecto → llegando → llegada.
+  // Una a la vez, en la base (sobre la pista), también en el modo mapa; «Voy apurado» (Ajustes) apaga las del trayecto.
+  medirAndado();
+  const fase = !ev ? null : ev.llego ? "llegada" : casi ? "llegando" : state.andado < PARTIDA_M ? "partida" : "trayecto";
+  if (state.zona && !state.hojaAbierta && state.andado - state.zonaDesde >= RETIRAR_M) state.zona = null;   // se retira sola al seguir caminando
+  if (fase === "trayecto" && !state.zona && !ajustes.apurado && state.andado - state.ultimaTarjeta >= PAUSA_M) {
+    const t = proximaTarjeta();
+    if (t) {
+      state.zona = t; state.zonaDesde = state.ultimaTarjeta = state.andado; state.zonasVistas.add(t.id); vibrar(150);
+      if (!bajo() && !$("vBrujula").classList.contains("modo-voz")) $("avisoTarjeta").textContent = `${t.titulo}: ${t.gancho}`;   // el modo voz la dice solo
     }
   }
-  const z = state.zona;
-  $("dato").hidden = !(z && !mapa && !casi && !(ev && ev.llego) && !state.hojaAbierta && !state.confirmando);
-  if (z) { $("datoTitulo").textContent = z.titulo; $("datoGancho").textContent = z.gancho; }
-  const foto = fotoDe(state.destId), verEntrada = casi && !mapa && !!foto && !state.entradaCerrada && !state.confirmando;
+  const z = state.zona, verDato = !!z && fase === "trayecto" && !state.hojaAbierta && !state.confirmando && !bajo();
+  $("dato").hidden = !verDato;
+  if (z) {
+    $("datoTitulo").textContent = z.titulo; $("datoGancho").textContent = z.gancho;
+    $("datoMeta").textContent = z.meta || ""; $("datoMeta").hidden = !z.meta;
+  }
   $("entrada").hidden = !verEntrada;
   if (verEntrada) {
     if ($("entradaImg").getAttribute("src") !== foto.src) $("entradaImg").src = foto.src;
-    $("entradaImg").alt = "Foto de " + nombre; $("entradaPie").textContent = foto.pie; $("entradaCred").textContent = foto.cred;
+    $("entradaTit").textContent = foto.otroLado ? "Así se ve desde otro lado" : "Así se ve al llegar";
+    $("entradaImg").alt = "Foto " + deDestino(nombre); $("entradaPie").textContent = foto.pie; $("entradaCred").textContent = foto.cred;
   }
-  $("hoja").hidden = !(state.hojaAbierta && z);
-  if (state.hojaAbierta && z && $("hoja").dataset.zona !== z.id) {
-    $("hoja").dataset.zona = z.id; $("hojaEt").textContent = z.etiqueta; $("hojaTitulo").textContent = z.gancho;
-    $("hojaTexto").innerHTML = [z.texto, ...z.mas].map(t => `<p>${esc(t)}</p>`).join("");
-  }
-  $("chipDemo").hidden = !state.demo;
+  $("flota").hidden = !(verDato || verEntrada);
+  $("vBrujula").classList.toggle("con-tarjeta", verDato || verEntrada);
+  // la hoja de la tarjeta: el dato completo, o el evento con «Ir ahí»
+  if (state.hojaAbierta && z) {
+    if ($("hoja").dataset.zona !== z.id) {
+      $("hoja").dataset.zona = z.id;
+      const e = z.tipo === "evento" ? EV[z.evento] : null, conIr = !!e && !state.demo;   // en la demo el recorrido va al A: «Ir ahí» no puede cambiarlo
+      $("hojaEt").textContent = e ? z.titulo : z.etiqueta || z.titulo; $("hojaTitulo").textContent = z.gancho;
+      const ps = e ? [z.texto, e.descripcion, e.organiza && "Organiza: " + e.organiza] : z.mas && z.mas.length ? z.mas : [z.texto];
+      $("hojaTexto").innerHTML = ps.filter(Boolean).map(t => `<p>${esc(t)}</p>`).join("");
+      $("hojaIr").hidden = !conIr; $("hojaCerrar").className = conIr ? "btn-texto" : "btn-principal";
+    }
+    abrirHoja($("hoja"));
+  } else cerrarHoja($("hoja"));
   $("accBtn").setAttribute("aria-pressed", state.accesible);
 
   // El GPS dice que llegaste: la persona lo comprueba con la foto («¿Es este el lugar?») antes de pasar a la llegada.
-  // «Aún no» lo pospone hasta que te alejes. El GPS puede errar 5 a 15 m y los edificios están pegados.
+  // «Aún no llego» lo pospone hasta que te alejes. El GPS puede errar 5 a 15 m y los edificios están pegados.
   if (ev && state.vista === "brujula") {
     if (ev.llego && state.llego !== state.destId) {
       state.llego = state.destId; state.confirmando = "auto"; vibrar([120, 70, 120]);
@@ -1266,6 +1511,9 @@ function renderBrujula() {
     }
   }
   renderConfirma();
+  // alto que ocupa la base desde el borde inferior (cambia con las tarjetas): los controles y el crédito del mapa van encima
+  const bt = $("base").getBoundingClientRect().top, vb = $("vBrujula").getBoundingClientRect();
+  mapV.baseH = Math.max(0, Math.round(vb.bottom - bt)); $("vBrujula").style.setProperty("--base-h", mapV.baseH + "px");
   if (mapa) dibujarMapa(ev, g);
 }
 
@@ -1287,27 +1535,30 @@ $("btnAtras").onclick = () => ir("buscar");
 // «Ya llegué»: con foto se pregunta antes (ayuda a notar que es otro edificio); sin foto va directo.
 $("btnYaLlegue").onclick = () => { state.llego = state.destId; if (fotoDe(state.destId)) { state.confirmando = "manual"; render(); } else ir("llegada"); };
 function confirmarLlegada() { state.confirmando = null; state.llego = state.destId; vibrar([120, 70, 120, 70, 300]); ir("llegada"); }
+$("btnUbicar").onclick = async () => { if (await enableGps()) { state.mode = "gps"; state.active = true; state.sim = false; render(); } };
 $("confSi").onclick = confirmarLlegada;
 $("confNo").onclick = () => { state.confirmando = null; render(); };
+alCerrar("confirma", () => $("confNo").onclick());
 function renderConfirma() {
-  const hoja = $("confirma"); hoja.hidden = !state.confirmando;
-  if (!state.confirmando) { hoja.dataset.dest = ""; return; }
+  const hoja = $("confirma");
+  if (!state.confirmando) { cerrarHoja(hoja); hoja.dataset.dest = ""; return; }
+  abrirHoja(hoja);                                           // el foco va al título (autofocus), no a «Sí, llegué»
   if (hoja.dataset.dest === state.destId) return;            // ya está pintada para este destino
   hoja.dataset.dest = state.destId;
   const i = info(state.destId), f = fotoDe(state.destId);
   $("confNombre").textContent = i.nombre; $("confDetalle").textContent = i.detalle || "";
   $("confImg").hidden = !f; $("confSinFoto").hidden = !!f;
+  $("btnReportar").hidden = !(f && f.id); $("btnReportar").disabled = false;   // solo las fotos de la comunidad se reportan
   if (f) {
-    $("confImg").src = f.src; $("confImg").alt = "Foto de " + i.nombre; $("confCred").textContent = f.cred;
-    $("confAyuda").textContent = "Compara la foto con lo que ves. Si coincide, estás en el lugar correcto.";
+    $("confImg").src = f.src; $("confImg").alt = "Foto " + deDestino(i.nombre); $("confCred").textContent = f.cred;
+    $("confAyuda").textContent = f.otroLado ? "Esta foto es de otro lado del edificio: desde donde estás puede verse distinto."
+      : "Compara la foto con lo que ves. Si coincide, estás en el lugar correcto.";
   } else {
     $("confLetra").textContent = i.letra || "•"; $("confCred").textContent = "";
     $("confSinFotoTxt").textContent = "Aún no hay foto de este lugar.";
     $("confAyuda").textContent = "Mira el edificio a tu alrededor. Al llegar puedes dejar tu foto para quien venga después.";
   }
-  try { $("confSi").focus({ preventScroll: true }); } catch (e) {}
 }
-$("btnAbrirMapa").onclick = () => setModo("mapa");
 $("selRes").onclick = () => setModo("resplandor");
 $("selFle").onclick = () => setModo("flecha");
 $("selMap").onclick = () => setModo("mapa");
@@ -1318,8 +1569,11 @@ function aplicarModo() {
   mapV.fitted = false;
 }
 $("datoCerrar").onclick = () => { state.zona = null; render(); };
-$("datoMas").onclick = () => { state.hojaAbierta = true; render(); try { $("hojaCerrar").focus(); } catch (e) {} };
+$("datoAbrir").onclick = () => { state.hojaAbierta = true; render(); };   // la tarjeta abre su hoja: el dato completo, o el evento con «Ir ahí»
+$("hojaIr").onclick = () => { const z = state.zona; state.hojaAbierta = false; if (z && z.tipo === "evento") elegirEvento(z.evento); };   // el evento pasa a ser el destino
+$("entradaCerrar").onclick = () => { state.entradaCerrada = true; render(); };
 $("hojaCerrar").onclick = () => { state.hojaAbierta = false; state.zona = null; render(); };
+alCerrar("hoja", () => $("hojaCerrar").onclick());
 $("accBtn").onclick = () => { state.accesible = !state.accesible; state.target = null; mapV.fitted = false; render(); };
 
 // ---------- Mapa: plano redibujado (design/assets) con tu posición y la ruta ----------
@@ -1334,7 +1588,8 @@ function cargarMapaImg(t) {
   MAPAS[t] = null;
   const img = new Image(); img.onload = () => { MAPAS[t] = img; render(); }; img.src = `assets/img/mapa-${t}.png`;
 }
-const TEMA = { oscuro: { bg: "#15131F", fg: "#F5F1EA", ruta: "#FF8A3D", yo: "#8FA6FF" }, claro: { bg: "#F6F1EA", fg: "#1D1A26", ruta: "#D2531A", yo: "#5B6FD6" } };
+// colores del lienzo: los mismos tokens del CSS (--bg, --fg, --ruta, --yo), leídos al dibujar
+const tokenColor = k => getComputedStyle(document.documentElement).getPropertyValue("--" + k).trim();
 const mapPx = n => toPlan(n.x, n.y);
 const posPx = p => { const q = toXY(p); return toPlan(q.x, q.y); };
 const toScr = (px, py) => {
@@ -1362,6 +1617,10 @@ function fitPoints(pts) {
   mapV.cx = (x0 + x1) / 2; mapV.cy = (y0 + y1) / 2;
 }
 function routePath(g) { return g ? astar(graph, g.target, destNode()) : null; }
+function fitCampus() {                                       // sin destino: tu posición o, sin ubicación, el plano completo
+  if (tieneUbicacion()) { const u = posPx(state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.z = Math.max(mapV.z, 1.2); return; }
+  fitPoints([{ px: MAPA_VB.x, py: MAPA_VB.y }, { px: MAPA_VB.x + MAPA_VB.w, py: MAPA_VB.y + MAPA_VB.h }]);
+}
 function fitRoute(g) {
   const path = routePath(g);
   const pts = path ? path.map(id => mapPx(graph[id])) : [mapPx(graph[destNode()])];
@@ -1379,12 +1638,13 @@ function polyPath(ctx, key) {                                // contorno (en pí
 function dibujarMapa(ev, g) {
   const { ctx, w, h } = fit($("map"));
   if (!w || !h) return;
-  const T = TEMA[claro() ? "claro" : "oscuro"], tema = claro() ? "claro" : "oscuro";
+  const tema = claro() ? "claro" : "oscuro", T = { bg: tokenColor("bg"), fg: tokenColor("fg"), ruta: tokenColor("ruta"), yo: tokenColor("yo") };
   cargarMapaImg(tema);
   mapV.w = w; mapV.h = h; mapV.sx = w / 2; mapV.sy = Math.max(h * 0.3, (70 + (h - mapV.baseH - 16)) / 2);
   mapV.theta = mapV.rotar ? -toRad(state.heading - PLANO.rot) : 0;
-  if (mapV.follow && ev) { const u = posPx(g ? g.pos : state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.fitted = true; }
-  if (!mapV.fitted) { fitRoute(g); mapV.fitted = true; }
+  const yo = tieneUbicacion(), sinDest = state.sinDestino;
+  if (mapV.follow && yo) { const u = posPx(g ? g.pos : state.user); mapV.cx = u.px; mapV.cy = u.py; mapV.fitted = true; }
+  if (!mapV.fitted) { if (sinDest) fitCampus(); else fitRoute(g); mapV.fitted = true; }
   ctx.fillStyle = T.bg; ctx.fillRect(0, 0, w, h);
   const img = MAPAS[tema];
   if (img) {
@@ -1394,7 +1654,7 @@ function dibujarMapa(ev, g) {
   }
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   // el edificio o patio de destino
-  const area = areaOf(state.destId);
+  const area = sinDest ? null : areaOf(state.destId);
   if (area) { ctx.fillStyle = T.ruta + "30"; ctx.strokeStyle = T.ruta; ctx.lineWidth = 2.5; polyPath(ctx, area); }
   // caminos del grafo (solo con ?debug)
   if (DEBUG) {
@@ -1415,23 +1675,26 @@ function dibujarMapa(ev, g) {
     ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   // puertas del destino: verde = sin escaleras, rojo = con escalera, gris = sin confirmar; la elegida lleva un aro
-  const pe = puertaActual();
-  for (const p of puertasDe(state.destId)) {
+  const pe = sinDest ? null : puertaActual();
+  for (const p of sinDest ? [] : puertasDe(state.destId)) {
     const [qx, qy] = toScr(...Object.values(mapPx(p))), esa = pe && pe.id === p.id;
     ctx.fillStyle = p.acc === true ? "#2FB44E" : p.acc === false ? "#E0405E" : "#9A94A6"; ctx.strokeStyle = T.bg; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(qx, qy, esa ? 8 : 6, 0, 7); ctx.fill(); ctx.stroke();
     if (esa) { ctx.strokeStyle = T.ruta; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(qx, qy, 13, 0, 7); ctx.stroke(); }
   }
   // etiqueta del destino
-  const [dx, dy] = toScr(...Object.values(mapPx(graph[destNode()])));
-  ctx.fillStyle = T.ruta; ctx.beginPath(); ctx.arc(dx, dy, 7, 0, 7); ctx.fill();
-  ctx.strokeStyle = T.bg; ctx.lineWidth = 2.5; ctx.stroke();
-  const nom = info(state.destId).nombre; ctx.font = "700 14px 'Chakra Petch', system-ui, sans-serif";
-  const tw = ctx.measureText(nom).width + 22, tx = Math.max(8, Math.min(w - tw - 8, dx - tw / 2)), ty = dy - 40;
-  ctx.fillStyle = T.fg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(tx, ty, tw, 30, 15) : ctx.rect(tx, ty, tw, 30); ctx.fill();
-  ctx.fillStyle = T.bg; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(nom, tx + tw / 2, ty + 16);
+  if (!sinDest) {
+    const [dx, dy] = toScr(...Object.values(mapPx(graph[destNode()])));
+    ctx.fillStyle = T.ruta; ctx.beginPath(); ctx.arc(dx, dy, 7, 0, 7); ctx.fill();
+    ctx.strokeStyle = T.bg; ctx.lineWidth = 2.5; ctx.stroke();
+    const nom = info(state.destId).nombre; ctx.font = "700 14px 'Chakra Petch', system-ui, sans-serif";
+    const tw = ctx.measureText(nom).width + 22, tx = Math.max(8, Math.min(w - tw - 8, dx - tw / 2)), ty = dy - 40;
+    ctx.fillStyle = T.fg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(tx, ty, tw, 30, 15) : ctx.rect(tx, ty, tw, 30); ctx.fill();
+    ctx.fillStyle = T.bg; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(nom, tx + tw / 2, ty + 16);
+  }
+  ctx.textBaseline = "middle";
   // tú: punto con borde, «Tú» y un cono hacia donde miras
-  if (ev) {
+  if (yo) {
     const raw = posPx(state.user), [ux, uy] = toScr(raw.px, raw.py);
     const sn = g ? posPx(g.pos) : raw, [sx, sy] = toScr(sn.px, sn.py);
     if (state.user.acc) { ctx.fillStyle = T.yo + "22"; ctx.beginPath(); ctx.arc(ux, uy, state.user.acc / PLANO.mpp * mapV.z, 0, 7); ctx.fill(); }
@@ -1445,8 +1708,9 @@ function dibujarMapa(ev, g) {
     ctx.fillStyle = T.fg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx + 16, sy - 12, yw, 24, 12) : ctx.rect(sx + 16, sy - 12, yw, 24); ctx.fill();
     ctx.fillStyle = T.bg; ctx.textAlign = "left"; ctx.fillText("Tú", sx + 24, sy + 1);
   }
-  // el plano no tiene el norte arriba: una brújula chica lo marca
-  const bx = 38, by = h / 2, psi = toRad(-PLANO.rot) + mapV.theta;
+  // el plano no tiene el norte arriba: una brújula chica lo marca, arriba a la izquierda, bajo la cabecera y el aviso del mapa
+  const tope = Math.max(...[".cab", "#alertaMapa"].map(s => { const r = document.querySelector("#vBrujula " + s).getBoundingClientRect(); return r.height ? r.bottom : 0; }));
+  const bx = 38, by = tope - $("map").getBoundingClientRect().top + 46, psi = toRad(-PLANO.rot) + mapV.theta;
   ctx.fillStyle = T.bg + "d0"; ctx.beginPath(); ctx.arc(bx, by, 20, 0, 7); ctx.fill();
   ctx.strokeStyle = T.fg + "44"; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.save(); ctx.translate(bx, by); ctx.rotate(psi);
@@ -1456,8 +1720,8 @@ function dibujarMapa(ev, g) {
   ctx.font = "700 11px system-ui, sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = "#ff453a"; ctx.strokeStyle = T.bg; ctx.lineWidth = 3;
   const nx = bx + 31 * Math.sin(psi), ny = by - 31 * Math.cos(psi) + 4; ctx.strokeText("N", nx, ny); ctx.fillText("N", nx, ny);
   // atribución obligatoria (ODbL)
-  ctx.font = "11px system-ui, sans-serif"; ctx.textAlign = "left"; ctx.fillStyle = T.fg + "99";
-  ctx.fillText("© colaboradores de OpenStreetMap", 12, h - mapV.baseH - 28);
+  ctx.font = "11px system-ui, sans-serif"; ctx.textAlign = "left"; ctx.fillStyle = T.fg + "cc";
+  ctx.fillText("© colaboradores de OpenStreetMap", 12, h - mapV.baseH - 12);   // justo sobre la base, bajo los controles
 }
 
 // gestos: arrastrar, pellizcar, rueda y toque (toca un edificio para ir a él; con ?debug mueve tu posición)
@@ -1534,9 +1798,8 @@ function renderLlegada() {
   cargarNube(state.destId);
   mostrarLl("inicio"); $("llError").textContent = ""; fotoNueva = null;
   $("llTitulo").textContent = "Llegaste " + aDestino(i.nombre);
-  $("llFoto").hidden = !f; $("llSinFoto").hidden = !!f;
-  $("btnReportar").hidden = !(f && f.id); $("btnReportar").disabled = false;
-  if (f) { $("llFotoImg").src = f.src; $("llFotoImg").alt = "Foto de " + i.nombre; $("llFotoPie").textContent = `${f.cred} · ${f.pie}`; }
+  $("llInvita").textContent = f ? "Ayuda al siguiente: toma una foto de lo que ves ahora."
+    : "Nadie ha dejado una foto de este lugar. Toma la primera: así quien venga después lo reconocerá.";
   const sab = SABIAS[state.destId]; $("llSabias").hidden = !sab; if (sab) $("llSabiasTxt").textContent = sab;
   $("llNombre2").textContent = i.nombre; $("llNombre3").textContent = i.nombre;
 }
@@ -1551,14 +1814,14 @@ $("inpFoto").onchange = async e => {
 };
 $("btnPublicar").onclick = async () => {
   if (!fotoNueva) return;
-  const btn = $("btnPublicar"), id = state.destId, lado = ladoFoto();
+  const btn = $("btnPublicar"), id = state.destId, lado = state.lado || ladoFoto();   // al llegar ya estás adentro: vale el lado por el que entraste
   btn.disabled = true; $("llegadaError").textContent = "";
   let compartida = false;
   try {                                                      // primero se intenta compartirla con todos
     const nid = await window.Fotos.publicarFoto(id, lado, fotoNueva);
-    nube[id] = { id: nid, src: fotoNueva }; compartida = true;
+    nube[id] = [{ id: nid, src: fotoNueva, lado }, ...(nube[id] || [])]; compartida = true;
   } catch (e) { /* sin conexión o foto demasiado grande: queda en este teléfono */ }
-  const guardada = compartida || guardarFoto(id, fotoNueva);
+  const guardada = compartida || guardarFoto(id, { src: fotoNueva, lado });
   btn.disabled = false;
   if (!guardada) { $("llegadaError").textContent = "No pudimos guardar la foto (poco espacio en el teléfono). Prueba de nuevo."; return; }
   $("llNota").textContent = compartida ? "Tu foto quedó publicada: quien venga después la verá al acercarse."
@@ -1570,9 +1833,10 @@ $("btnReportar").onclick = async () => {
   $("btnReportar").disabled = true;
   try {
     await window.Fotos.reportar(f.id);
-    nube[state.destId] = null; renderLlegada();
-    $("llError").textContent = "Gracias por avisar. Dejamos de mostrar esta foto.";
-  } catch (e) { $("llError").textContent = "No pudimos enviar el reporte. Prueba de nuevo."; $("btnReportar").disabled = false; }
+    nube[state.destId] = (nube[state.destId] || []).filter(x => x.id !== f.id);
+    $("confirma").dataset.dest = ""; renderConfirma();
+    $("confAyuda").textContent = "Gracias por avisar. Dejamos de mostrar esta foto.";
+  } catch (e) { $("confAyuda").textContent = "No pudimos enviar el reporte. Prueba de nuevo."; $("btnReportar").disabled = false; }
 };
 $("btnAunNo").onclick = () => { state.llego = state.destId; ir("brujula"); };
 $("btnOtro").onclick = () => ir("buscar");
@@ -1591,7 +1855,8 @@ function iniciarDemo() {
   const ar = areaOf(fin.id); if (ar) { const it = interior(ar); pts.push(fromXY(it.x, it.y)); }   // el camino llega al borde: sigue hasta adentro
   state.demo = true; state.sim = true; state.active = true; state.mode = "sim"; state.fix = true;
   state.modo = "resplandor"; state.hist = []; state.llego = null; state.zona = null; state.zonasVistas.clear(); state.hojaAbierta = false; state.entradaCerrada = false;
-  let i = 0, t = 0; const paso = 1.8;                         // metros por tick (~7 m/s: el recorrido dura ~35 s)
+  state.evento = null; state.puerta = null; reiniciarTrayecto();
+  let i = 0, t = 0; const paso = 1.8;                        // metros por tick (~7 m/s: el recorrido dura ~35 s)
   state.user = pts[0]; setHeading(bearing(pts[0], pts[1]));
   ir("brujula");
   demoTimer = setInterval(() => {
@@ -1608,7 +1873,6 @@ function detenerDemo() {
   if (state.demo && demoPrev) { Object.assign(state, demoPrev); }     // vuelve al GPS real (o a la posición de depuración)
   state.demo = false; demoPrev = null;
 }
-$("demoSalir").onclick = () => { detenerDemo(); ir("buscar"); };
 
 // ---------- Depuración (?debug) ----------
 $("from").innerHTML = DESTS.map(d => `<option value="${esc(d.id)}">${esc(info(d.id).nombre)}</option>`).join("");
@@ -1629,17 +1893,12 @@ function renderAhora() {
 }
 window.addEventListener("resize", render);
 // El alto del panel de abajo cambia cuando cambian la pista o la puerta (después de medirlo en renderBrujula):
-// se vuelve a medir solo, para que las tarjetas flotantes no se monten encima.
+// se vuelve a medir solo, para que los controles del mapa y el crédito no se monten encima.
 if (window.ResizeObserver) new ResizeObserver(() => {
   const h = $("base").offsetHeight;
   $("vBrujula").style.setProperty("--base-h", h + "px");
   if (typeof mapV !== "undefined") mapV.baseH = h;
 }).observe($("base"));
-// Con una tarjeta flotante a la vista, el número y el nombre se suben para no quedar debajo de ella.
-if (window.ResizeObserver) new ResizeObserver(() => {
-  const h = $("flota").offsetHeight;
-  $("vBrujula").style.setProperty("--flota-h", h > 0 ? h + 8 + "px" : "0px");
-}).observe($("flota"));
 
 // ---------- Arranque ----------
 if (params.has("demo")) iniciarDemo();

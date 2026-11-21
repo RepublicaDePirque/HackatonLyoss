@@ -1,0 +1,55 @@
+{
+	"nota": "Eventos curados por el equipo. «lugar» es el id de un destino de la app (ver DESTINOS en tools/generar-datos.py). Fechas en ISO 8601 con zona horaria: \"inicio\": \"2026-11-21T10:00:00-03:00\" y \"fin\". Los eventos de ejemplo usan «relativo» (minutos desde que se abre la app) para que la demo siempre tenga algo pasando ahora; no son reales. Se regenera js/generado/datos.js con python3 tools/generar-datos.py. Diseño: docs/eventos-y-trayecto.md.",
+	"eventos": [
+		{
+			"id": "cafe-bienvenida",
+			"titulo": "Café de bienvenida para mechones",
+			"lugar": "edificio-q-cafeteria-vivendum",
+			"donde": "Cafetería Vivendum",
+			"organiza": null,
+			"descripcion": "Café y conversación para quienes llegan por primera vez al campus.",
+			"relativo": { "inicio_min": -20, "dur_min": 120 },
+			"ejemplo": true
+		},
+		{
+			"id": "feria-clubes",
+			"titulo": "Feria de clubes y talleres",
+			"lugar": "patio-central",
+			"donde": "Patio Central",
+			"organiza": null,
+			"descripcion": "Clubes deportivos, culturales y talleres muestran lo que hacen durante el semestre.",
+			"relativo": { "inicio_min": -60, "dur_min": 240 },
+			"ejemplo": true
+		},
+		{
+			"id": "ayudantia-calculo",
+			"titulo": "Ayudantía abierta de Cálculo",
+			"lugar": "edificio-k-ciac",
+			"donde": "CIAC, primer piso",
+			"organiza": null,
+			"descripcion": "Repaso abierto antes del primer certamen.",
+			"relativo": { "inicio_min": 180, "dur_min": 90 },
+			"ejemplo": true
+		},
+		{
+			"id": "partido-carreras",
+			"titulo": "Partido entre carreras",
+			"lugar": "cancha-11x11",
+			"donde": "Cancha 11x11",
+			"organiza": null,
+			"descripcion": "Fútbol entre carreras de primer año.",
+			"relativo": { "inicio_min": 1500, "dur_min": 120 },
+			"ejemplo": true
+		},
+		{
+			"id": "charla-biblioteca",
+			"titulo": "Charla: cómo usar la Biblioteca",
+			"lugar": "edificio-u-biblioteca",
+			"donde": "Sala de lectura",
+			"organiza": null,
+			"descripcion": "Préstamos, salas de estudio y recursos en línea.",
+			"relativo": { "inicio_min": 12960, "dur_min": 60 },
+			"ejemplo": true
+		}
+	]
+}
