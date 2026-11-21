@@ -21,8 +21,10 @@ Más detalle: [docs/PRD.md](docs/PRD.md) (producto y decisiones de diseño), [do
 - **Ayuda para no perderse.** Una pista de texto por destino siempre visible y un mensaje según el estado: vas bien, te estás alejando, está detrás de ti o casi llegas. Si el GPS es impreciso, lo avisa.
 - **37 destinos con buscador.** Lista «Cerca de ti» y «Todos los destinos», ordenados por distancia; busca por nombre, lugar o letra («C»). Marca los que tienen fotos. Los destinos que repiten un edificio (Casino, Arquitectura, etc.) salen solo al buscarlos.
 - **Datos curiosos por zona.** Al pasar por ciertos lugares aparece una tarjeta compacta, dentro de la base de la brújula; al tocarla se abre el dato completo.
+- **Eventos del campus.** En «¿A dónde vas?», junto a los lugares: «Está pasando» arriba y «Próximos eventos» (los de los próximos 14 días) más abajo. Elegir un evento lleva la brújula a su lugar, y la búsqueda también los encuentra por nombre, organizador o lugar. Durante el trayecto, un evento que está pasando a 35 m o menos de tu camino aparece como tarjeta «Está pasando cerca», y su hoja trae el texto, quién organiza y «Ir ahí». Los eventos los cura el equipo en [data/eventos.json](data/eventos.json); la app no permite publicarlos todavía.
+- **Tarjetas del trayecto.** Una a la vez y según la distancia: ninguna en los primeros 15 m (primero hay que orientarse); a más de 60 m del destino, un evento cercano o un dato curioso de la zona, con al menos 30 m de camino entre una y otra; a 60 m o menos, solo la foto «Así se ve al llegar». «Voy apurado», en Ajustes, apaga los datos y los eventos del camino. Detalle en [docs/eventos-y-trayecto.md](docs/eventos-y-trayecto.md).
 - **Llegada.** Automática al entrar al cuadro del edificio o patio (con un margen de 5 m por el error del GPS), con botón «Ya llegué» por si el GPS falla.
-- **Fotos de cómo se ve el destino.** En los últimos 60 m aparece «Así se ve al llegar», y al llegar el usuario puede tomar y dejar su propia foto, que verán los demás estudiantes. Quien vea una foto inadecuada puede reportarla desde «¿Es este el lugar?»: con 3 reportes deja de mostrarse.
+- **Fotos de cómo se ve el destino.** En los últimos 60 m aparece «Así se ve al llegar», con la foto del lado del edificio por el que llegas (si no hay de ese lado, muestra otra y lo avisa), y al llegar el usuario puede tomar y dejar su propia foto, que verán los demás estudiantes. Quien vea una foto inadecuada puede reportarla desde «¿Es este el lugar?»: con 3 reportes deja de mostrarse.
 - **Mapa del campus.** Plano de Casa Central con tu posición, el destino y la ruta sobre los caminos de OpenStreetMap, con aviso de escaleras. «Prefiero ver solo el mapa» lo abre sin destino: tocar un edificio lo vuelve destino.
 - **Puertas de los edificios.** La señal y la ruta apuntan a la **puerta** del edificio, no a su borde: hay 41 puertas marcadas en 20 edificios. Si un edificio tiene varias, la app elige la de menor costo desde donde estás. La pista dice «Entrada principal · con escalera» y el mapa dibuja las puertas (verde sin escaleras, rojo con escalera, gris sin confirmar).
 - **Atajos por dentro de edificios.** Hay 11 pasos marcados que cruzan un edificio de puerta a puerta (un pasillo del A, por ejemplo). La ruta los usa cuando acortan el camino y avisa «Atajo por dentro (Edificio A) en unos 20 m»; en el mapa van con puntos. Si el paso tiene escalera, «Evitar escaleras» lo esquiva.
@@ -35,6 +37,7 @@ Más detalle: [docs/PRD.md](docs/PRD.md) (producto y decisiones de diseño), [do
 ### Estado actual
 
 - Las fotos de la comunidad se publican en Firestore ([js/fotos.js](js/fotos.js) y [firebase/firestore.rules](firebase/firestore.rules)) y las ve cualquiera que elija ese destino. Si no hay conexión, la foto queda guardada solo en el teléfono (`localStorage`). Todavía no hay moderación activa más allá de los reportes: las fotos se borran a mano desde la consola de Firebase.
+- Los 5 eventos de `data/eventos.json` son **de ejemplo**: van marcados «ejemplo» en la app y se calculan respecto de la hora en que se abre, para que la demo siempre tenga algo «pasando ahora». El equipo debe reemplazarlos por eventos con fuente antes de presentarlos como reales.
 - Los datos curiosos y varias pistas son contenido de ejemplo sin verificar. Faltan fotos propias de varios edificios y validar las coordenadas en terreno. La lista completa está en [docs/pendientes-datos.md](docs/pendientes-datos.md).
 - Las puertas y los pasos por dentro están marcados a mano sobre el plano, así que son **aproximados**: falta afinarlos en terreno. No se sabe si un pasillo está abierto a cierta hora; el aviso de cada paso es la única forma de advertirlo. Los edificios J, Federación, Comedores y Gimnasio 1 aún no tienen puerta propia y la señal apunta a su borde.
 - La interfaz se probó con un DOM simulado, no en un teléfono real.
@@ -60,19 +63,19 @@ Lo que necesita el navegador está en la raíz y en `js/` y `assets/`; el resto 
 │       ├── grafo.js         Caminos y destinos, desde OpenStreetMap
 │       ├── contornos.js     Contornos de edificios y patios, calcados del plano
 │       ├── entradas.js      Puertas de los edificios y pasos por dentro, desde data/entradas.json
-│       └── datos.js         Nombre, pista y foto de cada destino
+│       └── datos.js         Nombre, pista, foto y eventos de cada destino
 ├── assets/
 │   ├── img/                 Mapas claro y oscuro y fotos de fachada con licencia libre
 │   ├── fonts/, fuentes.css  Tipografías (Chakra Petch e Instrument Sans)
 │   ├── icons/               Íconos de la app (180, 192 y 512 px)
 │   ├── logo/                Logo del proyecto y su versión liviana para la portada
 │   └── plano.jpeg           Plano oficial de Casa Central
-├── data/                    Datos fuente: edificios, puertas y pasos (entradas.json), puntos de interés, georreferencia y datos curiosos
+├── data/                    Datos fuente: edificios, puertas y pasos (entradas.json), eventos (eventos.json), puntos de interés, georreferencia y datos curiosos
 ├── tools/                   Scripts de Python que generan js/generado/
 ├── tests/                   Pruebas del modo voz, de «Evitar escaleras», de la señal de la brújula, de la portada y de las entradas
 ├── firebase/                Reglas de seguridad de Firestore
 ├── design/                  Prototipo de interfaz (lienzo, plantillas y scripts del diseño)
-├── docs/                    PRD, implementación, fuentes, pendientes de datos y enunciado del hackatón
+├── docs/                    PRD, implementación, eventos y trayecto, fuentes, pendientes de datos y enunciado del hackatón
 ├── LICENSE
 └── README.md
 ```
