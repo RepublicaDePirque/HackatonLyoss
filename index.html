@@ -108,8 +108,7 @@ const nodesList = [
   N("f2","",   -54.0,   -85.4),
   N("fisica","Física (E)",   -64.1,  -111.6),
   N("inform","Informática, Matemática, Industrias y Comercial (F)",  -105.7,   -88.4),
-  N("u_sur","",    35.8,   -34.3),
-  N("biblio","Biblioteca (U)",    63.3,   -68.5),
+  N("biblio","Biblioteca (U)",    51.6,   -88.8),
   N("u_norte","",   100.3,  -102.9),
   N("cancha","Cancha 11x11 (8007)",   133.9,   -84.2),
   N("ro_b","",   127.1,  -129.3),
@@ -128,6 +127,7 @@ const nodesList = [
   N("g1","Gimnasio 1 (A)",    25.4,  -129.7),
   N("b_puerta","Edificio B (oficinas y salas de clases)",     9.2,  -205.8),
   N("fed","Federación",   151.5,  -247.3),
+  N("a_puerta","Edificio A",     1.8,   -56.0),
   N("f_este","",  -155.0,  -106.4),
   N("t_ruta","",  -169.0,  -101.0),
   N("t_puerta","Humanísticos (T)",  -175.5,  -110.4),
@@ -148,9 +148,6 @@ const edgePairs = [
   ["calle_este","f2"],
   ["calle_este","fisica"],
   ["f2","inform"],
-  ["calle_sur","u_sur"],
-  ["u_sur","biblio"],
-  ["biblio","u_norte"],
   ["u_norte","cancha"],
   ["u_norte","ro_b"],
   ["ro_b","c_oeste"],
@@ -172,11 +169,12 @@ const edgePairs = [
   ["g1","patio"],
   ["b_puerta","j2"],
   ["fed","p_clases"],
+  ["a_puerta","calle_sur"],
   ["inform","f_este"],
   ["f_este","t_ruta"],
   ["t_ruta","t_puerta"],
   ["fisica","tenis"],
-  ["biblio","patio_bib"],
+  ["biblio","patio_bib",1],
   ["patio_bib","g1_oeste"],
   ["g1_oeste","g1"],
 ];
@@ -215,7 +213,7 @@ const SPACES = {
   patio_canon: [[-100.1,-116.0],[-132.0,-133.7],[-142.3,-115.3],[-110.4,-97.5]],
   patio_calistenia: [[127.9,-103.0],[121.3,-108.9],[111.8,-109.7],[103.1,-105.8],[73.2,-52.1],[85.1,-43.8],[99.2,-37.6],[105.6,-47.2],[100.7,-52.1],[124.5,-95.0]],
 };
-const DEST_BLD = { patio_bib:"patio_biblioteca",tenis:"cancha_tenis",g1:"gimnasio1",b_puerta:"B",fed:"federacion",t_puerta:"T",patio:"patio_central",admision:"patio_central",biblio:"U",casino:"D",arqui:"D",fisica:"E",inform:"F",c_puerta:"C",m_clases:"M",r_port:"R",p_clases:"P",cancha:"cancha" };
+const DEST_BLD = { a_puerta:"A",patio_bib:"patio_biblioteca",tenis:"cancha_tenis",g1:"gimnasio1",b_puerta:"B",fed:"federacion",t_puerta:"T",patio:"patio_central",admision:"patio_central",biblio:"U",casino:"D",arqui:"D",fisica:"E",inform:"F",c_puerta:"C",m_clases:"M",r_port:"R",p_clases:"P",cancha:"cancha" };
 // Edificios que cuentan como uno solo al llegar (P2 es parte de P, R2 de R).
 const GROUPS = { P: ["P", "P2"], R: ["R", "R2"] };
 const graph = Object.fromEntries(nodesList.map(n => [n.id, n]));
