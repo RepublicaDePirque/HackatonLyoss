@@ -48,14 +48,33 @@ for i, e in enumerate(datos["entradas"], 1):
             avisos.append(f"{k}: «{nombre}» y «{o['n']}» están a menos de 3 m (¿repetida?)")
     salida.setdefault(k, []).append({"n": nombre, "px": round(e["px"], 1), "py": round(e["py"], 1), "a": acc})
 
+# ---- pasos por dentro de edificios (atajos de puerta a puerta) ----
+pasos = []
+puertas_px = [(e["px"], e["py"]) for lista in salida.values() for e in lista]
+for i, p in enumerate(datos.get("pasos", []), 1):
+    k, pts, nom = p.get("edificio"), [(q["px"], q["py"]) for q in p.get("puntos", [])], (p.get("descripcion") or "").strip() or "Paso por dentro"
+    if k not in contornos: errores.append(f"paso {i}: el edificio «{k}» no existe en contornos.js"); continue
+    if len(pts) < 2: errores.append(f"paso {i} («{nom}»): necesita al menos 2 puntos"); continue
+    if any(not (-60 <= x <= W + 60 and -60 <= y <= H + 60) for x, y in pts): errores.append(f"paso {i} («{nom}»): un punto cae fuera del plano"); continue
+    acc = p.get("accesible")
+    if acc not in (True, False, None): errores.append(f"paso {i} («{nom}»): «accesible» debe ser true, false o null"); continue
+    largo = sum(math.hypot(pts[j][0] - pts[j - 1][0], pts[j][1] - pts[j - 1][1]) for j in range(1, len(pts))) * MPP
+    if largo > 250: avisos.append(f"paso «{nom}»: mide {largo:.0f} m (¿está bien trazado?)")
+    for extremo in (pts[0], pts[-1]):                      # un extremo sin puerta cerca se conecta al camino más cercano
+        if not puertas_px or min(math.hypot(extremo[0] - a, extremo[1] - b) for a, b in puertas_px) * MPP > 6:
+            avisos.append(f"paso «{nom}»: un extremo no coincide con una puerta marcada (a más de 6 m): se unirá al camino más cercano"); break
+    pasos.append({"n": nom, "k": k, "p": [[round(x, 1), round(y, 1)] for x, y in pts], "a": acc, "h": (p.get("nota") or "").strip()})
+
 if errores:
     print("ERRORES:"); [print("  -", x) for x in errores]; sys.exit(1)
 (RAIZ / "js/generado/entradas.js").write_text(
     "// GENERADO por tools/generar-entradas.py desde data/entradas.json. No editar a mano.\n"
     "// n = descripción · px, py = píxel del plano · a = se entra sin escaleras (true), con escalera (false) o sin confirmar (null)\n"
-    "const ENTRADAS = " + json.dumps(salida, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
+    "const ENTRADAS = " + json.dumps(salida, ensure_ascii=False, separators=(",", ":")) + ";\n"
+    "// PASOS: atajos por dentro de edificios, de puerta a puerta. n = descripción · k = edificio · p = puntos [px, py] en orden · a = sin escaleras (true), con escalera (false) o sin confirmar (null) · h = aviso (horario, acceso)\n"
+    "const PASOS = " + json.dumps(pasos, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
 n = sum(len(v) for v in salida.values())
-print(f"js/generado/entradas.js: {n} puertas en {len(salida)} edificios")
+print(f"js/generado/entradas.js: {n} puertas en {len(salida)} edificios, {len(pasos)} pasos por dentro")
 sin = sorted(set(contornos) - set(salida))
 print("edificios con contorno y sin puerta:", ", ".join(sin) or "ninguno")
 for a in avisos: print("  aviso:", a)
