@@ -73,7 +73,6 @@
   #btnPortada .nombre { margin-top:-28px; font-family:'Chakra Petch', sans-serif; font-weight:700; font-size:30px; letter-spacing:.02em; animation:aparece 1400ms 250ms var(--ease) both; }
   #btnPortada .toca { font-size:15px; color:#B3ADBF; animation:aparece 1400ms 500ms var(--ease) both, late 3.2s 1.9s ease-in-out infinite; }
   #vPortada #btnPortada:focus-visible { outline-offset:-6px; }
-  #vPortada.saliendo { opacity:0; transition:opacity 650ms ease-in; pointer-events:none; }
   #vPermiso { gap:24px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #vPermiso .tel { align-self:center; position:relative; width:150px; height:250px; flex-shrink:0; border-radius:30px; border:2px solid var(--line); overflow:hidden; background:var(--surface); }
   #vPermiso .tel .mancha { position:absolute; left:64px; top:-90px; width:200px; height:200px; animation:recorre 9s cubic-bezier(.45,0,.55,1) infinite; }
@@ -1124,13 +1123,7 @@ function renderBrujula() {
   if (mapa) dibujarMapa(ev, g);
 }
 
-$("btnPortada").onclick = () => {                           // la portada muestra el logo; al tocar se desvanece y se entra
-  const p = $("vPortada");
-  if (p.classList.contains("saliendo")) return;
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return ir("permiso");
-  p.classList.add("saliendo");
-  setTimeout(() => { ir("permiso"); p.classList.remove("saliendo"); }, 650);
-};
+$("btnPortada").onclick = () => ir("permiso");              // la portada muestra el logo; al tocar se entra
 $("btnAtras").onclick = () => ir("buscar");
 // «Ya llegué»: con foto se pregunta antes (ayuda a notar que es otro edificio); sin foto va directo.
 $("btnYaLlegue").onclick = () => { state.llego = state.destId; if (fotoDe(state.destId)) { state.confirmando = "manual"; render(); } else ir("llegada"); };
