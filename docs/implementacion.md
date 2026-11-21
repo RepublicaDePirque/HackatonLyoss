@@ -52,6 +52,15 @@ Se pueden combinar: `/?debug&tema=claro`.
 - **«Vas bien»** solo aparece si no te estás alejando (compara con lo más cerca que estuviste en los últimos 20 s), por la crítica de diseño que señala que el mensaje fijo refuerza rumbos equivocados.
 - **Calibración del plano**: la app usa 0,4601 m/px y 155,3°; `data/georef.json` da 0,4666 m/px y 154,8°. Las dos coinciden a 1 a 6 m (máximo en los bordes del plano), así que no hay desfase relevante. Si se unifican, hay que cambiar también `tools/generar-grafo.py`.
 
+## Herramienta temporal: marcar entradas
+
+`marcar-entradas.html` (en Pages: `/marcar-entradas.html`) sirve para levantar la puerta de cada edificio y exportar un `entradas.json`. No es parte de la app ni de su caché; se borra cuando las entradas estén integradas.
+
+- Elige el edificio arriba (o toca cerca de uno: lo detecta a 20 m y pega la puerta a su borde si está a 8 m o menos), toca la puerta en el plano y guarda con una descripción y si se puede entrar sin escaleras (sí, no, no sé).
+- «⌖» muestra tu ubicación y «Marcar donde estoy» marca con el GPS (avisa si la precisión es peor que ±15 m; tocar el plano es más preciso).
+- Se guarda solo en el teléfono mientras se trabaja. «Lista» muestra el avance, los edificios que faltan y el resultado para copiar, descargar o compartir.
+- Tocar una marca la edita o la borra. Admite varias puertas por edificio.
+
 ## Supuestos en los contornos
 
 - **Comedores** es la parte norte del bloque D (OpenStreetMap lo dibuja separado; el plano lo trae dentro del cuadro de D). Su contorno sale de OSM recortado al cuadro de D. Elegir «Edificio D» también se cumple al entrar a Comedores, porque está dentro de D.
