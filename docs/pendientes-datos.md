@@ -42,7 +42,7 @@ Pendientes de sacar en terreno, destinos de la demo primero:
 - **Pistas**: las de `data/edificios.json` son borradores escritos mirando el plano. Revisar que describan lo que se ve al caminar.
 - **Qué hay en cada edificio** (`que_hay`): viene de la rama `wip/brujula`, sin verificar.
 - **Punto del edificio P**: es el centro de P y P2 juntos; queda unos 20 m corrido hacia el P2. Tomar el punto de la entrada.
-- **Puertas**: todas las coordenadas marcan el centro del edificio, no la puerta. Tomar la puerta de los ocho destinos de la demo.
+- **Puertas**: todas las coordenadas marcan el centro del edificio, no la puerta. Tomar la puerta de los ocho destinos de la demo. En curso: Agustín las marca en terreno con `marcar-entradas.html`, que exporta un `entradas.json`.
 - **Puntos de interés de OpenStreetMap** (32): no se comprobó que sigan existiendo.
 - **Precisión real**: el ajuste entre plano y OpenStreetMap da 1 a 2 m, pero no se midió contra el GPS de un teléfono en el campus.
 
