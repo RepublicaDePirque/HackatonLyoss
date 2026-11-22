@@ -6,3 +6,10 @@ HackatonLyoss/
 
 # Registros del navegador automatizado (Playwright MCP)
 .playwright-mcp/
+
+# Archivos locales y notas internas: no versionar
+.claude/
+CONTEXT_DUMP.md
+Bases_Hackaton_Oficiales.pdf
+*:Zone.Identifier
+tools/preview.png
